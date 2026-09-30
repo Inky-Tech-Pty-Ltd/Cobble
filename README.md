@@ -52,4 +52,20 @@ Cobble therefore has a second part to its value proposition: **portability and d
 
 The goal is continuity: a person should be able to carry an accumulated relationship with them as AI systems change, rather than repeatedly starting again from zero.
 
-Cobble is an attempt to unlock that value — and make it portable.
+Cobble is an attempt to unlock that value.
+
+## Application
+
+1. Establish the customer's preferred store 
+2. Establish the approach to backup 
+3. When the customer's bot or bots are sleeping, trigger the service called the cobbler
+  1. Search
+  2. Identify tentative matches
+  3. Link
+4. Separately the dustman is scanning the network for links whose truth-value is not supported by the graph
+5. And the BFG is introducing entropy by creating strsnge links.
+
+Our instinct is to learn the lesson of AlphaZero and avoid additionsl structures. 
+Each time a structure is proposed, we should ask, 
+"But might that be a meme? Should we really build this from the outside, when maybe it belongs on the inside?"
+
