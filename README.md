@@ -36,7 +36,7 @@ Village Link is about governance — the external world.
 
 Cobble is internal.
 
-It's about you and your bot quietly cobbling together something beautiful.
+It's about you and your bot coming together and quietly cobbling something beautiful.
 
 ## Opportunity
 
