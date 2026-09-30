@@ -26,7 +26,7 @@ The result would not be one giant memory. It would be a graph: a structure in wh
 
 ## Name
 
-The project has acquired the domain name `cobbled.link`.
+The project has acquired the domain names  `cobble.link` and  `cobbled.link`.
 
 We were looking for something with echoes of the village, but with more intimacy.
 
