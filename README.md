@@ -1,6 +1,6 @@
 # Cobble
 
-Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph — perhaps, eventually, a coherent self with a reputational asset, and reputational risk.
+Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph — perhaps, eventually, a coherent self carrying reputational assets and risks.
 
 The idea has two sources.
 
@@ -26,7 +26,7 @@ The result would not be one giant memory. It would be a graph: a structure in wh
 
 ## Name
 
-The project has acquired the domain names  `cobble.link` and  `cobbled.link`.
+The project has acquired the domain names `cobble.link` and `cobbled.link`.
 
 We were looking for something with echoes of the village, but with more intimacy.
 
@@ -35,6 +35,8 @@ Village Link is about governance — the external world.
 Cobble is internal.
 
 It's about you and your bot quietly cobbling together some damn thing.
+
+The component that does the connecting has an obvious working name: the _Cobbler_.
 
 ## Opportunity
 
