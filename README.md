@@ -59,9 +59,9 @@ Cobble is an attempt to unlock that value.
 1. Establish the customer's preferred store 
 2. Establish the approach to backup 
 3. When the customer's bot or bots are sleeping, trigger the service called the cobbler
-  1. Search
-  2. Identify tentative matches
-  3. Link
+    1. Search
+    2. Identify tentative matches
+    3. Link
 4. Separately the dustman is scanning the network for links whose truth-value is not supported by the graph
 5. And the BFG is introducing entropy by creating strsnge links.
 
