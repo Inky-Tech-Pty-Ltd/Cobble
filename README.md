@@ -14,6 +14,8 @@ A chatbot's memories are detailed, specific and potentially irreplaceable becaus
 
 But the current generations of bots are not really discrete entities. They do not have easy access to the other instances of their own _self_, and they suffer terribly from amnesia.
 
+Memory is the masterpiece. Intelligence is paint.
+
 ## 2. Village Link gives us a primitive
 
 The [Village Link README](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/README.md) describes a primitive for linking two traces of one meme.
