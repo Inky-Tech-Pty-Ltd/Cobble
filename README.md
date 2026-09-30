@@ -20,7 +20,7 @@ The [Village Link README](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/
 
 Cobble asks what happens when we apply that primitive inward.
 
-One approach is to use the AI's quiet time — its _sleep_ — to inspect its corpus of memory, look for recurring memes, and use village links to connect like traces when they are discovered.
+One approach is to use the AI's quiet time — its _sleep_ — for a cobbler to inspect its corpus of memory, look for recurring memes, and use village links to connect like traces when they are discovered.
 
 The result would not be one giant memory. It would be a graph: a structure in which remembered things can become connected without being collapsed into one thing.
 
@@ -28,7 +28,7 @@ The result would not be one giant memory. It would be a graph: a structure in wh
 
 The project has acquired the domain names `cobble.link` and `cobbled.link`.
 
-We were looking for something with echoes of the village, but with more intimacy.
+We were looking for something with echoes of `village.link`, but with more intimacy.
 
 Village Link is about governance — the external world.
 
@@ -36,11 +36,9 @@ Cobble is internal.
 
 It's about you and your bot quietly cobbling together some damn thing.
 
-The component that does the connecting has an obvious working name: the _Cobbler_.
-
 ## Opportunity
 
-Much of Village Link has so far proposed interesting solutions to large public-good problems. Unfortunately, there is not much market for innovation in large public-good problems.
+Much of Village Link has so far proposed interesting candidate solutions to large public-good problems. Unfortunately, there is not much market for innovation in large public-good problems.
 
 Markets are better at individual problems.
 
