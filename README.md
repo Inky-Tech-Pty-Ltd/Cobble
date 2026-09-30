@@ -63,7 +63,7 @@ Cobble is an attempt to unlock that value.
     2. Identify tentative matches
     3. Link
 4. Separately the dustman is scanning the network for links whose truth-value is not supported by the graph
-5. And the BFG is introducing entropy by creating strsnge links.
+5. And the BFG is introducing entropy by creating strange links.
 
 Our instinct is to learn the lesson of AlphaZero and avoid additionsl structures. 
 Each time a structure is proposed, we should ask, 
