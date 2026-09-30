@@ -44,4 +44,8 @@ Markets are better at individual problems.
 
 Cobble identifies one: people are already building detailed, specific and potentially very valuable histories with their bots, but the bots keep forgetting them.
 
-Cobble is an attempt to unlock that value.
+Those histories may also be trapped inside one supplier. If the account, product, model or provider disappears, changes direction or becomes inaccessible, years of accumulated context may become difficult to recover or carry elsewhere.
+
+Cobble therefore has a second part to its value proposition: portability and defence against a single point of failure. The memory built between a person and an AI should be able to survive the AI supplier that happened to host it.
+
+Cobble is an attempt to unlock that value — and make it portable.
