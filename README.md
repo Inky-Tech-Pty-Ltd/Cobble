@@ -46,6 +46,8 @@ Cobble identifies one: people are already building detailed, specific and potent
 
 Those histories may also be trapped inside one supplier. If the account, product, model or provider disappears, changes direction or becomes inaccessible, years of accumulated context may become difficult to recover or carry elsewhere.
 
-Cobble therefore has a second part to its value proposition: portability and defence against a single point of failure. The memory built between a person and an AI should be able to survive the AI supplier that happened to host it.
+Cobble therefore has a second part to its value proposition: **portability and defence against a single point of failure**. The memory built between a person and an AI should be customer-controlled and capable of surviving the particular supplier, product or model that happened to host it.
+
+The goal is continuity: a person should be able to carry an accumulated relationship with them as AI systems change, rather than repeatedly starting again from zero.
 
 Cobble is an attempt to unlock that value — and make it portable.
