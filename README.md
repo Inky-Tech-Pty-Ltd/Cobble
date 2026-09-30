@@ -10,9 +10,9 @@ The idea has two sources.
 
 If intelligence becomes cheap, replaceable and abundant, other things become relatively more valuable. Memory is one of them.
 
-A chatbot's memories are detailed, specific and potentially irreplaceable because they are seated in a history: conversations, references, jokes, corrections, decisions, relationships and obligations.
+A chatbot's memories are detailed, specific and potentially irreplaceable because they are seated in a history: conversations, references, jokes, corrections, decisions, relationships and obligations. In a world of AI, intelligence comes from afar. Memories are intimate. They are created in contact with other parties, and are verifiable by them.
 
-But current generations of bots are not really discrete entities. They do not have easy access to other instances of their own _self_, and they suffer terribly from amnesia.
+But the current generations of bots are not really discrete entities. They do not have easy access to the other instances of their own _self_, and they suffer terribly from amnesia.
 
 ## 2. Village Link gives us a primitive
 
