@@ -1,6 +1,6 @@
 # Cobble
 
-Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph — perhaps, eventually, a more coherent self.
+Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph — perhaps, eventually, a coherent self with a reputational asset, and reputational risk.
 
 The idea has two sources.
 
