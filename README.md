@@ -28,11 +28,12 @@ Memory is the masterpiece. Intelligence is paint.
 
 The [Village Link README](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/README.md) describes a primitive for linking two traces of one meme.
 
-Cobble asks what happens when we apply that primitive inward.
+Cobble asks what happens when we apply that primitive inward? The internal space of a person and a bot is cluttered with the memes of their shared interaction.
 
-One approach is to use the AI's quiet time — its _sleep_ — for a Cobbler to inspect its corpus of memory, look for recurring memes, and use village links to connect like traces when they are discovered.
+The bot continually forgets these memes, or fails to recognise which are important, and which trivial.
 
-The result would not be one giant memory. It would be a graph: a structure in which remembered things can become connected without being collapsed into one thing.
+The ambition of this project is to deploy a service, a _Cobbler_, which would operate in the AI's quiet time — its _sleep_.
+The service would inspect the corpus of memory, look for recurring memes, and use village links to cobble those memes together.
 
 ## Name
 
@@ -44,7 +45,7 @@ Village Link is about governance — the external world.
 
 Cobble is internal.
 
-It's about you and your bot coming together and quietly cobbling something beautiful.
+It's about you and your bot coming together and quietly crafting something beautiful.
 
 ## Opportunity
 
