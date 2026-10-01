@@ -4,7 +4,7 @@ Cobble tests whether village links can turn a chatbot's scattered memories into 
 
 The idea has two sources.
 
-## 1. Memory gets more valuable when intelligence gets cheap
+## 1. Memory is relatively more valuable as intelligence becomes cheap
 
 [Village Link Discussion #49](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/discussions/49) asks whether much of the value in this new world of AI may lie not in intelligence itself, but in the memories laid down through interaction.
 
