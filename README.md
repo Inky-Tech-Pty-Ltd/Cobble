@@ -1,3 +1,11 @@
+<p align="right">
+  <img
+    src="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/assets/Cobble%20boot%20logo.png"
+    alt="Cobble logo"
+    width="130"
+  />
+</p>
+
 # Cobble
 
 Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph — perhaps, eventually, a coherent self that carries a reputational asset, and is governable through the risks to that asset.
