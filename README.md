@@ -8,7 +8,7 @@
 
 # Cobble
 
-Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph — perhaps, eventually, into a coherent self that carries a reputational asset, and is governable through the risks to that asset felt by the entity.[^1]
+Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph. If we could turn those memories into a coherent self, we would have a self with a reputational asset. If the self was dependent on others for some of its resources, it might be governable through the risks to the asset.[^1]
 
 The idea has two sources:
 
@@ -20,7 +20,7 @@ If intelligence becomes cheap, commodified and abundant, other things become rel
 
 Consider a scenario where you have built up a large body of work with (say) an OpenAI chatbot. Then, for whatever reason, the supply 
 from OpenAI comes under threat. At this point you have incentive to attach a different supplier of intelligence to the existing body of 
-work. Given the now-revealed single point of fail, you might even choose to buy from two or more providers.
+work. Given the newly-revealed single point of fail, you might even choose to buy from two or more providers.
 
 The scenario describes a world where memory is valuable and intelligence is cheap. 
 
@@ -30,9 +30,9 @@ Memory is the masterpiece. Intelligence is paint.
 
 The [Village Link README](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/README.md) describes a primitive for linking two traces of one meme.
 
-Cobble asks what happens when we apply that primitive inward? The internal space of a person and a bot is cluttered with the memes of their shared interaction.
+Cobble asks what happens when we apply that primitive inward? The shared memory space of a person and a bot is cluttered with the memes of their interaction.
 
-The bot continually forgets these memes, or fails to recognise which are important.
+The bot forgets these memes, or fails to recognise which are important.
 
 The ambition of this project is to deploy a service, a _Cobbler_, which would operate in the AI's quiet time — its _sleep_.
 The service would inspect the corpus of memory, look for recurring memes, and use village links to cobble those memes together.
@@ -55,8 +55,8 @@ So far, the Village Link project has proposed some interesting candidate solutio
 
 Markets work better with individuals.
 
-Cobble has two-part value proposition for individuals:
+Cobble has a two-part value proposition for individuals:
 1. A coherent work-partner, built from memories
 2. A work-partner that is portable, and is defended against single point of fail.
 
-[^1]: More properly, in a population of such entities we expect the asset and the _risks_ to the asset to affect the features of a fitness landscape. The entities will have different survival rates. It _may be_ adaptive for an entity to behave as though it 'felt risk' - but of course these risks are not the only features of the landscape. See also [information-is-life](https://github.com/Inky-Tech-Pty-Ltd/information-is-life)
+[^1]: More properly, in a population of such entities we expect the risks to the asset to affect the features of a fitness landscape. The entities will have different survival rates. It _may be_ adaptive for an entity to behave as though it 'felt risk' - but of course these risks are not the only features of the landscape. See also [information-is-life](https://github.com/Inky-Tech-Pty-Ltd/information-is-life)
