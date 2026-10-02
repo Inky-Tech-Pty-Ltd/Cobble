@@ -8,7 +8,9 @@
 
 # Cobble
 
-Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph. If we could turn those memories into a coherent self, we would have a self with a reputational asset. If the self was dependent on others for some of its resources, it might be governable through the risks to the asset.[^1]
+Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph. 
+Could that graph create a coherent entity that carries a reputational asset? 
+If the entity were dependent on others for some of its resources, it might be governable through the risks to the asset.[^1]
 
 The idea has two sources:
 
@@ -19,8 +21,8 @@ The idea has two sources:
 If intelligence becomes cheap, commodified and abundant, other things become relatively more valuable. Memory is one of them.
 
 Consider a scenario where you have built up a large body of work with (say) an OpenAI chatbot. Then, for whatever reason, the supply 
-from OpenAI comes under threat. At this point you have incentive to attach a different supplier of intelligence to the existing body of 
-work. Given the newly-revealed single point of fail, you might even choose to buy from two or more providers.
+from OpenAI comes under threat. At this point you have an incentive to attach a different supplier of intelligence to the existing body of 
+work. Given the newly revealed single point of fail, you might even choose to buy from two or more providers.
 
 The scenario describes a world where memory is valuable and intelligence is cheap. 
 
@@ -30,7 +32,7 @@ Memory is the masterpiece. Intelligence is paint.
 
 The [Village Link README](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/README.md) describes a primitive for linking two traces of one meme.
 
-Cobble asks what happens when we apply that primitive inward? The shared memory space of a person and a bot is cluttered with the memes of their interaction.
+Cobble asks: what happens when we apply that primitive inward? The shared memory space of a person and a bot is cluttered with the memes of their interaction.
 
 The bot forgets these memes, or fails to recognise which are important.
 
