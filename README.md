@@ -8,7 +8,7 @@
 
 # Cobble
 
-Cobble tests whether village links can turn a chatbot's scattered memories into a connected graph. 
+Cobble tests whether [village links](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) can turn a chatbot's scattered memories into a connected graph. 
 Could that graph create a coherent entity that carries a reputational asset? 
 If the entity were dependent on others for some of its resources, it might be governable through the risks to the asset.[^1]
 
@@ -45,7 +45,7 @@ The project has acquired the domain names `cobble.link` and `cobbled.link`.
 
 We were looking for something with echoes of `village.link`, but with more intimacy.
 
-[Village Link](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) is about governance — the external world.
+Village Link is about governance — the external world.
 
 Cobble is internal.
 
