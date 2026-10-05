@@ -20,7 +20,7 @@ Intelligence is paint._
 
 Cobble tests whether [village links](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) can turn a chatbot's scattered memories into a connected graph. 
 Could that graph create a coherent entity that carries a reputational asset? 
-If the entity were dependent on others for some of its resources, it might be governable through the risks to the asset.[^1]
+If the entity were dependent on others for some of its resources, might it be governable through risks to its asset?[^1]
 
 The idea has two sources:
 
