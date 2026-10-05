@@ -13,12 +13,10 @@ Cobble is an Inky Tech project.
 **Inky Tech Pty Ltd**   
 Infrastructure of memory.
 
-**Mission:** Defend memory against intelligence.
-
 _Memory is the masterpiece.  
 Intelligence is paint._
 
-# Memory
+## Cobbled memory
 
 Cobble tests whether [village links](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) can turn a chatbot's scattered memories into a connected graph. 
 Could that graph create a coherent entity that carries a reputational asset? 
