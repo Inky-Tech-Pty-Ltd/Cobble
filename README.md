@@ -68,7 +68,7 @@ So far, the Village Link project has proposed some interesting candidate solutio
 Markets work better with individuals.
 
 Cobble has a two-part value proposition for individuals:
-1. A coherent work-partner, built from memories
-2. A work-partner that is portable, and is defended against single point of fail.
+1. A coherent AI work-partner, maintained with intelligence services, but seated in memories
+2. A work-partner asset that is portable, and is defended against single point of fail.
 
 [^1]: More properly, in a population of such entities we expect the risks to the asset to affect the features of a fitness landscape. The entities will have different survival rates. It _may be_ adaptive for an entity to behave as though it 'felt risk' - but of course these risks are not the only features of the landscape. See also [information-is-life](https://github.com/Inky-Tech-Pty-Ltd/information-is-life)
