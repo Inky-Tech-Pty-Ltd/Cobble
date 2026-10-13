@@ -10,6 +10,21 @@ four retrieved candidates per query, and a common lexical ranker. A0 contains
 only flat traces. A1 adds seeded hypothesis membership. A2 preserves A1
 rankings while exposing append-only observation history.
 
+## Measured results (CI run #38337374916)
+
+| Architecture | Mean precision@4 | Mean recall@4 |
+| --- | ---: | ---: |
+| A0 | 0.4583 | 0.6111 |
+| A1 | 0.7500 | 1.0000 |
+| A2 | 0.7500 | 1.0000 |
+
+The full test suite completed **20 tests successfully** using the actual
+VillageLink prototype codec. A1's improvement is expected under the deliberately
+seeded relevance labels; **it must not be generalized** to unseen memories.
+A2 has no retrieval gain over A1 in this harness. Its incremental utility
+is historical source-availability reporting. See the Actions run:
+https://github.com/Inky-Tech-Pty-Ltd/Cobble/actions/runs/38337374916
+
 ## Results that the tests establish
 
 - A0/A1/A2 use an equal candidate set and retrieval budget.
