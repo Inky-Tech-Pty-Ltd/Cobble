@@ -1,0 +1,271 @@
+{
+  "description": "24 synthetic traces in six seeded hypothesis groups; labels deliberately define experimental relevance, not verified semantic equivalence",
+  "traces": [
+    {
+      "id": "T01",
+      "text": "portable memory discussion 0 with source provenance example",
+      "source_uri": "file:///synthetic/T01.txt"
+    },
+    {
+      "id": "T02",
+      "text": "portable memory discussion 1 with agent accountability example",
+      "source_uri": "file:///synthetic/T02.txt"
+    },
+    {
+      "id": "T03",
+      "text": "portable memory discussion 2 with identity continuity example",
+      "source_uri": "file:///synthetic/T03.txt"
+    },
+    {
+      "id": "T04",
+      "text": "portable memory discussion 3 with portable memory example",
+      "source_uri": "file:///synthetic/T04.txt"
+    },
+    {
+      "id": "T05",
+      "text": "source provenance discussion 0 with agent accountability example",
+      "source_uri": "file:///synthetic/T05.txt"
+    },
+    {
+      "id": "T06",
+      "text": "source provenance discussion 1 with identity continuity example",
+      "source_uri": "file:///synthetic/T06.txt"
+    },
+    {
+      "id": "T07",
+      "text": "source provenance discussion 2 with privacy boundaries example",
+      "source_uri": "file:///synthetic/T07.txt"
+    },
+    {
+      "id": "T08",
+      "text": "source provenance discussion 3 with source provenance example",
+      "source_uri": "file:///synthetic/T08.txt"
+    },
+    {
+      "id": "T09",
+      "text": "agent accountability discussion 0 with identity continuity example",
+      "source_uri": "file:///synthetic/T09.txt"
+    },
+    {
+      "id": "T10",
+      "text": "agent accountability discussion 1 with privacy boundaries example",
+      "source_uri": "file:///synthetic/T10.txt"
+    },
+    {
+      "id": "T11",
+      "text": "agent accountability discussion 2 with revision history example",
+      "source_uri": "file:///synthetic/T11.txt"
+    },
+    {
+      "id": "T12",
+      "text": "agent accountability discussion 3 with agent accountability example",
+      "source_uri": "file:///synthetic/T12.txt"
+    },
+    {
+      "id": "T13",
+      "text": "identity continuity discussion 0 with privacy boundaries example",
+      "source_uri": "file:///synthetic/T13.txt"
+    },
+    {
+      "id": "T14",
+      "text": "identity continuity discussion 1 with revision history example",
+      "source_uri": "file:///synthetic/T14.txt"
+    },
+    {
+      "id": "T15",
+      "text": "identity continuity discussion 2 with portable memory example",
+      "source_uri": "file:///synthetic/T15.txt"
+    },
+    {
+      "id": "T16",
+      "text": "identity continuity discussion 3 with identity continuity example",
+      "source_uri": "file:///synthetic/T16.txt"
+    },
+    {
+      "id": "T17",
+      "text": "privacy boundaries discussion 0 with revision history example",
+      "source_uri": "file:///synthetic/T17.txt"
+    },
+    {
+      "id": "T18",
+      "text": "privacy boundaries discussion 1 with portable memory example",
+      "source_uri": "file:///synthetic/T18.txt"
+    },
+    {
+      "id": "T19",
+      "text": "privacy boundaries discussion 2 with source provenance example",
+      "source_uri": "file:///synthetic/T19.txt"
+    },
+    {
+      "id": "T20",
+      "text": "privacy boundaries discussion 3 with privacy boundaries example",
+      "source_uri": "file:///synthetic/T20.txt"
+    },
+    {
+      "id": "T21",
+      "text": "revision history discussion 0 with portable memory example",
+      "source_uri": "file:///synthetic/T21.txt"
+    },
+    {
+      "id": "T22",
+      "text": "revision history discussion 1 with source provenance example",
+      "source_uri": "file:///synthetic/T22.txt"
+    },
+    {
+      "id": "T23",
+      "text": "revision history discussion 2 with agent accountability example",
+      "source_uri": "file:///synthetic/T23.txt"
+    },
+    {
+      "id": "T24",
+      "text": "revision history discussion 3 with revision history example",
+      "source_uri": "file:///synthetic/T24.txt"
+    }
+  ],
+  "stars": [
+    {
+      "centre": "H1",
+      "members": [
+        "T01",
+        "T02",
+        "T03",
+        "T04"
+      ]
+    },
+    {
+      "centre": "H2",
+      "members": [
+        "T05",
+        "T06",
+        "T07",
+        "T08"
+      ]
+    },
+    {
+      "centre": "H3",
+      "members": [
+        "T09",
+        "T10",
+        "T11",
+        "T12"
+      ]
+    },
+    {
+      "centre": "H4",
+      "members": [
+        "T13",
+        "T14",
+        "T15",
+        "T16"
+      ]
+    },
+    {
+      "centre": "H5",
+      "members": [
+        "T17",
+        "T18",
+        "T19",
+        "T20"
+      ]
+    },
+    {
+      "centre": "H6",
+      "members": [
+        "T21",
+        "T22",
+        "T23",
+        "T24"
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "id": "Q1",
+      "anchor": "T01",
+      "text": "portable memory discussion",
+      "relevant": [
+        "T02",
+        "T03",
+        "T04"
+      ]
+    },
+    {
+      "id": "Q2",
+      "anchor": "T05",
+      "text": "source provenance discussion",
+      "relevant": [
+        "T06",
+        "T07",
+        "T08"
+      ]
+    },
+    {
+      "id": "Q3",
+      "anchor": "T09",
+      "text": "agent accountability discussion",
+      "relevant": [
+        "T10",
+        "T11",
+        "T12"
+      ]
+    },
+    {
+      "id": "Q4",
+      "anchor": "T13",
+      "text": "identity continuity discussion",
+      "relevant": [
+        "T14",
+        "T15",
+        "T16"
+      ]
+    },
+    {
+      "id": "Q5",
+      "anchor": "T17",
+      "text": "privacy boundaries discussion",
+      "relevant": [
+        "T18",
+        "T19",
+        "T20"
+      ]
+    },
+    {
+      "id": "Q6",
+      "anchor": "T21",
+      "text": "revision history discussion",
+      "relevant": [
+        "T22",
+        "T23",
+        "T24"
+      ]
+    }
+  ],
+  "observations": {
+    "T01": [
+      {
+        "at": "2026-10-11T00:00:00Z",
+        "status": "available"
+      },
+      {
+        "at": "2026-10-12T00:00:00Z",
+        "status": "unavailable"
+      }
+    ],
+    "T05": [
+      {
+        "at": "2026-10-11T00:00:00Z",
+        "status": "available"
+      },
+      {
+        "at": "2026-10-12T00:00:00Z",
+        "status": "moved"
+      }
+    ],
+    "T09": [
+      {
+        "at": "2026-10-12T00:00:00Z",
+        "status": "restricted"
+      }
+    ]
+  }
+}
