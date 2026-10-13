@@ -30,3 +30,6 @@ jobs:
       - name: Run standard-library unit suite
         working-directory: Cobble
         run: PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -v
+      - name: Run synthetic A0 A1 A2 evaluation
+        working-directory: Cobble
+        run: PYTHONPATH=src:../VillageLink/prototype python scripts/evaluate_memory_graph.py
