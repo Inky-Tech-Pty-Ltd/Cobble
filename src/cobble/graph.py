@@ -60,12 +60,16 @@ def simple_baseline(store: Path, centre_uri: str) -> dict:
     This is an illustrative structural baseline, not evidence of improved
     semantic retrieval accuracy or model-independent continuity.
     """
-    result = inspect_hypothesis(store, centre_uri)
-    folder = Path(store).expanduser().resolve() / "traces"
+    ident = trace_id(centre_uri)
+    store = Path(store).expanduser().resolve()
+    centre = json.loads((store / "traces" / (ident + ".json")).read_text(encoding="utf-8"))
+    if centre.get("uri") != centre_uri or centre.get("kind") != "hypothesis":
+        raise ValueError("Invalid hypothesis centre")
+    folder = store / "traces"
     inventory = []
     for path in folder.glob("*.json"):
         record = json.loads(path.read_text(encoding="utf-8"))
         if record.get("kind") != "hypothesis":
             inventory.append(record["uri"])
-    return {"query": result["hypothesis"], "candidate_count": len(inventory),
+    return {"query": centre.get("selector", {}).get("exact"), "candidate_count": len(inventory),
             "candidates": sorted(inventory), "relationships_available": False}
