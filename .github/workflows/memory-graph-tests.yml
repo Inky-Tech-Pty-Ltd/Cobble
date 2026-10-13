@@ -1,0 +1,32 @@
+name: Cobble experimental memory graph tests
+on:
+  push:
+    branches:
+      - experiment/evidence-aware-memory-graph
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - ".github/workflows/memory-graph-tests.yml"
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out Cobble
+        uses: actions/checkout@v4
+        with:
+          path: Cobble
+      - name: Check out VillageLink prototype
+        uses: actions/checkout@v4
+        with:
+          repository: Inky-Tech-Pty-Ltd/VillageLink
+          path: VillageLink
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run standard-library unit suite
+        working-directory: Cobble
+        run: PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -v
