@@ -57,3 +57,43 @@ Maintainers may accept this ADR only after reviewing the experiment, failure
 modes, a fair independent relevance benchmark, retention/privacy boundaries
 and whether A1 plus ordinary logs is sufficient. Merge of this experimental
 implementation does not itself imply ADR acceptance.
+
+## Evidence update: independent benchmark, observation contract, and ablation
+
+Subsequent experiments strengthen and narrow this ADR.
+
+The independent adversarial benchmark stores relevance annotations separately
+from graph membership. Under four synthetic queries A1 improved aggregate
+precision/recall over A0, while also promoting two deliberately mislinked
+irrelevant traces. Graph construction quality is therefore both a utility and
+a harm-control concern.
+
+Observation schema `0.1` now makes retrieval state, observation time,
+retrieval time, source-event time, and integrity status distinct. Records are
+machine-validated as non-authoritative and truth-unassessed.
+
+A representation ablation then held memberships constant while comparing the
+current Star Credential, a simple collection, and centre-preserving pairwise
+relationships. All three produced identical Cobble retrieval rankings.
+
+### Revised proposed decision
+
+The evidence supports a **group-membership capability**, but does not yet show
+that Cobble requires the specific Star Credential syntax to obtain its current
+retrieval behavior.
+
+Therefore:
+
+- retain Star Credential support for compatibility with the existing project
+  direction and VillageLink experiment;
+- do not make Star Credential syntax a Cobble architectural requirement solely
+  on the basis of retrieval performance;
+- preserve a stable hypothesis/group identity in any alternative representation;
+- require a separate VillageLink-level analysis of publication, provenance,
+  validation and interchange semantics before replacing or generalizing the
+  Star Credential;
+- keep ADR status **Proposed**, not Accepted.
+
+The next decision is no longer whether graph grouping has any utility. It is
+whether the Star Credential carries additional semantics that justify its
+specific representation beyond recoverable co-membership.
