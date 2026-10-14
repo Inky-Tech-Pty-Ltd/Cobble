@@ -36,3 +36,6 @@ jobs:
       - name: Run independent adversarial retrieval benchmark
         working-directory: Cobble
         run: python scripts/evaluate_independent_benchmark.py
+      - name: Run Star Credential representation ablation
+        working-directory: Cobble
+        run: PYTHONPATH=src:../VillageLink/prototype python scripts/evaluate_star_ablation.py
