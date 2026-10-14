@@ -38,6 +38,9 @@ def validate_observation(record: dict) -> dict:
     integrity=record.get("integrity",{})
     if integrity.get("status") not in INTEGRITY_STATUSES:
         raise ValueError("Invalid integrity status")
+    semantics=record.get("semantics",{})
+    if semantics.get("authoritative") is not False or semantics.get("truth_assessed") is not False:
+        raise ValueError("Observation semantics must remain non-authoritative and truth-unassessed")
     if retrieval["status"] == "not_checked" and retrieved_at is not None:
         raise ValueError("not_checked retrieval must not claim retrieved_at")
     if retrieval["status"] in {"available","unavailable","restricted","moved"} and retrieved_at is None:
