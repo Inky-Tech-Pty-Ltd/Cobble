@@ -61,6 +61,10 @@ Cobble is internal.
 
 It's about you and your bot coming together quietly to create something beautiful.
 
+## Project status
+
+See [progress](docs/progress.md) for demonstrated experiments, limitations and next steps; the [specification](specification.md) describes the evolving ambition.
+
 ## Opportunity
 
 So far, the Village Link project has proposed some interesting candidate solutions to large public-good problems. Unfortunately there is not much market for innovation in public goods.
