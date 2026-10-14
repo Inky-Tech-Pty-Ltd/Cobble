@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cobble.link/schema/source-observation-0.1.json",
+  "title": "Cobble Experimental Source Observation",
+  "type": "object",
+  "required": ["schema_version","id","trace_uri","observed_at","retrieved_at","source_event_at","retrieval","integrity","semantics"],
+  "properties": {
+    "schema_version": {"const":"0.1"},
+    "id": {"type":"string","format":"uuid"},
+    "trace_uri": {"type":"string","pattern":"^https://cobble\\.link/t/[0-9a-f-]{36}$"},
+    "observed_at": {"type":"string","format":"date-time"},
+    "retrieved_at": {"type":["string","null"],"format":"date-time"},
+    "source_event_at": {"type":["string","null"],"format":"date-time"},
+    "retrieval": {
+      "type":"object","required":["status","method"],"additionalProperties":false,
+      "properties":{
+        "status":{"enum":["available","unavailable","restricted","moved","not_checked","unknown"]},
+        "method":{"enum":["local-file","manual","other"]}
+      }
+    },
+    "integrity":{
+      "type":"object","required":["status"],"additionalProperties":false,
+      "properties":{"status":{"enum":["not_checked","matches_recorded_digest","differs_from_recorded_digest","unknown"]}}
+    },
+    "semantics":{
+      "type":"object","required":["authoritative","truth_assessed"],"additionalProperties":false,
+      "properties":{"authoritative":{"const":false},"truth_assessed":{"const":false}}
+    }
+  },
+  "additionalProperties": false
+}
