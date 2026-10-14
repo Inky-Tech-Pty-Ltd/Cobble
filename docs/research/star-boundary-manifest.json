@@ -1,0 +1,163 @@
+{
+  "schema_version": "1.0",
+  "review": "villagelink-cobble-star-boundary",
+  "normative_effect": "none",
+  "source_authority": {
+    "VillageLink": [
+      "Village Link primitive",
+      "Star Credential abstract semantics",
+      "future normative Star serialization/conformance"
+    ],
+    "Cobble": [
+      "memory hypothesis lifecycle",
+      "local persistence",
+      "source observation contract",
+      "retrieval/ranking",
+      "graph-construction experiments"
+    ]
+  },
+  "relationships": [
+    {
+      "from": "Cobble",
+      "to": "VillageLink",
+      "type": "implements",
+      "does_not_imply": [
+        "Cobble controls VillageLink semantics",
+        "VillageLink requires Cobble storage architecture"
+      ]
+    },
+    {
+      "from": "Cobble",
+      "to": "VillageLink",
+      "type": "informative-alignment",
+      "does_not_imply": [
+        "normative adoption",
+        "semantic transitivity"
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "id": "same_entity_assertion",
+      "owner": "VillageLink",
+      "status": "normative",
+      "cobble_use": "compatibility",
+      "evidence": [
+        "VillageLink specification §4.1"
+      ]
+    },
+    {
+      "id": "distinguished_centre",
+      "owner": "VillageLink",
+      "status": "normative",
+      "cobble_use": "hypothesis_identity",
+      "evidence": [
+        "VillageLink specification §11.2",
+        "ADR-004"
+      ]
+    },
+    {
+      "id": "unordered_membership",
+      "owner": "VillageLink",
+      "status": "normative",
+      "cobble_use": "group_membership",
+      "evidence": [
+        "VillageLink specification §11.3",
+        "ADR-004"
+      ]
+    },
+    {
+      "id": "duplicate_member_rejection",
+      "owner": "VillageLink",
+      "status": "normative",
+      "cobble_use": "compatible_invariant",
+      "evidence": [
+        "ADR-004",
+        "Cobble star tests"
+      ]
+    },
+    {
+      "id": "star_expansion",
+      "owner": "VillageLink",
+      "status": "normative",
+      "cobble_use": "constituent_links",
+      "evidence": [
+        "VillageLink specification §11.2",
+        "ADR-004"
+      ]
+    },
+    {
+      "id": "star_json_serialization",
+      "owner": "unresolved",
+      "status": "open",
+      "cobble_use": "implementation_local",
+      "evidence": [
+        "VillageLink specification §11.5",
+        "ADR-004 open questions"
+      ]
+    },
+    {
+      "id": "hypothesis_lifecycle",
+      "owner": "Cobble",
+      "status": "experimental",
+      "cobble_use": "required",
+      "evidence": [
+        "Cobble memory graph experiment"
+      ]
+    },
+    {
+      "id": "source_observation_history",
+      "owner": "Cobble",
+      "status": "experimental",
+      "cobble_use": "required",
+      "evidence": [
+        "source-observation contract 0.1"
+      ]
+    },
+    {
+      "id": "retrieval_ranking",
+      "owner": "Cobble",
+      "status": "experimental",
+      "cobble_use": "required",
+      "evidence": [
+        "independent adversarial benchmark"
+      ]
+    },
+    {
+      "id": "local_persistence",
+      "owner": "Cobble",
+      "status": "experimental-high-risk",
+      "cobble_use": "required",
+      "evidence": [
+        "Cobble README",
+        "VillageLink ADR-007 boundary"
+      ]
+    },
+    {
+      "id": "truth_or_authoritative_identity",
+      "owner": "neither",
+      "status": "not_asserted",
+      "cobble_use": "prohibited_claim",
+      "evidence": [
+        "VillageLink specification §4.4",
+        "Cobble observation contract 0.1"
+      ]
+    },
+    {
+      "id": "universal_confidence_reputation",
+      "owner": "neither",
+      "status": "deferred",
+      "cobble_use": "not_required",
+      "evidence": [
+        "VillageLink specification scope",
+        "Cobble ADR-001"
+      ]
+    }
+  ],
+  "gates": {
+    "villageLink_normative_change": false,
+    "cobble_star_syntax_required": false,
+    "stable_group_identity_required": true,
+    "real_personal_memory_ready": false
+  }
+}
