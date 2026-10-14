@@ -33,3 +33,6 @@ jobs:
       - name: Run synthetic A0 A1 A2 evaluation
         working-directory: Cobble
         run: PYTHONPATH=src:../VillageLink/prototype python scripts/evaluate_memory_graph.py
+      - name: Run independent adversarial retrieval benchmark
+        working-directory: Cobble
+        run: python scripts/evaluate_independent_benchmark.py
