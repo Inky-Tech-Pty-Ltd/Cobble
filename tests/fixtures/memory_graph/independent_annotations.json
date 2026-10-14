@@ -1,0 +1,23 @@
+{
+  "description": "Reference relevance judgments maintained independently of graph membership.",
+  "relevance": {
+    "IQ1": [
+      "B02",
+      "B03"
+    ],
+    "IQ2": [
+      "B08",
+      "B09",
+      "B11",
+      "B12"
+    ],
+    "IQ3": [
+      "B14",
+      "B15"
+    ],
+    "IQ4": [
+      "B06",
+      "B17"
+    ]
+  }
+}

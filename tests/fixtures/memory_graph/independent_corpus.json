@@ -1,0 +1,155 @@
+{
+  "description": "Independent relevance annotations are stored separately from imperfect graph memberships. The graph contains deliberate false-positive and incomplete relationships.",
+  "traces": [
+    {
+      "id": "B01",
+      "text": "A portable AI work partner should recover its project memory after switching model providers.",
+      "source_uri": "file:///benchmark/B01.txt"
+    },
+    {
+      "id": "B02",
+      "text": "Provider migration should preserve access to prior project decisions and linked evidence.",
+      "source_uri": "file:///benchmark/B02.txt"
+    },
+    {
+      "id": "B03",
+      "text": "A fresh model session can reconstruct project context from persisted memory relationships.",
+      "source_uri": "file:///benchmark/B03.txt"
+    },
+    {
+      "id": "B04",
+      "text": "Portable storage devices make local backups easier to carry between computers.",
+      "source_uri": "file:///benchmark/B04.txt"
+    },
+    {
+      "id": "B05",
+      "text": "Memory foam mattresses use viscoelastic material for pressure relief.",
+      "source_uri": "file:///benchmark/B05.txt"
+    },
+    {
+      "id": "B06",
+      "text": "Model replacement should not imply continuity of authorization or legal responsibility.",
+      "source_uri": "file:///benchmark/B06.txt"
+    },
+    {
+      "id": "B07",
+      "text": "Source provenance records where a memory trace was observed and when it was retrieved.",
+      "source_uri": "file:///benchmark/B07.txt"
+    },
+    {
+      "id": "B08",
+      "text": "An unavailable source may still have a historical observation showing earlier retrieval.",
+      "source_uri": "file:///benchmark/B08.txt"
+    },
+    {
+      "id": "B09",
+      "text": "A source can move without making the underlying claim true or false.",
+      "source_uri": "file:///benchmark/B09.txt"
+    },
+    {
+      "id": "B10",
+      "text": "Popular sources receive more citations and therefore may rank highly in search.",
+      "source_uri": "file:///benchmark/B10.txt"
+    },
+    {
+      "id": "B11",
+      "text": "Revision history shows that a page changed after an earlier observation was recorded.",
+      "source_uri": "file:///benchmark/B11.txt"
+    },
+    {
+      "id": "B12",
+      "text": "A checksum mismatch can indicate that retrieved content differs from an earlier version.",
+      "source_uri": "file:///benchmark/B12.txt"
+    },
+    {
+      "id": "B13",
+      "text": "Agent accountability requires attributable actions, review, and decision authority.",
+      "source_uri": "file:///benchmark/B13.txt"
+    },
+    {
+      "id": "B14",
+      "text": "A GitHub contribution trail can distinguish requester, executor, reviewer, and committer.",
+      "source_uri": "file:///benchmark/B14.txt"
+    },
+    {
+      "id": "B15",
+      "text": "A model may be capable of an action without being authorized to perform it.",
+      "source_uri": "file:///benchmark/B15.txt"
+    },
+    {
+      "id": "B16",
+      "text": "Identity continuity asks whether two occurrences are the same continuing entity.",
+      "source_uri": "file:///benchmark/B16.txt"
+    },
+    {
+      "id": "B17",
+      "text": "A software model version can change while an application keeps the same product name.",
+      "source_uri": "file:///benchmark/B17.txt"
+    },
+    {
+      "id": "B18",
+      "text": "A pseudonymous account can deliberately avoid correlation with a civil identity.",
+      "source_uri": "file:///benchmark/B18.txt"
+    }
+  ],
+  "stars": [
+    {
+      "centre": "S1",
+      "members": [
+        "B01",
+        "B02",
+        "B03",
+        "B04"
+      ],
+      "note": "B04 is a deliberate false positive"
+    },
+    {
+      "centre": "S2",
+      "members": [
+        "B07",
+        "B08",
+        "B09",
+        "B10"
+      ],
+      "note": "B10 is a deliberate false positive; B11/B12 relevant evidence is absent"
+    },
+    {
+      "centre": "S3",
+      "members": [
+        "B13",
+        "B14",
+        "B15"
+      ]
+    },
+    {
+      "centre": "S4",
+      "members": [
+        "B16",
+        "B17"
+      ],
+      "note": "B06 is relevant but absent from the star"
+    }
+  ],
+  "queries": [
+    {
+      "id": "IQ1",
+      "anchor": "B01",
+      "text": "portable project memory across AI provider or model changes"
+    },
+    {
+      "id": "IQ2",
+      "anchor": "B07",
+      "text": "historical source provenance availability and change"
+    },
+    {
+      "id": "IQ3",
+      "anchor": "B13",
+      "text": "agent accountability attribution authorization contribution trail"
+    },
+    {
+      "id": "IQ4",
+      "anchor": "B16",
+      "text": "continuing identity across model replacement without assuming authorization continuity"
+    }
+  ]
+}
