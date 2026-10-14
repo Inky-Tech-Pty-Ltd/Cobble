@@ -36,6 +36,9 @@ The tools are:
 - `inspect_star(centre_uri)` — locally verified centre and Village Link rays.
 - `search_memory(query, limit=10)` — text search over trace selectors and
   their locally retained excerpts.
+- `read_github_discussion(repository, number, offset=0, max_chars=12000)` —
+  read paginated text from a **previously archived** GitHub Discussion,
+  including comments and replies, with original author and source URL.
 
 The store defaults to `~/cobble-data` and may be overridden by
 `COBBLE_DATA_DIR`. The tools do not write to the store, make network
@@ -116,3 +119,32 @@ ChatGPT's service**; the tunnel is not an end-to-end private computation
 boundary.
 
 For milestones and outstanding work, see [progress](progress.md).
+
+
+## Next integration exercise: a live GitHub Discussion
+
+GitHub Discussion #8 in the Cobble repository is a real-world test input.
+This exercise deliberately uses **preserved local memory**, not a GitHub
+call made by the MCP server. On McKay, after updating the Cobble checkout:
+
+```bash
+PYTHONPATH=src python scripts/import_github_conversations.py Inky-Tech-Pty-Ltd/Cobble
+PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -v
+```
+
+The first command contacts GitHub from an **ingestion tool** and writes
+versioned records under the local memory store. The second command includes
+offline tests of the reader's pagination, original provenance, path
+validation and archive digest. The runtime tunnel must then be restarted
+to load the new MCP tool definition.
+
+From ChatGPT, call `read_github_discussion` with repository
+`Inky-Tech-Pty-Ltd/Cobble` and number `8`. If the response has a non-null
+`next_offset`, call again with that offset until the entire snapshot has
+been retrieved. The read operation makes **no GitHub network request**.
+It does **not** mint a Village Link or assert two traces are equivalent.
+
+This experimental reader accesses a specific archived conversation by
+its repository and discussion number. It is not yet a full search index
+over all GitHub conversations, and the archive represents a snapshot
+that will only change when the importer is run again.
