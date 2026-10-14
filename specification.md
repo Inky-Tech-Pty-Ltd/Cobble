@@ -34,8 +34,11 @@ A useful way of organising the problem is:
 Keep three roles distinct: **the memory store** (held under the customer's
 control), **the Cobbler** (software maintaining and using it), and
 **intelligence services** (which may change providers or running instances).
-In the current prototype, ChatGPT does not directly read the store on McKay.
-A possible MCP interface is future work, not an implemented capability.
+The current prototype exposes three read-only operations through a Cobble MCP
+server on McKay. A ChatGPT plugin has successfully queried the local store
+through a workspace-scoped secure tunnel. This proves a path for memory
+access, not continuous assistant identity or autonomous memory maintenance.
+See [the MCP experiment](docs/mcp.md) for the boundary and limitations.
 
 ## Application
 

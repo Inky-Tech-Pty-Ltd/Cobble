@@ -98,6 +98,35 @@ subsequently succeeded against real GitHub APIs.
 
 These tests cover specific behaviours, not the entire intended system.
 
+### 8. Live ChatGPT-to-Cobble MCP access
+
+The first read-only MCP server exposes `search_memory`, `inspect_star` and
+`get_trace` over stdio. With the compatible MCP Python SDK (1.x), **27
+unit tests passed** on McKay, including six memory-access tests. An independent
+local MCP client discovered all three tools and successfully retrieved the
+original ChatGPT excerpt through `get_trace`.
+
+An OpenAI Secure MCP Tunnel called **Cobble memory** was created separately
+from the earlier **Anna connection test** tunnel. The tunnel client runs on
+McKay, launches Cobble's stdio MCP server and establishes an outbound
+connection. Its `doctor` checks passed and its local `/readyz` endpoint
+returned `ready`. The runtime key is kept outside Git and was stored in
+1Password; no credential is included here.
+
+A custom **Cobble** plugin was then registered and connected in ChatGPT. In
+a live conversation, ChatGPT successfully called Cobble's `search_memory`
+through the tunnel and received **four** matching traces for “Memory is the
+masterpiece.” It also called `inspect_star`, receiving the original centre
+and **three** verified Village Link rays.
+
+**Important limitation:** ChatGPT's direct `get_trace` call was blocked by a
+platform safety check in that trial. We have **not** demonstrated successful
+full-text retrieval through the ChatGPT plugin, although the same operation
+worked through the independent local MCP client. The search/inspection calls
+demonstrate the live connection, not unrestricted access or a persistent
+identity for the assistant. The tunnel is operational only while its runtime
+is running; its long-term supervision and access controls still need review.
+
 ## Not yet established
 
 - Automatic detection of recurring memes, or reliable judgements about
@@ -107,7 +136,8 @@ These tests cover specific behaviours, not the entire intended system.
 - Governance emerging from consequences across memory systems.
 - Autonomous maintenance, resource optimisation or forgetting by a Cobbler
   service.
-- An MCP connection giving a ChatGPT instance direct access to McKay's store.
+- Successful full-text `get_trace` access from ChatGPT itself, and reliable
+  long-running supervision and security review of the MCP tunnel.
 - Full historical ChatGPT ingestion or ongoing synchronisation.
 
 These are subjects for experiments rather than assumptions to encode in the
@@ -119,9 +149,9 @@ Village Link primitive.
    then build repeatable ingestion of complete conversations.
 2. **Broader GitHub history:** Import VillageLink conversations and consider
    the other Inky Tech repositories.
-3. **Memory access:** Expose a narrow, permissioned interface (potentially
-   MCP) for looking up traces, retrieving local copies and inspecting stars.
-   Establish what the connecting assistant can actually access.
+3. **Memory access:** Investigate why ChatGPT's direct `get_trace` call was
+   blocked, audit tunnel/workspace access, and establish supervised runtime
+   operation. Extend search scope only when there is evidence of need.
 4. **Cross-system links:** Test deliberate Village Links between the same
    meme represented in ChatGPT, Git files and GitHub conversations; do not
    infer equivalence from text similarity alone.
@@ -134,6 +164,7 @@ Village Link primitive.
 - [Local trace resilience](trace-resilience.md)
 - [Git ingestion](git-ingestion.md)
 - [GitHub conversation ingestion](github-conversations.md)
+- [MCP connection experiment](mcp.md)
 
 **Principle:** Preserve the distinction between *a published assertion* and
 *an established equivalence*, and between *preserving memory* and *creating
