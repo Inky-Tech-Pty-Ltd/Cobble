@@ -98,3 +98,56 @@ semantic truth, transaction safety or operational costs.
 **Decision gate:** Proposed ADR, not accepted. Maintainer review and a
 non-leaking external annotation benchmark are required before an evidence-
 based claim of retrieval superiority or promotion into reference architecture.
+
+## Observation contract and lifecycle hardening
+
+The observation layer now uses experimental schema version `0.1` with
+separate retrieval, time, integrity, and semantic dimensions.
+
+Key invariants are executable:
+
+- `not_checked` is distinct from `unavailable`;
+- retrieval attempt time can differ from observation-record time;
+- source event time is optional and is never inferred;
+- availability does not imply integrity;
+- observations remain explicitly non-authoritative and truth-unassessed;
+- tampering with those semantic boundaries fails validation.
+
+CI initially found that the Python validator did not enforce the schema's
+non-authoritative semantic invariant. The validator was corrected; the test was
+retained. The corrected suite passed in run #38505873518.
+
+## Star Credential representation ablation (CI run #38505938236)
+
+The same benchmark memberships were encoded three ways:
+
+1. current Star Credential membership;
+2. a simple hypothesis/group collection;
+3. centre-to-member pairwise relationships with the shared centre retained so
+   co-membership can be reconstructed.
+
+All three produced identical retrieval rankings for every independent benchmark
+query:
+
+- `collection_matches_star: true`
+- `pairwise_reconstructed_matches_star: true`
+
+The full suite completed **38 tests successfully**.
+
+This result is intentionally narrow. It demonstrates that Cobble's current
+ranking algorithm consumes **recoverable co-membership**, not the specific
+Star Credential syntax. It does not establish that collections or reconstructed
+pairwise relationships have equivalent VillageLink publication, provenance,
+validation, interchange, or governance semantics.
+
+### Updated architectural disposition
+
+- Stable trace identity: **retain**.
+- Hypothesis/group identity: **retain**, because pairwise reconstruction still
+  requires a common grouping identity.
+- Star Credential syntax: **retain experimentally, but no longer justify it
+  solely by Cobble retrieval utility**.
+- Observation contract 0.1: **retain experimentally**, with production
+  promotion blocked on authentication, retention, privacy, integrity, and
+  transactional guarantees.
+- Automated graph induction: **defer**.
