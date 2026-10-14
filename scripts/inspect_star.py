@@ -28,7 +28,7 @@ def main():
         if saved.get("uri") != ray or parse(ray) != (star["A"], member):
             raise ValueError(f"Ray {index} failed verification")
         print(f"Ray {index}: {member} [verified locally]")
-    print(f"Verified {len(star['B'])} rays; their truth remains unassessed.")
+    print(f"Verified {len(star['B'])} rays.")
 
 
 if __name__ == "__main__":
