@@ -97,3 +97,43 @@ Therefore:
 The next decision is no longer whether graph grouping has any utility. It is
 whether the Star Credential carries additional semantics that justify its
 specific representation beyond recoverable co-membership.
+
+## Cross-repository boundary review
+
+The dedicated boundary review on `research/star-boundary-review` classifies
+Star semantics by authority rather than implementation location.
+
+VillageLink remains authoritative for:
+
+- the same-entity assertion `A ↔ B`;
+- the distinguished Star centre;
+- unordered membership and duplicate exclusion;
+- expansion of a Star into constituent centre/member Village Links; and
+- any future normative Star serialization or conformance rules.
+
+Cobble remains authoritative only for its application-specific behavior:
+
+- hypothesis lifecycle;
+- local memory-graph persistence;
+- source observations and integrity state;
+- retrieval/ranking; and
+- graph-construction experiments.
+
+The review confirms that Cobble's retrieval evidence does not justify
+redefining Star Credential semantics, nor does it justify making the current
+Star JSON representation an application requirement. A stable hypothesis/group
+identity remains useful and is retained.
+
+VillageLink ADR-007 creates a deliberate risk boundary: Cobble persistence is a
+separate application decision and must not be treated as an extension of the
+stateless Composer. Real cross-context personal equivalence data remains outside
+the demonstrated safe scope of the experiment.
+
+### Boundary decision
+
+**Keep this ADR Proposed.** The current evidence supports continued
+Star-compatible experimentation in Cobble, but no normative VillageLink change.
+
+If the open publication, provenance, interchange, subsetting, or serialization
+questions are escalated, they should be reviewed in VillageLink under its own
+issue/branch and authority trail.
