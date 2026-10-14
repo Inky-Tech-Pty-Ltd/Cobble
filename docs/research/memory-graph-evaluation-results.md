@@ -41,6 +41,44 @@ Reproduce the exact precision and recall numbers using
 used as relevance labels, **these numbers are internal sanity checks only**,
 not evidence of an externally validated retrieval improvement.
 
+
+## Independent adversarial benchmark (CI run #38505600739)
+
+A second benchmark separates relevance annotations from graph membership and
+introduces deliberately wrong and incomplete graph relationships.
+
+| Architecture | Mean precision@4 | Mean recall@4 | Linked irrelevant retrieved |
+| --- | ---: | ---: | ---: |
+| A0 flat | 0.3750 | 0.6250 | 0 |
+| A1 linked | 0.5000 | 0.8750 | 2 |
+
+This is a materially stronger result than the original seeded sanity check,
+but it remains bounded. A1 improves aggregate retrieval under these four
+independently annotated synthetic queries, while also promoting two deliberately
+mislinked irrelevant traces. The graph therefore demonstrates both **utility**
+and **harm sensitivity**. It is not an unqualified retrieval improvement.
+
+Per-query behavior is mixed: graph assistance has no recall gain on some cases
+and improves recall on others. Relevant traces intentionally omitted from graph
+membership remain dependent on lexical retrieval. This supports continued
+experimentation with graph-assisted retrieval while making graph-construction
+quality a first-class assurance problem.
+
+CI executed the complete suite plus both evaluation harnesses successfully:
+https://github.com/Inky-Tech-Pty-Ltd/Cobble/actions/runs/38505600739
+
+### Consequence for the architecture decision
+
+The previous label-leakage blocker is partially addressed: relevance labels are
+now stored independently from graph membership and the graph contains known
+errors. However, memberships are still hand-seeded. The benchmark therefore
+does **not** establish that Cobble can infer useful relationships reliably from
+real memories.
+
+The next gate is observation/lifecycle semantics, followed by a focused Star
+Credential ablation review. Automated graph induction should remain deferred
+until those semantics and failure modes are explicit.
+
 ## Interpretation
 
 The graph and observation layer provide different capabilities: group-aware
