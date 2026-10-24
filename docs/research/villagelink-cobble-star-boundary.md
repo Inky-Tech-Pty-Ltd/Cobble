@@ -11,7 +11,7 @@ only consumed by Cobble, and which application-specific semantics must remain
 owned by Cobble rather than leaking back into the VillageLink primitive?
 
 The review is based on the current VillageLink specification, requirements,
-ADR-004 (Star Credential centred unordered set), ADR-007 (stateless Composer
+[ADR-004](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/docs/adr/004-star-credential-data-model.md) (Star Credential centred unordered set), [ADR-007](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/docs/adr/007-stateless-composer.md) (stateless Composer
 and no persistent credential manager), and the evidence produced by Cobble's
 memory-graph experiments.
 
