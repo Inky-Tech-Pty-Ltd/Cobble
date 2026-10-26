@@ -28,4 +28,4 @@ jobs:
         with:
           python-version: '3.11'
       - name: Verify round-trip and negative cases
-        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_portability.py' -v
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
