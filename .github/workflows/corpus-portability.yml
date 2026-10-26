@@ -1,0 +1,31 @@
+name: Corpus portability tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/cobble/portability.py'
+      - 'scripts/portable_github_corpus.py'
+      - 'tests/test_portability.py'
+      - 'docs/corpus-portability-experiment.md'
+      - '.github/workflows/corpus-portability.yml'
+  push:
+    paths:
+      - 'src/cobble/portability.py'
+      - 'scripts/portable_github_corpus.py'
+      - 'tests/test_portability.py'
+      - '.github/workflows/corpus-portability.yml'
+
+jobs:
+  portability:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify round-trip and negative cases
+        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_portability.py' -v
