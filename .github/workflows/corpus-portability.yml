@@ -8,6 +8,7 @@ on:
       - 'tests/test_portability.py'
       - 'docs/corpus-portability-experiment.md'
       - '.github/workflows/corpus-portability.yml'
+      - 'scripts/verify_public_corpus_roundtrip.py'
   push:
     paths:
       - 'src/cobble/portability.py'
@@ -35,3 +36,21 @@ jobs:
           persist-credentials: false
       - name: Verify Cobble unittest suite
         run: PYTHONPATH=src:vendor/VillageLink/prototype python -m unittest discover -s tests -v
+
+  live-public-corpus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      discussions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Authenticate, ingest, restore and compare public archive bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: PYTHONPATH=src python scripts/verify_public_corpus_roundtrip.py
