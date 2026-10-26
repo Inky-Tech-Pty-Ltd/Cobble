@@ -75,6 +75,34 @@ class PortabilityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             restore_corpus(self.package, self.dst)
 
+
+    def test_rejects_invalid_latest_pointer(self):
+        import base64
+        import hashlib
+        def mutate(package):
+            pointer = next(e for e in package["entries"] if e["path"].endswith("latest.json"))
+            content = b'{"sha256": "0", "version": "versions/other.json"}'
+            pointer["data_base64"] = base64.b64encode(content).decode("ascii")
+            pointer["sha256"] = hashlib.sha256(content).hexdigest()
+        self.assert_rejects(mutate)
+
+    def test_rejects_symlink_in_source(self):
+        self.export()
+        root = self.src / "github/conversations" / self.repo
+        (root / "linked.json").symlink_to(self.package)
+        with self.assertRaises(ValueError):
+            self.export()
+
+    def test_rejects_symlink_in_destination(self):
+        self.export()
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.dst / "github"
+            root.mkdir(parents=True)
+            (root / "conversations").symlink_to(temp, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                restore_corpus(self.package, self.dst)
+
     def test_rejects_uningested_repo(self):
         with self.assertRaises(ValueError):
             export_corpus(self.src, self.package, ["Unknown/Repo"])
