@@ -78,6 +78,15 @@ def _root(store):
     return Path(store).expanduser().resolve() / "github" / "conversations"
 
 
+def _reject_symlink_components(path, store):
+    """Reject archive symlinks at any depth below the canonical store root."""
+    current = Path(store).expanduser().resolve()
+    for part in path.relative_to(current).parts:
+        current /= part
+        if current.is_symlink():
+            raise ValueError("Symlinks not supported")
+
+
 def export_corpus(store, output, repositories):
     """Export explicitly selected archives without interpreting their contents."""
     if not repositories:
@@ -89,11 +98,11 @@ def export_corpus(store, output, repositories):
         if len(parts) != 2 or any(not PART.fullmatch(p) or p in (".", "..") for p in parts):
             raise ValueError("Invalid repository selector")
         repo_root = root.joinpath(*parts)
-        if not repo_root.is_dir() or repo_root.is_symlink():
+        _reject_symlink_components(repo_root, store)
+        if not repo_root.is_dir():
             raise ValueError("Repository not ingested: " + slug)
         for path in sorted(repo_root.rglob("*")):
-            if path.is_symlink():
-                raise ValueError("Symlinks not supported")
+            _reject_symlink_components(path, store)
             if path.is_file():
                 files[path.relative_to(root).as_posix()] = path.read_bytes()
     count = _verify(files)
@@ -137,8 +146,7 @@ def restore_corpus(source, store):
     root = _root(store)
     for path, data in files.items():
         dest = root.joinpath(*path.split("/"))
-        if dest.is_symlink() or any(p.is_symlink() for p in dest.parents if p != root.parent):
-            raise ValueError("Symbolic link destination")
+        _reject_symlink_components(dest, store)
         if dest.exists() and (not dest.is_file() or dest.read_bytes() != data):
             raise ValueError("Conflicting destination")
     for path, data in sorted(files.items()):
