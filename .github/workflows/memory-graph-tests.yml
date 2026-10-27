@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - experiment/evidence-aware-memory-graph
+      - research/star-boundary-review
   pull_request:
     paths:
       - "src/**"
