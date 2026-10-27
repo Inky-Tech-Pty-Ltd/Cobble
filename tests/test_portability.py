@@ -103,6 +103,32 @@ class PortabilityTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 restore_corpus(self.package, self.dst)
 
+    def test_rejects_symlink_in_export_github_parent(self):
+        github = self.src / "github"
+        moved = self.root / "external-github"
+        github.rename(moved)
+        github.symlink_to(moved, target_is_directory=True)
+        with self.assertRaises(ValueError):
+            self.export()
+
+    def test_rejects_symlink_in_export_owner_parent(self):
+        owner = self.src / "github/conversations/Inky-Tech-Pty-Ltd"
+        moved = self.root / "external-owner"
+        owner.rename(moved)
+        owner.symlink_to(moved, target_is_directory=True)
+        with self.assertRaises(ValueError):
+            self.export()
+
+    def test_rejects_symlink_in_restore_github_parent(self):
+        self.export()
+        external = self.root / "external-output"
+        external.mkdir()
+        self.dst.mkdir()
+        (self.dst / "github").symlink_to(external, target_is_directory=True)
+        with self.assertRaises(ValueError):
+            restore_corpus(self.package, self.dst)
+        self.assertEqual(list(external.iterdir()), [])
+
     def test_rejects_uningested_repo(self):
         with self.assertRaises(ValueError):
             export_corpus(self.src, self.package, ["Unknown/Repo"])
