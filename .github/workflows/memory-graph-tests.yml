@@ -1,7 +1,10 @@
-name: Cobble experimental memory graph tests
+# CI checks the current experiment. They are not Cobble architecture conformance tests.
+name: Cobble memory graph regression and research
 on:
+  workflow_dispatch:
   push:
     branches:
+      - main
       - experiment/evidence-aware-memory-graph
       - research/star-boundary-review
   pull_request:
@@ -9,9 +12,11 @@ on:
       - "src/**"
       - "tests/**"
       - "scripts/**"
+      - "docs/research/**"
+      - "docs/adr/001-evidence-aware-memory-graph.md"
       - ".github/workflows/memory-graph-tests.yml"
 jobs:
-  unit:
+  experiment:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,15 +33,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Run standard-library unit suite
+      # Blocking regressions describe behavior of the *current* implementation,
+      # not mandatory features of future Cobble memory architectures.
+      - name: Current implementation regression safeguards
         working-directory: Cobble
-        run: PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -v
-      - name: Run synthetic A0 A1 A2 evaluation
+        run: |
+          for test in test_traces.py test_stars.py test_memory_graph.py test_observation_contract.py; do
+            PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -p "$test" -v
+          done
+      # Research remains executable and visible in CI, but a changed experimental
+      # result is evidence to inspect, not a reason to reject a future design.
+      - name: Research test suite (informational)
+        continue-on-error: true
+        working-directory: Cobble
+        run: |
+          for test in test_independent_benchmark.py test_memory_graph_evaluation.py test_star_ablation.py test_star_boundary_manifest.py; do
+            PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -p "$test" -v
+          done
+      - name: Synthetic A0/A1/A2 evaluation (informational)
+        continue-on-error: true
         working-directory: Cobble
         run: PYTHONPATH=src:../VillageLink/prototype python scripts/evaluate_memory_graph.py
-      - name: Run independent adversarial retrieval benchmark
+      - name: Independent adversarial retrieval benchmark (informational)
+        continue-on-error: true
         working-directory: Cobble
         run: python scripts/evaluate_independent_benchmark.py
-      - name: Run Star Credential representation ablation
+      - name: Star Credential representation ablation (informational)
+        continue-on-error: true
         working-directory: Cobble
         run: PYTHONPATH=src:../VillageLink/prototype python scripts/evaluate_star_ablation.py

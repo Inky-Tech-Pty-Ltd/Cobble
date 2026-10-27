@@ -169,3 +169,28 @@ itself justify a normative specification change.
 Any future VillageLink change should be made on a separate VillageLink branch
 and should identify the normative proposition, compatibility impact, evidence,
 and unresolved risks independently of Cobble's implementation history.
+
+## Merge and CI disposition (October 2026)
+
+The original review branch was stacked on `experiment/evidence-aware-memory-graph`.
+Its manifest checks and evaluation scripts accompanied the experimental
+implementation they exercise, preserving the dependency in the merged history.
+
+Integration distinguishes three kinds of material:
+
+1. **Regression safeguards** test behavior of the *current* implementation.
+   They can block an accidental break in that implementation, but do not set
+   permanent requirements for a different memory architecture.
+2. **Reproducible research** preserves fixtures, evaluation scripts and recorded
+   outcomes. CI runs these checks as informational experiments, not acceptance
+   criteria for alternative representations or new experimental results.
+3. **Provisional architectural decisions** remain proposals. In particular,
+   ADR-001 is not accepted merely because its supporting code, tests or
+   documentation merges into `main`.
+
+Issue #10 records subsequent corpus-first hypotheses, including memory-native
+addressing and alternative internal memory organisation. Those ideas neither
+invalidate these recorded experiments nor inherit normative obligations from
+them. Future implementations should be compared against the evidence and
+capabilities at issue, not forced to reproduce a particular graph shape or
+synthetic benchmark outcome.
