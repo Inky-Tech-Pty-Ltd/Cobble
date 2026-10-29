@@ -1,13 +1,19 @@
-"""Read-only MCP interface to the local Cobble memory store.
+"""Cobble memory MCP interface with scoped Arena diagnostic operations.
 
 Use stdio for private development. Do not publish an unauthenticated HTTP
-version of this service: memory contents may be sensitive.
+version of this service: memory contents may be sensitive. The fixed Arena
+test operation is disabled unless McKay's operator explicitly enables it.
 """
 import os
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 from cobble.github_memory_access import read_github_discussion as read_archived_discussion
+from cobble.remote_ops import (
+    arena_status as read_arena_status,
+    verify_arena as verify_arena_copy,
+    run_arena_tests as run_arena_selftest,
+)
 from cobble.memory_access import (
     get_trace as read_trace,
     inspect_star as read_star,
@@ -15,8 +21,8 @@ from cobble.memory_access import (
 )
 
 mcp = FastMCP("Cobble Memory", instructions=(
-    "Read-only local Cobble memory. Village Links are equivalence assertions, "
-    "not established facts. Search is restricted to Cobble traces and retained excerpts."
+    "Cobble memory and bounded Arena diagnostics. Village Links are "
+    "assertions, not established facts. Remote shell execution is unavailable."
 ))
 
 
@@ -51,6 +57,28 @@ def read_github_discussion(repository: str, number: int, offset: int = 0,
     requests GitHub live or changes memory. Import the discussion first.
     """
     return read_archived_discussion(store(), repository, number, offset, max_chars)
+
+
+@mcp.tool()
+def arena_status(name: str = "arena-a") -> dict:
+    """Read a named local Arena's budget and population counts (no source text)."""
+    return read_arena_status(name)
+
+
+@mcp.tool()
+def verify_arena(name: str = "arena-a") -> dict:
+    """Verify the copied Arena's SHA-256 file manifest without changing files."""
+    return verify_arena_copy(name)
+
+
+@mcp.tool()
+def run_arena_tests() -> dict:
+    """Run the fixed offline Arena tests; opt-in required on McKay.
+
+    Disabled unless COBBLE_MCP_ALLOW_ARENA_TESTS=1 is configured locally.
+    No commands, paths, shell arguments or environment variables accepted.
+    """
+    return run_arena_selftest()
 
 
 if __name__ == "__main__":

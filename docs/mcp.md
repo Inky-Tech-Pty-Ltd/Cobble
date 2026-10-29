@@ -148,3 +148,70 @@ This experimental reader accesses a specific archived conversation by
 its repository and discussion number. It is not yet a full search index
 over all GitHub conversations, and the archive represents a snapshot
 that will only change when the importer is run again.
+
+
+## Scoped Arena operations — experimental, 30 October 2026
+
+The existing memory tunnel can also expose three small operations for the
+derived Arena. They reuse the same outbound tunnel and require **no public
+SSH endpoint or incoming port**:
+
+- `arena_status(name="arena-a")`: read the Arena's population and five
+  resource budgets, without returning source text.
+- `verify_arena(name="arena-a")`: rehash **all files in the local Arena
+  copy**, compare against the copied manifest, and report aggregate byte/file
+  counts. It does not write to the source archive or the Arena.
+- `run_arena_tests()`: optionally execute the **one fixed, offline test
+  suite** `test_arena_one.py` in the Cobble checkout, with a 45-second
+  timeout and an explicit locally configured opt-in.
+
+These do **not** constitute an unrestricted server shell. The tools accept
+no arbitrary command strings, paths outside `~/cobble-arenas/`, environment
+variables or shell arguments. The fixed test process runs with a minimal
+environment that does not forward tunnel or GitHub tokens. The test suite is
+still executable Python code on McKay, so review repository changes before
+enabling it; it is not an OS sandbox.
+
+The sensitive source archive remains outside the control boundary for all
+three tools. The status and integrity tools can read the **derived** Arena,
+but they return no raw conversation or file contents. The existing memory
+read tools have their previous capabilities and limitations.
+
+### Operator enablement
+
+1. Publish reviewed tool code via the normal Puck-GPT express workflow.
+2. On McKay, update the Cobble checkout and run the new **offline tests**:
+
+   ```sh
+   cd ~/Cobble
+   git pull --ff-only
+   PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_remote_ops.py' -v
+   ```
+
+3. Restart the existing `cobble-memory` Secure MCP Tunnel so that its
+   subprocess loads the newly published tool definitions. In ChatGPT,
+   refresh the Cobble plugin tools; if necessary, start a new chat.
+4. For **status and integrity checks**, no additional environment flag
+   is necessary. Puck can call those two tools from a connected chat.
+5. **Only if the operator explicitly approves remote test execution**,
+   arrange for the MCP subprocess to inherit
+   `COBBLE_MCP_ALLOW_ARENA_TESTS=1`. This can be set in its local
+   stdio command configuration; do not commit credentials or put secrets
+   in chat. With the flag absent or any other value, the test tool
+   refuses to execute. Restart the tunnel after changing the flag.
+
+This is a reversible, incremental bridge from read-only retrieval to bounded
+agentic checks. Later, **separately reviewed and explicitly authorised**
+Arena-only actions might add an operation dispatcher for creating derived
+experiments, traversing the copied corpus and running controlled providers.
+Do not smuggle arbitrary shell access, network crawling, publication rights
+or writes into `~/cobble-data` under this diagnostic interface.
+
+### Governance boundary
+
+The tunnel still uses the workspace's existing access and control-plane
+authentication; its local MCP layer has no separate per-tool user login.
+Therefore any workspace principal who is permitted to invoke these tools
+may see the Arena's metadata, and (when the flag is enabled) run the fixed
+test. Treat adding *any* action as a security-boundary decision. Maintain
+reviewable code and a way to disable the service by stopping the tunnel.
