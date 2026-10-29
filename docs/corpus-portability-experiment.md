@@ -28,6 +28,15 @@ The output package contains original text and provenance fields. **Treat it as p
 
 ## Evidence and limitations
 
+The complete offline unittest suite runs automatically for relevant pull requests
+and pushes. The live public GitHub round-trip runs only when this workflow is
+manually dispatched in Actions; it requires network access and authentication.
+It uses disposable stores, not a running arena. This experiment does not provide
+a consistent snapshot of a concurrently changing arena or archive: export from
+a quiescent archive and restore into a private destination without concurrent
+writers. The package is assembled in memory, so large-corpus use needs separate
+capacity testing.
+
 A successful round-trip establishes retention of local snapshot bytes and latest pointers without consulting GitHub during restoration. Each content-addressed record's canonical JSON digest and each byte-level entry digest are checked before writing. Missing snapshots, invalid paths, duplicate entries, and conflicting destinations cause explicit errors. Restore preflight checks are not an atomic filesystem transaction; interruption or disk failure can leave a partial destination.
 
 GitHub API acquisitions are not a single atomic source snapshot. API response fields may omit deleted material, binary attachments, or inaccessible items. A restored local archive does not prove that a source is currently accessible, that an assertion is true, or that a publisher has authority. Preserved authorship and timestamps are source-reported claims.
