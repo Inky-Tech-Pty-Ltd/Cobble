@@ -65,6 +65,11 @@ It's about you and your bot coming together quietly to create something beautifu
 
 See [progress](docs/progress.md) for demonstrated experiments, limitations and next steps; the [specification](specification.md) describes the evolving ambition.
 
+**Try the first experiment:** [Reproduce Arena One offline](docs/reproducing-arena-one.md)
+on a public synthetic corpus with Python 3.11+, without a model account,
+MCP tunnel or access to anyone's private memories. This verifies whole-corpus
+copying and resource accounting, **not emergent intelligence**.
+
 ## Opportunity
 
 So far, the Village Link project has proposed some interesting candidate solutions to large public-good problems. Unfortunately there is not much market for innovation in public goods.
