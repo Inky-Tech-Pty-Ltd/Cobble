@@ -13,6 +13,8 @@ from cobble.remote_ops import (
     arena_status as read_arena_status,
     verify_arena as verify_arena_copy,
     run_arena_tests as run_arena_selftest,
+    arena_catalogue as read_arena_catalogue,
+    arena_list_sources as read_arena_list_sources,
 )
 from cobble.memory_access import (
     get_trace as read_trace,
@@ -69,6 +71,23 @@ def arena_status(name: str = "arena-a") -> dict:
 def verify_arena(name: str = "arena-a") -> dict:
     """Verify the copied Arena's SHA-256 file manifest without changing files."""
     return verify_arena_copy(name)
+
+
+@mcp.tool()
+def arena_catalogue(name: str = "arena-a") -> dict:
+    """Report copied-source counts and bytes by category; no source content."""
+    return read_arena_catalogue(name)
+
+
+@mcp.tool()
+def arena_list_sources(name: str = "arena-a", category: str = "all",
+                       offset: int = 0, limit: int = 25, query: str = "") -> dict:
+    """Page file paths and hashes from Snug's saved corpus manifest, not text.
+
+    Returned paths may be sensitive; call only when a user has authorised
+    inspection of that Arena. No historical archive reads or network calls.
+    """
+    return read_arena_list_sources(name, category, offset, limit, query)
 
 
 @mcp.tool()
