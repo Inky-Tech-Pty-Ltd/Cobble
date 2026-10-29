@@ -1,0 +1,12 @@
+{
+  "kind": "synthetic-github-discussion",
+  "id": "example-discussion-1",
+  "title": "A portable memory experiment",
+  "body": "The implementation records observations. Its hypotheses remain open to disagreement.",
+  "comments": [
+    {
+      "author": "Reviewer",
+      "body": "How do we check that the evidence survives a change of implementation?"
+    }
+  ]
+}
