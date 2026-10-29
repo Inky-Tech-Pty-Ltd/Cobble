@@ -1,0 +1,45 @@
+name: Arena One public reproducibility
+
+on:
+  push:
+    paths:
+      - 'src/cobble/arena.py'
+      - 'scripts/reproduce_arena_one.py'
+      - 'tests/test_arena_reproducibility.py'
+      - 'tests/test_arena_one.py'
+      - 'tests/fixtures/arena_one_public/**'
+      - '.github/workflows/arena-reproducibility.yml'
+  pull_request:
+    paths:
+      - 'src/cobble/arena.py'
+      - 'scripts/reproduce_arena_one.py'
+      - 'tests/test_arena_reproducibility.py'
+      - 'tests/test_arena_one.py'
+      - 'tests/fixtures/arena_one_public/**'
+      - '.github/workflows/arena-reproducibility.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-offline-reproduction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run small regression suite
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_one.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_reproducibility.py' -v
+      - name: Reproduce public experiment twice and compare results
+        run: |
+          PYTHONPATH=src python scripts/reproduce_arena_one.py --report /tmp/arena-report-1.json
+          PYTHONPATH=src python scripts/reproduce_arena_one.py --report /tmp/arena-report-2.json
+          cmp /tmp/arena-report-1.json /tmp/arena-report-2.json
+          git diff --exit-code
