@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - 'src/cobble/arena.py'
+      - 'src/cobble/arena_catalogue.py'
+      - 'scripts/arena_catalogue.py'
+      - 'tests/test_arena_catalogue.py'
       - 'scripts/reproduce_arena_one.py'
       - 'tests/test_arena_reproducibility.py'
       - 'tests/test_arena_one.py'
@@ -12,6 +15,9 @@ on:
   pull_request:
     paths:
       - 'src/cobble/arena.py'
+      - 'src/cobble/arena_catalogue.py'
+      - 'scripts/arena_catalogue.py'
+      - 'tests/test_arena_catalogue.py'
       - 'scripts/reproduce_arena_one.py'
       - 'tests/test_arena_reproducibility.py'
       - 'tests/test_arena_one.py'
@@ -37,6 +43,8 @@ jobs:
         run: |
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_one.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_reproducibility.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_catalogue.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_remote_ops.py' -v
       - name: Reproduce public experiment twice and compare results
         run: |
           PYTHONPATH=src python scripts/reproduce_arena_one.py --report /tmp/arena-report-1.json

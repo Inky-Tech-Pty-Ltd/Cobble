@@ -6,7 +6,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from cobble.arena import init_arena, populate_corpus
-from cobble.remote_ops import arena_status, verify_arena, run_arena_tests
+from cobble.remote_ops import (arena_status, verify_arena, run_arena_tests,
+                               arena_catalogue, arena_list_sources)
 
 
 class ArenaRemoteTests(unittest.TestCase):
@@ -47,6 +48,18 @@ class ArenaRemoteTests(unittest.TestCase):
             with self.assertRaises(ValueError, msg=name):
                 arena_status(name)
                 verify_arena(name)
+
+    def test_source_senses_are_read_only_and_path_confined(self):
+        before = (self.arena / "state.json").read_bytes()
+        census = arena_catalogue()
+        self.assertEqual(census["catalogue"]["total_files"], 1)
+        listing = arena_list_sources(limit=1)
+        self.assertEqual(listing["page"]["total_matches"], 1)
+        self.assertEqual(listing["page"]["entries"][0]["path"], "hello.txt")
+        self.assertNotIn("real archived memory", str(listing))
+        self.assertEqual(before, (self.arena / "state.json").read_bytes())
+        with self.assertRaises(ValueError):
+            arena_list_sources("../secrets")
 
     def test_tests_are_disabled_by_default(self):
         with patch.dict(os.environ, {"COBBLE_MCP_ALLOW_ARENA_TESTS": "0"}):
