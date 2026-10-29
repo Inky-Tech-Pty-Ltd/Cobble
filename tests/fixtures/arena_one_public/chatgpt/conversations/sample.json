@@ -1,0 +1,14 @@
+{
+  "kind": "synthetic-chat-interaction",
+  "id": "example-chat-1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Can an intellectual history survive a change of model supplier?"
+    },
+    {
+      "role": "assistant",
+      "content": "Preserve it independently, then test what a second supplier can recover."
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Hypothesis: shared history may not imply shared identity.
+Observation: a working copy and its protected original have different roles.
+Question: what changes when a new experience arrives?
