@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 from cobble.arena import overview
+from cobble.arena_catalogue import catalogue as read_catalogue, list_sources as read_source_page
 
 _ARENA_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
@@ -102,6 +103,18 @@ def verify_arena(name="arena-a"):
         raise ValueError("Unmanifested or missing Arena files")
     return {"arena": name, "verified": True, "files": len(files), "source_bytes": total,
             "scope": "local copied bytes only; does not establish original source truth"}
+
+
+
+def arena_catalogue(name="arena-a"):
+    """Summarise the entire copied corpus by source category, without content."""
+    return {"arena": name, "catalogue": read_catalogue(_arena(name))}
+
+
+def arena_list_sources(name="arena-a", category="all", offset=0, limit=25, query=""):
+    """List bounded pages of copied-source file metadata, not text contents."""
+    return {"arena": name,
+            "page": read_source_page(_arena(name), category, offset, limit, query)}
 
 
 def run_arena_tests():
