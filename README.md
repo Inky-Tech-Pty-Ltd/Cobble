@@ -65,6 +65,8 @@ It's about you and your bot coming together quietly to create something beautifu
 
 See [progress](docs/progress.md) for demonstrated experiments, limitations and next steps; the [specification](specification.md) describes the evolving ambition.
 
+**Snug's first interface:** [Open a local prompt-and-response laboratory console](docs/snug-console.md) over a preserved Arena, with offline, source-attributed diagnostics only. OpenAI and Kimi hemispheres are not yet connected.
+
 **Try the first experiment:** [Reproduce Arena One offline](docs/reproducing-arena-one.md)
 on a public synthetic corpus with Python 3.11+, without a model account,
 MCP tunnel or access to anyone's private memories. This verifies whole-corpus
