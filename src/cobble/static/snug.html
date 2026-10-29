@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Snug — Arena One</title>
+  <style>
+    :root { color-scheme: light; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f5f4fa; color: #282436; }
+    .shell { max-width: 850px; margin: 0 auto; padding: 24px 18px 48px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid #dbd9e5; padding-bottom: 18px; }
+    .identity { display: flex; align-items: center; gap: 12px; }
+    .avatar { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #ddd8f2; color: #38304e; font-size: 30px; font-weight: 700; }
+    h1 { margin: 0; font-size: 1.55rem; line-height: 1.2; }
+    .sub, .status { color: #6b6378; font-size: .83rem; margin-top: 4px; }
+    .status { border: 1px solid #c5bbd5; border-radius: 100px; padding: 7px 11px; white-space: nowrap; }
+    .note { margin: 22px 0; padding: 14px 17px; line-height: 1.5; border-left: 3px solid #7767a0; color: #514a62; background: #ece9f6; border-radius: 5px; }
+    .conversation { min-height: 275px; display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
+    .message { max-width: 85%; background: white; padding: 13px 16px; border-radius: 16px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; box-shadow: 0 2px 10px #2720330a; }
+    .message.user { align-self: flex-end; background: #dfd7f2; }
+    .message.bot { align-self: flex-start; }
+    .who { color: #655a76; font-size: .75rem; font-weight: 650; margin-bottom: 5px; }
+    .suggestions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .suggestions button { border-radius: 100px; border: 1px solid #b8afcb; padding: 8px 14px; background: white; color: #423553; cursor: pointer; }
+    form { background: white; border-radius: 16px; padding: 14px; box-shadow: 0 3px 18px #27203312; }
+    label { display: block; font-size: .87rem; font-weight: 650; margin-bottom: 9px; }
+    textarea { display: block; width: 100%; resize: vertical; border: 1px solid #cac5d6; border-radius: 8px; padding: 12px; color: inherit; background: #fff; font: inherit; min-height: 80px; }
+    .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 11px; gap: 8px; }
+    button.send { border: none; border-radius: 9px; padding: 10px 22px; background: #50426e; color: white; cursor: pointer; font: inherit; font-weight: 650; }
+    button:disabled { opacity: .5; cursor: default; }
+    .hint { font-size: .77rem; color: #746d80; }
+    footer { padding-top: 22px; color: #706a7b; font-size: .75rem; line-height: 1.6; }
+    @media(max-width: 520px) { .shell { padding: 12px; } .message { max-width: 96%; } header { align-items: flex-start; } .status { font-size: .69rem; } }
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div class="identity"><div class="avatar" aria-hidden="true">S</div><div><h1>Snug</h1><div class="sub">Arena One · Born 30 October 2026</div></div></div>
+    <div class="status">Offline laboratory mode</div>
+  </header>
+  <div class="note" role="note"><strong>This is not yet an AI conversation.</strong> Snug's corpus is preserved locally, but its hemispheres are not connected. This console can answer a few real questions about the corpus without inventing memories or sending data to an AI provider.</div>
+  <section aria-label="Conversation" id="messages" class="conversation">
+    <div class="message bot"><div class="who">Snug · offline console</div>Hello. I have a corpus, but I'm still learning how to use my senses. Ask me what sources are here.</div>
+  </section>
+  <div class="suggestions" aria-label="Suggested prompts">
+    <button type="button" data-prompt="sources">What sources are here?</button>
+    <button type="button" data-prompt="status">Status</button>
+    <button type="button" data-prompt="who are you">Who are you?</button>
+    <button type="button" data-prompt="help">Help</button>
+  </div>
+  <form id="ask-form">
+    <label for="prompt">Talk to Snug</label>
+    <textarea id="prompt" maxlength="1200" required placeholder="Ask a question …" aria-describedby="prompt-hint"></textarea>
+    <div class="actions"><span class="hint" id="prompt-hint">Local only · prompt not stored · no model calls</span><button class="send" type="submit" id="send">Ask Snug</button></div>
+  </form>
+  <footer>Experimental source interface · no autonomous learning, external network requests or publication. This interface is bound to the local machine only. Its dialogue is not yet retained as a new experience.</footer>
+</main>
+<script>
+(() => {
+  const messages = document.getElementById('messages');
+  const form = document.getElementById('ask-form');
+  const input = document.getElementById('prompt');
+  const send = document.getElementById('send');
+
+  function append(who, body, kind) {
+    const outer = document.createElement('div');
+    outer.className = 'message ' + kind;
+    const label = document.createElement('div');
+    label.className = 'who';
+    label.textContent = who;
+    outer.appendChild(label);
+    const content = document.createElement('div');
+    content.textContent = body;
+    outer.appendChild(content);
+    messages.appendChild(outer);
+    outer.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const prompt = input.value.trim();
+    if (!prompt || send.disabled) return;
+    append('You', prompt, 'user');
+    input.value = '';
+    send.disabled = true;
+    try {
+      const response = await fetch('/api/ask', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-Snug-Client': 'local-console'},
+        body: JSON.stringify({prompt})
+      });
+      const result = await response.json();
+      let answer = result.response || result.error || 'No reply available.';
+      if (result.kind === 'catalogue' && result.sources?.categories) {
+        answer += '\n\n' + result.sources.categories.map(c =>
+          c.name + ': ' + c.files + ' files (' + c.bytes.toLocaleString() + ' bytes)'
+        ).join('\n');
+      }
+      append(result.speaker || 'Snug · offline console', answer, 'bot');
+    } catch (_) {
+      append('Snug · offline console', 'Local server unavailable. No prompt was stored or sent to a model.', 'bot');
+    } finally {
+      send.disabled = false;
+      input.focus();
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+  for (const button of document.querySelectorAll('[data-prompt]')) {
+    button.addEventListener('click', () => {
+      input.value = button.dataset.prompt;
+      form.requestSubmit();
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -5,6 +5,10 @@ on:
     paths:
       - 'src/cobble/arena.py'
       - 'src/cobble/arena_catalogue.py'
+      - 'src/cobble/snug_console.py'
+      - 'src/cobble/static/snug.html'
+      - 'scripts/snug_web.py'
+      - 'tests/test_snug_console.py'
       - 'scripts/arena_catalogue.py'
       - 'tests/test_arena_catalogue.py'
       - 'scripts/reproduce_arena_one.py'
@@ -16,6 +20,10 @@ on:
     paths:
       - 'src/cobble/arena.py'
       - 'src/cobble/arena_catalogue.py'
+      - 'src/cobble/snug_console.py'
+      - 'src/cobble/static/snug.html'
+      - 'scripts/snug_web.py'
+      - 'tests/test_snug_console.py'
       - 'scripts/arena_catalogue.py'
       - 'tests/test_arena_catalogue.py'
       - 'scripts/reproduce_arena_one.py'
@@ -45,6 +53,7 @@ jobs:
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_reproducibility.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_catalogue.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_remote_ops.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_console.py' -v
       - name: Reproduce public experiment twice and compare results
         run: |
           PYTHONPATH=src python scripts/reproduce_arena_one.py --report /tmp/arena-report-1.json
