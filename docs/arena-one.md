@@ -118,6 +118,10 @@ universal enforcement mechanism for arbitrary future integrations.
 
 ## Next increments
 
+**First sense available for review:** [Arena source catalogue](arena-source-senses.md)
+classifies every saved source file without inspecting or transmitting its
+contents. It remains an observer diagnostic, not Snug's metered curiosity.
+
 1. Confirm the size and integrity of the actual populated corpus; preserve
    and add the full ChatGPT export once obtained, in a *fresh* Arena.
 2. Make the complete local corpus **addressable and traversable** to the
