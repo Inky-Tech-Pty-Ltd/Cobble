@@ -215,3 +215,13 @@ Therefore any workspace principal who is permitted to invoke these tools
 may see the Arena's metadata, and (when the flag is enabled) run the fixed
 test. Treat adding *any* action as a security-boundary decision. Maintain
 reviewable code and a way to disable the service by stopping the tunnel.
+
+### Arena source senses
+
+The separately reviewed [source-catalogue design](arena-source-senses.md)
+adds `arena_catalogue` and `arena_list_sources`. These operate solely
+on the derived Arena's saved manifest. The former reports category
+counts and byte totals; the latter returns **bounded source paths and
+hashes, not contents**. A file path can itself be sensitive, so use
+source listing only when inspection of that Arena is authorised.
+Neither operation is a metered action by the juvenile learner.
