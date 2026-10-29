@@ -19,7 +19,7 @@ Keep three things distinct:
 
 1. **Corpus and memory store:** Retained source material, traces, identities, provenance, observations, and any experimental graph structures, held under customer-controlled storage and access policies. An original source can remain external while a recoverable local copy is preserved.
 2. **Cobbler:** Application machinery that ingests, selects, mints, retrieves, proposes and maintains candidate connections, and may experiment with compression and resource allocation. It is not a new Village Link primitive.
-3. **Suppliers of intelligence:** Models and other processes recruited to examine or act on parts of the corpus. Their providers, instances and configurations may change; no supplier automatically owns the corpus or constitutes a persistent entity.
+3. **Suppliers of intelligence:** Models and other processes recruited to examine or act on parts of the corpus. Their providers, instances and configurations may change; no supplier automatically owns the corpus or constitutes a persistent entity. Early use of independent suppliers is itself a test of portability and self-sovereignty, not merely a later optimisation of answer quality.
 
 The [Village Link](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) specification owns the semantics of the primitive and the abstract Star Credential. In its current conceptual form:
 
@@ -69,7 +69,7 @@ An **arena** is a bounded environment for testing changes to memory, interpretat
 The initial [Exhibit B](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/discussions/78) design asks us to:
 
 1. **Load historical evidence.** Begin with a **selected, inventoried subset** of available source memories, retaining their provenance and source distinctions. Use the existing organisation-wide GitHub archive as an acquisition source, not as the arena itself. Do not assume its completion or require a pre-constructed semantic graph. Keep private or sensitive repository content out of model-provider requests unless explicitly authorised.
-2. **Impose a finite working budget.** Set the first arena's capacity **after measuring** the selected corpus; the illustrative sizes in Exhibit B are not implementation targets. Account separately for retained working bytes, tokens/model calls and other constrained resources. The source archive remains independently recoverable. A memory limit must eventually force choices.
+2. **Impose explicit resource budgets.** Set initial capacities **after measuring** the selected corpus; the illustrative sizes in Exhibit B are not implementation targets. Account separately for working memory, intelligence, attention, historical retrieval and external resources (below). The source archive remains independently recoverable; a memory limit must eventually force choices without deleting historical evidence.
 3. **Introduce fresh experience.** A new prompt, observation, interaction or feedback event enters the arena. The input itself becomes addressable evidence.
 4. **Recruit hemispheres.** One or more semi-independent intelligence processes examine the experience and relevant history. They may use different model suppliers.
 5. **Run a separated-and-recombined cycle.** Hemispheres independently propose memes, matching traces, equivalence hypotheses, Village Links, possible star centres and natural-language interpretations. They then compare their proposals, challenge evidence, preserve disagreement where appropriate and decide what action to recommend.
@@ -90,6 +90,44 @@ Measure consequences, including harm: usefulness to collaborators, fulfilled com
 
 The user or experimenter sets and enforces actual limits on storage, model spending, calls and publication. **No simulated resource pressure authorises an agent to seek real resources, contact people, spend money, reveal private history or publish assertions without separately granted permission.** We test a value function; we do not grant it unrestricted authority.
 
+## Five independent resource budgets
+
+Constrained working memory combined with effectively unlimited intelligence would distort Exhibit B. An entity could simply re-read the complete source corpus, call an external model repeatedly and reconstruct most of its discarded working memory. A finite *memory* budget alone therefore does not test the pressures of a resource-dependent entity.
+
+The arena must support **five independently parameterised and measured budgets**:
+
+| Resource | Example accounting units and boundaries |
+| --- | --- |
+| **Working memory** | Retained bytes or units in the arena, including summaries, links, candidate hypotheses and derived indexes; eviction affects only the derived arena |
+| **Intelligence** | Model invocations, input/output tokens, retries and monetary or compute cost; separate counts for each supplier and joint deliberation |
+| **Attention** | Time or bounded processing steps allocated to an incoming experience; record wall-clock latency apart from chargeable model use |
+| **Historical retrieval** | Searches and reads against preserved source material, including calls, returned bytes or tokens; a read costs the arena something even though the archive survives |
+| **External resources** | Network use, additional storage, paid services, disclosure of source passages and any permitted action outside the arena, with externally enforced ceilings |
+
+For each run declare the **units, maximum allowances, scope and reset rules**, plus how failed and repeated operations consume budgets. Record costs actually incurred, not only estimates. Resource ceilings are experimental parameters, not normative constants. A generously resourced control still needs finite, recorded allowances; only the selected dimensions should differ between comparison runs.
+
+**The protected source archive is outside the memory eviction game.** Charging an arena for historical access constrains its working behaviour, not the independent preservation, backup or restoration of source evidence. Simulated rewards or scarcity may never override actual limits on money, privacy, network activity, publication or contact with third parties.
+
+Measure the substitutions and trade-offs: when is retention cheaper than expensive reconstruction? When does compression pay for its model cost? Does additional historical retrieval outperform an extra hemisphere? Does an apparent gain from abundant intelligence vanish once computation and retrieval are priced? An intelligence supplier cannot reconstruct unique events when all evidence of those events has been lost.
+
+## Early multiple-supplier test of sovereignty
+
+Cobble proposes that an entity's persistent history resides in its **corpus**, rather than in any one model or provider's chat session. **Provider substitution should therefore be tested early**, not deferred until the Arena's memory allocation algorithms are sophisticated.
+
+The preferred first real multi-supplier experiment will recruit **OpenAI and Kimi**. Kimi's early presence is an explicit test of *supplier diversity and independence* in the sovereignty proposition, not an assertion that either model is better, that two providers suffice for sovereignty, or that a difference in supplier location by itself guarantees independence. No Kimi account, model version, API entitlement or expenditure is presumed to exist at the time of this specification.
+
+Build a small **provider-neutral adapter** that can assign equivalent, permitted source-attributed material and a declared per-provider budget to each hemisphere. Preserve each provider's independently produced proposals, model/version metadata when available, source references, usage and monetary estimates, disagreements and any reconciliation step. A stub provider can establish that the software works offline; it is **not** evidence of a real two-provider test.
+
+The early controlled comparison asks:
+
+1. **Continuity:** Can both suppliers work from the *same* preserved, independently controlled corpus without making the model supplier's conversation store the authoritative source?
+2. **Substitution:** If the first supplier is absent or replaced, can the second resume a subsequent input with the same authorised memory and history, without a bespoke migration of entity identity?
+3. **Diversity and cost:** What different hypotheses and errors arise, and are the gains worth added intelligence, attention, retrieval and coordination costs?
+
+Use a small set of **public or otherwise explicitly authorised** source excerpts first; do not transmit the whole GitHub archive, private InkyBooks material or a future ChatGPT export to either provider merely because it was ingested locally. Keep credentials out of the repository and the corpus, and configure spending caps before live model calls.
+
+This test may begin once the offline arena harness can account for a complete input cycle. It **need not wait** for the full ChatGPT export, a mature theory of social value or a large arena. Later runs can vary which models, how many hemispheres and how much resource each receives. Model selection and a working configuration belong to the application, **not** the Village Link primitive.
+
 ## First sprint: a falsifiable, inspectable loop
 
 The near-term experiment should produce an auditable record of one or more complete cycles:
@@ -107,7 +145,7 @@ new experience
 
 Each cycle should retain the input, source identifiers, independent hemisphere outputs, rejected as well as accepted suggestions, reasons for retention or eviction, measured costs, and observed (not merely predicted) consequences. Preserve the **difference between proposing, minting and publishing** a Village Link or Star Credential.
 
-Baseline comparisons should include a single-hemisphere run, multiple hemispheres, and simple memory allocation rules. Run adverse cases involving false links, missing sources and low-quality but socially attractive information. Do not present a successful retrieval or attractive summary as evidence that a social entity or governance has emerged.
+Baseline comparisons should include a single-hemisphere run, multiple hemispheres, simple memory allocation rules and different combinations of the five resource budgets. Compare constrained and generously resourced intelligence at the *same* memory limit, and constrained versus generous historical retrieval at the *same* intelligence limit. Use stub suppliers for repeatable offline tests and real OpenAI/Kimi calls for the early provider-substitution experiment. Run adverse cases involving false links, missing sources and low-quality but socially attractive information. Do not present successful retrieval, an attractive summary or two working API connections as evidence that a social entity or governance has emerged.
 
 Use a **selected, permitted portion** of the existing imported GitHub corpus to begin; do not send the full archive indiscriminately to a model supplier. The pending ChatGPT export can be ingested as a separate source later; its arrival is not a prerequisite for the first arena. Earlier graph, ablation and adversarial retrieval experiments remain relevant controls, not immutable architectural constraints.
 
@@ -129,8 +167,8 @@ Near-term checks:
 
 1. On McKay, fast-forward the Cobble checkout and run `bash scripts/sync_github_corpus.sh --dry-run`; inspect the repositories and intended checkouts before any real sync. Run the sync under existing GitHub credentials only after confirming scope. A successful run is a current observation, not evidence of historical completeness.
 2. Inventory the selected *arena input* corpus and verify source identifiers, provenance, available local copies and protected archival backups. Use the separate [portability CLI](scripts/portable_github_corpus.py) to test a **bounded, quiescent GitHub conversation subset** in a disposable destination; do not assume it can round-trip the entire evolving arena.
-3. Establish an isolated derived arena store, a measured working-memory limit, independent recovery of original evidence and reproducible allocation/accounting rules. Test eviction only against derived working data.
-4. Integrate replaceable intelligence providers behind a limited interface, with independently recorded outputs, explicit permission to disclose source passages, capped model calls and costs, and no automatic external publication.
+3. Establish an isolated derived arena store, independent recovery of original evidence and reproducible accounting across the **five distinct resource budgets** above. Measure a working-memory limit from the actual selected corpus; test eviction only against derived working data.
+4. Implement the minimal replaceable-provider interface with deterministic offline stubs, then integrate **both OpenAI and Kimi early**, using a small explicitly permitted set of source passages. Record independent outputs, token/call/attention/retrieval costs, provider substitution and disagreements, with capped spending and no automatic external publication.
 5. Evaluate candidate equality assertions against evidence and independent adversarial cases. Preserve disagreements, rejected suggestions, and proposed versus published assertions; compare single- and multi-hemisphere cycles and competing value rules.
 6. Record simulated or human-authorised actions and **observed** consequences separately from predicted outcomes. Independently test backup restore, privacy boundaries and source disappearance before ingesting or transmitting more sensitive material.
 
