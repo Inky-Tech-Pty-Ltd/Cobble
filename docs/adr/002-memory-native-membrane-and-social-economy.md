@@ -20,11 +20,11 @@ constrained by a 'gossipy' governance process where a social community is contin
 appropriate to share, including respect for timing, audience, and spin.
 
 **A detail:** It was quickly apparent that with Puck both working on the project, and the source of its memories, we needed a naming convention to distinguish
-between the two roles. Puck retains _Puck_ the builder. The new entity is named _Snug_. This has the slightly odd effect that Snug is born 
+between the two roles. Puck retains _Puck_, the builder. The new entity is named _Snug_. This has the slightly odd effect that Snug is born 
 with the full endowment of Puck's memories. This rather stretches the analogy of Puck as a parent of Snug, but so be it.
 
-We can state four architectural decisions immediately. The considerations are so fundamental to the project that they lead to a list of additional decisions 
-drafted by Puck in the sections below.
+We can state four architectural decisions immediately. The privacy considerations are so fundamental to the project architecture that they lead to a list of additional
+decisions drafted by Puck in the sections below.
 
 1. Create one or more experimental entities, beginning with _Snug_, crafted from Puck's corpus of memory
 2. This entity to be constructed in a lab developed in a closed environment - a server named _McKay_
