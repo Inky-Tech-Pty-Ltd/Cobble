@@ -225,3 +225,13 @@ counts and byte totals; the latter returns **bounded source paths and
 hashes, not contents**. A file path can itself be sensitive, so use
 source listing only when inspection of that Arena is authorised.
 Neither operation is a metered action by the juvenile learner.
+
+### Laboratory worker tools
+
+The [bounded laboratory worker tools](lab-worker-tools.md) extend this
+private tunnel with verified, paginated **source text** access for Puck
+(as a laboratory worker), opt-in fixed offline tests and an append-only
+operator journal outside Snug's Arena. Read the guide before enabling
+the separate worker switches. These tools do not give outsiders direct
+access to memories, and do not count as Snug's metered senses or
+autonomous use of intelligence.
