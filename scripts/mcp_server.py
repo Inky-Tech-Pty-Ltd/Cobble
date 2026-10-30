@@ -15,6 +15,10 @@ from cobble.remote_ops import (
     run_arena_tests as run_arena_selftest,
     arena_catalogue as read_arena_catalogue,
     arena_list_sources as read_arena_list_sources,
+    arena_read_source as read_arena_source_text,
+    run_lab_suite as execute_lab_suite,
+    lab_add_note as append_lab_note,
+    lab_recent_notes as get_lab_notes,
 )
 from cobble.memory_access import (
     get_trace as read_trace,
@@ -88,6 +92,44 @@ def arena_list_sources(name: str = "arena-a", category: str = "all",
     inspection of that Arena. No historical archive reads or network calls.
     """
     return read_arena_list_sources(name, category, offset, limit, query)
+
+
+@mcp.tool()
+def arena_read_source(name: str = "arena-a", path: str = "",
+                      offset: int = 0, max_bytes: int = 8000) -> dict:
+    """Read one verified source-text page from an inherited Arena file.
+
+    Intended for authorised lab workers, not public visitors or Snug's
+    metered senses. Requires COBBLE_MCP_ALLOW_SOURCE_READS=1 on McKay.
+    Return at most 12000 source bytes; follow next_offset for continuation.
+    """
+    return read_arena_source_text(name, path, offset, max_bytes)
+
+
+@mcp.tool()
+def run_lab_suite(suite: str = "arena") -> dict:
+    """Run a fixed offline lab test suite: arena, remote, console or lab.
+
+    Requires COBBLE_MCP_ALLOW_LAB_TESTS=1 on McKay. Never accepts paths,
+    shell commands or an external network request.
+    """
+    return execute_lab_suite(suite)
+
+
+@mcp.tool()
+def lab_add_note(kind: str, text: str, arena: str = "arena-a") -> dict:
+    """Append an attributed operator observation to the private lab journal.
+
+    Requires COBBLE_MCP_ALLOW_LAB_NOTES=1. Notes never modify source,
+    Arena state or Snug's experimental resource ledger.
+    """
+    return append_lab_note(kind, text, arena)
+
+
+@mcp.tool()
+def lab_recent_notes(limit: int = 10) -> dict:
+    """Read the most recent operator journal entries, no filesystem browsing."""
+    return get_lab_notes(limit)
 
 
 @mcp.tool()

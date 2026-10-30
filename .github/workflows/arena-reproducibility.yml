@@ -8,6 +8,15 @@ on:
       - 'src/cobble/snug_console.py'
       - 'src/cobble/static/snug.html'
       - 'scripts/snug_web.py'
+      - 'src/cobble/arena_source_access.py'
+      - 'src/cobble/lab_ops.py'
+      - 'src/cobble/remote_ops.py'
+      - 'scripts/mcp_server.py'
+      - 'scripts/lab_tunnel.sh'
+      - 'tests/test_lab_source_access.py'
+      - 'tests/test_lab_ops.py'
+      - 'tests/test_remote_ops.py'
+      - 'docs/lab-worker-tools.md'
       - 'tests/test_snug_console.py'
       - 'scripts/arena_catalogue.py'
       - 'tests/test_arena_catalogue.py'
@@ -23,6 +32,15 @@ on:
       - 'src/cobble/snug_console.py'
       - 'src/cobble/static/snug.html'
       - 'scripts/snug_web.py'
+      - 'src/cobble/arena_source_access.py'
+      - 'src/cobble/lab_ops.py'
+      - 'src/cobble/remote_ops.py'
+      - 'scripts/mcp_server.py'
+      - 'scripts/lab_tunnel.sh'
+      - 'tests/test_lab_source_access.py'
+      - 'tests/test_lab_ops.py'
+      - 'tests/test_remote_ops.py'
+      - 'docs/lab-worker-tools.md'
       - 'tests/test_snug_console.py'
       - 'scripts/arena_catalogue.py'
       - 'tests/test_arena_catalogue.py'
@@ -54,6 +72,7 @@ jobs:
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_arena_catalogue.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_remote_ops.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_console.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_lab_*.py' -v
       - name: Reproduce public experiment twice and compare results
         run: |
           PYTHONPATH=src python scripts/reproduce_arena_one.py --report /tmp/arena-report-1.json
