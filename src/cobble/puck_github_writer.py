@@ -13,8 +13,8 @@ import urllib.request
 REPOSITORY = "Inky-Tech-Pty-Ltd/Cobble"
 BOT_NAME = "puck-gpt[bot]"
 BOT_EMAIL = "320794343+puck-gpt[bot]@users.noreply.github.com"
-_BRANCH = re.compile(r"puck/work/[A-Za-z0-9][A-Za-z0-9._-]{0,63}\\Z")
-_PATH = re.compile(r"docs/experiments/[A-Za-z0-9][A-Za-z0-9._-]{0,75}\\.md\\Z")
+_BRANCH = re.compile(r"puck/work/[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
+_PATH = re.compile(r"docs/experiments/[A-Za-z0-9][A-Za-z0-9._-]{0,75}\.md\Z")
 _API = "https://api.github.com"
 
 
@@ -73,7 +73,7 @@ def write_file(branch, path, content, message):
         raise ValueError("Writer restricted to new experiment Markdown files")
     if not isinstance(content, str) or not 0 < len(content.encode("utf-8")) <= 12000:
         raise ValueError("Invalid content length")
-    if not isinstance(message, str) or not 0 < len(message) <= 120 or "\\n" in message:
+    if not isinstance(message, str) or not 0 < len(message) <= 120 or "\n" in message:
         raise ValueError("Invalid commit message")
     token = _token()
     _installation(token)
