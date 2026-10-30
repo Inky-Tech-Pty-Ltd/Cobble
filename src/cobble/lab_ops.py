@@ -7,6 +7,7 @@ Neither grants a general shell or general filesystem write capability.
 from datetime import datetime, timezone
 import json
 import os
+import stat
 from pathlib import Path
 import subprocess
 import sys
@@ -48,18 +49,32 @@ def run_lab_suite(suite: str):
             "scope": "fixed offline tests; not a generic command runner"}
 
 
-def _journal_file():
+def _journal_dir():
     base = Path.home() / "cobble-lab"
     if base.is_symlink():
         raise ValueError("Lab journal directory must not be a symlink")
-    return base / "journal.jsonl"
+    return base
 
 
-def _check_journal_file(path):
-    if path.is_symlink():
-        raise ValueError("Lab journal must not be a symlink")
-    if path.exists() and (not path.is_file() or path.stat().st_size > MAX_JOURNAL_BYTES):
+def _open_journal_dir(create=False):
+    base = _journal_dir()
+    if create:
+        base.mkdir(mode=0o700, parents=True, exist_ok=True)
+    return os.open(base, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+
+
+def _open_journal_file(dir_fd, writing=False):
+    flags = os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
+    if writing:
+        flags |= os.O_CREAT | os.O_APPEND | os.O_WRONLY
+    else:
+        flags |= os.O_RDONLY
+    fd = os.open("journal.jsonl", flags, 0o600, dir_fd=dir_fd)
+    st = os.fstat(fd)
+    if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_JOURNAL_BYTES:
+        os.close(fd)
         raise ValueError("Lab journal is not a regular file or has reached its size limit")
+    return fd
 
 
 def add_lab_note(kind: str, text: str, arena: str = "arena-a"):
@@ -77,21 +92,24 @@ def add_lab_note(kind: str, text: str, arena: str = "arena-a"):
         "arena": arena, "kind": kind, "text": text.strip(),
         "authorship": "Puck (laboratory worker via scoped MCP tool)",
     }
-    path = _journal_file()
-    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    _check_journal_file(path)
-    data = (json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+    data = (json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\\n").encode("utf-8")
     if len(data) > 20000:
         raise ValueError("Lab note exceeds byte limit")
-    flags = os.O_CREAT | os.O_APPEND | os.O_WRONLY | os.O_NOFOLLOW
-    fd = os.open(path, flags, 0o600)
+    directory_fd = _open_journal_dir(create=True)
     try:
-        if not os.path.isfile(path) or os.fstat(fd).st_size + len(data) > MAX_JOURNAL_BYTES:
-            raise ValueError("Journal size or file type invalid")
-        os.write(fd, data)
-        os.fsync(fd)
+        fd = _open_journal_file(directory_fd, writing=True)
+        try:
+            if os.fstat(fd).st_size + len(data) > MAX_JOURNAL_BYTES:
+                raise ValueError("Journal has reached its size limit")
+            # Exactly one append in ordinary use; refuse a partial write.
+            written = os.write(fd, data)
+            if written != len(data):
+                raise OSError("Partial journal append")
+            os.fsync(fd)
+        finally:
+            os.close(fd)
     finally:
-        os.close(fd)
+        os.close(directory_fd)
     return {"recorded": True, "kind": kind, "arena": arena, "at": entry["at"],
             "scope": "append-only lab note; does not affect juvenile resources"}
 
@@ -100,11 +118,17 @@ def recent_lab_notes(limit: int = 10):
     """Read up to 20 recent journal notes; no general filesystem access."""
     if type(limit) is not int or not 1 <= limit <= 20:
         raise ValueError("limit must be between 1 and 20")
-    path = _journal_file()
-    _check_journal_file(path)
-    if not path.exists():
+    if not _journal_dir().exists():
         return {"entries": [], "scope": "local laboratory journal"}
-    with path.open("r", encoding="utf-8") as stream:
-        lines = stream.readlines()
+    directory_fd = _open_journal_dir()
+    try:
+        try:
+            fd = _open_journal_file(directory_fd)
+        except FileNotFoundError:
+            return {"entries": [], "scope": "local laboratory journal"}
+        with os.fdopen(fd, "r", encoding="utf-8") as stream:
+            lines = stream.readlines()
+    finally:
+        os.close(directory_fd)
     notes = [json.loads(line) for line in lines[-limit:]]
     return {"entries": notes, "scope": "local laboratory journal; human/operator notes, not automatically Snug's experiences"}
