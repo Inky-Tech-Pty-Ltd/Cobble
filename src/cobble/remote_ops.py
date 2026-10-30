@@ -13,6 +13,12 @@ from pathlib import Path
 
 from cobble.arena import overview
 from cobble.arena_catalogue import catalogue as read_catalogue, list_sources as read_source_page
+from cobble.arena_source_access import read_source as read_arena_text
+from cobble.lab_ops import (
+    run_lab_suite as execute_fixed_lab_suite,
+    add_lab_note as write_lab_note,
+    recent_lab_notes as read_lab_notes,
+)
 
 _ARENA_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
@@ -115,6 +121,34 @@ def arena_list_sources(name="arena-a", category="all", offset=0, limit=25, query
     """List bounded pages of copied-source file metadata, not text contents."""
     return {"arena": name,
             "page": read_source_page(_arena(name), category, offset, limit, query)}
+
+
+def arena_read_source(name="arena-a", path="", offset=0, max_bytes=8000):
+    """Read a byte-bounded, manifest-verified text page from the copied Arena.
+
+    Source is accessible to authorised lab workers; this is *not* Snug's
+    metered attention and does not publish the document to the world.
+    A local operator must explicitly enable it on McKay.
+    """
+    if os.environ.get("COBBLE_MCP_ALLOW_SOURCE_READS") != "1":
+        raise PermissionError("Arena source reads are disabled on McKay")
+    return {"arena": name,
+            "page": read_arena_text(_arena(name), path, offset, max_bytes)}
+
+
+def run_lab_suite(suite="arena"):
+    """Run one fixed, reviewed offline test collection with explicit opt-in."""
+    return execute_fixed_lab_suite(suite)
+
+
+def lab_add_note(kind, text, arena="arena-a"):
+    """Append a small Puck-authored note outside source and juvenile Arena."""
+    return write_lab_note(kind, text, arena)
+
+
+def lab_recent_notes(limit=10):
+    """Read recent human/operator notes; does not enter Snug's biography."""
+    return read_lab_notes(limit)
 
 
 def run_arena_tests():
