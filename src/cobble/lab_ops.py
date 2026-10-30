@@ -92,7 +92,7 @@ def add_lab_note(kind: str, text: str, arena: str = "arena-a"):
         "arena": arena, "kind": kind, "text": text.strip(),
         "authorship": "Puck (laboratory worker via scoped MCP tool)",
     }
-    data = (json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\\n").encode("utf-8")
+    data = (json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
     if len(data) > 20000:
         raise ValueError("Lab note exceeds byte limit")
     directory_fd = _open_journal_dir(create=True)
