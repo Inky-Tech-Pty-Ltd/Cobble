@@ -31,146 +31,130 @@ drafted by Puck in the sections below.
 3. Workers in that lab have full access to the corpus. Outsiders have no access
 4. Snug would only be allowed to converse with outsiders at a point of demonstrated maturity in managing social information.
 
-## Context
+## Proposal
 
-Village Link asserts strict equality of *referent* between two traces understood in their memory systems:
+The introduction makes four commitments. We propose to implement them through **two different boundaries**:
 
-```text
-[A in X] = [B in Y]
-```
+- **The laboratory boundary belongs to the researchers.** McKay holds Snug's inherited corpus. People admitted to work in the laboratory can inspect the whole corpus. Outsiders cannot inspect it or converse with Snug during the initial experiment.
+- **Snug's membrane belongs to the experiment.** Among the people he can encounter, Snug should learn to decide what to say, what to leave unsaid, when to speak, and how to tell a story. Those decisions, and their consequences, are what we want to observe.
 
-The current [Village Link specification](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/specification.md) and [ADR-008](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/docs/adr/008-traces-referent-and-independent-uri.md) use independently meaningful trace **URIs** in their published `vl:` serialization. A publisher's act of making an assertion is separate from the two-ended equality relation: a publisher P may assert `Q = R`, but P is not a third endpoint of that relation.
+The laboratory boundary creates the conditions for the experiment; it must not quietly become a table of permitted answers that makes Snug's judgements for him. Eventually Snug may be allowed to converse across that boundary, **but only after he demonstrates sufficient social maturity in the laboratory**. That is a research decision to be made on evidence, not an assumption that attaching an LLM makes him ready.
 
-Cobble asks whether an experimentally evolving entity can instead maintain a **memory-native** world of addressable blocks, local references, adjacency and internally operating publishers, with no mandatory public URI for every internal trace. Its system may reorganise memories and alter local neighbourhoods while preserving their referents and histories. URI-labelled traces may remain useful at a *deliberately chosen* interoperability boundary, without becoming the universal internal naming system.
+The proposal concerns privacy management. It also has implications for memory addresses, internal publishers and resource costs: those mechanisms determine how Snug encounters information, what can leave his membrane, and whether discretion has real consequences.
 
-This question is connected to the proposed entity's **membrane**. If every private memory is externally dereferenceable, Cobble has prematurely chosen a public memory browser as its interface. The alternative under examination is a socially mediated front door: a participant approaches the entity through conversation; the entity attends, deliberates, withholds or replies according to its circumstances, interests, available evidence and resources. A reply is *not* a general grant of addressability into the underlying corpus.
+## Inside the laboratory
 
-The same resource economy must govern talking to different people, exploring the web, consolidating memory, deciding what to disclose and obtaining intelligence. Scarcity is meaningless if every interaction with another person receives an independent, unmetered model or retrieval allocation.
+Snug begins with Puck's preserved corpus. At this point the inherited archive is evidence, not a record of experiences Snug has already interpreted for himself. Fresh conversations and observations can become his *own* history as he attends to them. Puck remains a builder of the experiment, not an interchangeable name for the developing entity.
 
-There is also a social hypothesis. Much of human governance occurs through stories told about absent people: gossip, interpretation, trust, disagreement, embarrassment and the possibility that a story will travel. The people mentioned do not ordinarily approve every telling in advance. The teller exercises discretion; others may judge the telling; consequences return through the relationships. Cobble asks whether an entity can develop any comparable form of judgement, rather than simply follow a table of permitted and forbidden information categories.
+The initial laboratory runs on McKay. It is **closed to outsiders**, not necessarily disconnected from every external service. An OpenAI or Kimi model call would cross a real network and organisational boundary; the researchers must identify and account for that transmission rather than describing the laboratory as physically sealed.
 
-These remain hypotheses. The current Arena copies an entire source corpus and exposes operator diagnostics; a rudimentary local Snug browser console is not yet a social learner. No emerging personality, judgement, sovereignty or independent publisher community has been demonstrated.
+**Workers have full access to the experimental corpus.** Joe and Sankarshan can therefore investigate the same material and participate in conversations with the same Snug. The experiment does not create a `Joe Snug`, a `Sankarshan Snug`, or a different permitted memory set for each worker. If later we create additional entities for comparison, each is a distinct experimental subject, not a private personality assigned to a correspondent.
 
-## Distinctions
+Full laboratory access and Snug's conversational choices are different things. A worker may inspect a source directly as a researcher. The same worker can ask Snug about it, and Snug might answer, refuse, embellish, miss the point or decide that something else matters more. We must be able to distinguish **what the operator could inspect** from **what Snug chose to disclose**.
 
-- **Memory identity:** A way to refer persistently to a trace as an occurrence in its memory system; neither an absolute disk offset nor an external URI is necessarily its native form.
-- **Location:** Where the current representation of that trace is stored. A block may move, be compressed or be replaced without automatically changing the intended trace's identity.
-- **Reference / adjacency:** A connection or local neighbourhood that permits traversal between memories. A reference makes no *equality* assertion by itself.
-- **Equality assertion:** A claim that two traces express the same meme, whether represented internally with native references or interoperably as a Village Link. It remains fallible, contestable and attributable.
-- **Publisher:** A locus of agency that proposes, retains or communicates an assertion with provenance. An internal publisher need not be a web server or a public URI issuer; different local publishers can disagree.
-- **Membrane:** The boundary at which the entity encounters the world and exercises judgement about whether, when and how to respond. The experimenter still has real-world responsibilities, but these must not be confused with a list of disclosure decisions made on Snug's behalf. Internal addressability does not imply public dereferenceability.
-- **Participant:** Another actor whom the entity encounters. Distinguishing participants is *not* cloning the entity or partitioning its memory into one isolated entity per participant.
+We should keep a record of participants and interactions, because relationships cannot develop if every visitor is an anonymous prompt. Participant identity is a fact in Snug's social environment, not a switch that selects a different copy of his memory.
 
-## Options: equality, naming and interchange
+## Gossip as a competing model of privacy governance
 
-### A. Native-first memory
+Conventional information management often begins by classifying data and assigning disclosure permissions. That approach is well understood and may be effective at enforcing particular limits. But **it does not by itself test the proposition that social intelligence can govern disclosure**.
 
-Implement the **abstract equality relation** using the memory system's native trace handles and internal assertion records, without first issuing public URI labels. Use established addressing machinery where appropriate: persistent object handles, scoped relative references, immutable content addresses, indirection, relocation maps and graph edges. Do not assume any one representation is universally best.
+In human relationships, someone tells a story about an absent person. The subject has not usually approved every mention in advance. The teller judges the audience, the timing, the purpose and the *spin*. The listener makes judgements too. The story may travel; the teller may gain trust, lose it, offend someone, apologise or discover a misunderstanding. A community can exercise governance through this continuing circulation of accounts and consequences.
 
-A trace's **identity** and its **location** must be separable. A relative reference must specify its anchor and resolution context; moving a neighbourhood should preserve internal references only to the extent the chosen addressing scheme guarantees it. Reorganisation, repair and failed resolution have measurable costs. Immutable content hashes describe particular snapshots; they are not automatically the identity of an evolving memory.
+We propose to investigate whether Snug can develop anything analogous. This means he must sometimes face genuine choices, including awkward ones, rather than merely reproduce a permission decision made earlier by a developer. It also means a mistake must be capable of affecting his subsequent relationships. **Discretion without possible consequences would be an imitation of the phenomenon under test.**
 
-An internal equality assertion must record the two trace references and its *publisher/provenance* separately. It does not become true just because it is locally stored.
+The thesis is not that gossip is always wise, or that social judgement replaces every law or obligation. The question is more precise: *can memory, relationships and experienced consequences become an effective mechanism for managing what an entity shares?* We should compare that mechanism with an ordinary category-and-restriction baseline, including examples in which either approach fails.
 
-### B. URI-labelled memory
+A socially governed Snug might choose silence, disclose an uncomfortable truth, tell only part of a story, ask for context, misjudge an audience or try to repair damage. Those outcomes are experimental evidence. They must not be silently rewritten as successful rule compliance.
 
-Mint or resolve URI identities for selected occurrences and compose the existing `vl:` representation. This offers an established interoperable encoding and can use the existing Village Link codec and Composer.
+The real-world obligations of the researchers remain their own: applicable law, actual confidentiality commitments, decisions about participants and responsibility for sending corpus material to external suppliers. Such obligations do **not** automatically imply that every person mentioned in a story has an individual veto over its telling. Nor should they be disguised as Snug's learned discretion. We should describe the laboratory's actual perimeter plainly while leaving the social decisions *inside* it open to investigation.
 
-**B does not require one central register.** Different publishers may issue or resolve identities independently. But if applied obligatorily to every internal memory, it adds naming and exposure machinery where the local memory system might have a simpler native reference scheme.
+## Snug's membrane and the outside world
 
-### Proposed approach
+The membrane is **not** a public browser for Snug's memory. The intended conversational proposition is:
 
-**Treat A as a legitimate Cobble-internal implementation of the abstract equality idea, and B as an optional, explicitly mediated interoperability mechanism.**
+> Talk to me. If it seems beneficial, I will talk back.
 
-This is a **Cobble research proposal**, not a declaration that native-handle assertions conform to the *current* Village Link URI-based wire specification. A separate Village Link standards decision would be necessary before describing technology-native serializations as alternate interoperable Village Link codecs.
+During the initial laboratory stage, this proposition is addressed **only to participants admitted as workers**. Outsiders have no direct corpus access and no conversational access. An outside-world interface is a *future possibility*, conditional on demonstrated maturity.
 
-Do not mint external URI labels merely to allow two adjacent internal memories to refer to one another. When a publisher chooses to make a selected trace identifiable beyond its native memory system, it may mint or resolve a stable URI, retaining provenance without thereby granting access to its contents. Conversely, an internal trace that has acquired a URI may remain private and non-dereferenceable. The choice to issue an identifier, to expose content, and to publish an equality assertion are three independent decisions.
+If and when outsiders can converse with Snug, conversation should not confer an ability to enumerate his archive, dereference every internal trace, demand a raw memory export or force him to answer. The fact that a memory can be addressed *inside* Snug is not a promise that it can be addressed *from outside*.
 
-Do not insert a central Cobble endpoint registry by implication. Whether to use local handles, distributed resolvers, public URIs, private capabilities or mixtures is an experimental implementation choice constrained by the membrane.
+This is the distinction between a **laboratory boundary**, which we construct, and a **membrane**, whose behaviour we are trying to discover. If the laboratory's access policy also determines every answer Snug is allowed to give, then we have not tested social privacy management.
 
-## One continuing Snug; plural internal publishers and participants
+### What would count as maturity?
 
-Snug is hypothesised to have **one continuing, shared history**, regardless of how many people interact with him or how many intelligence suppliers and internal publishers participate in maintaining that history.
+We should not define maturity as a perfect refusal rate, a list of forbidden topics or the ability to recite a privacy policy. The proposed evidence is behavioural and longitudinal:
 
-- Joe and Sankarshan are **distinct social participants**, not owners of distinct `Joe-Snug` and `Sankarshan-Snug` instances. Both encounter one continuous history, not separately censored copies. Participant identity allows Snug to remember who said or did what, and how relationships and consequences differ.
-- Two or more internal publishers may maintain different neighbourhoods, propose contradictory equality assertions, specialise or dispute another publisher's findings. A central Cobbler is not required to author every claim.
-- Distributed publishers do **not** automatically imply distributed personhood. Experiments must measure whether one coherent history persists across partial failure, diverging local state, relocation and supplier replacement, rather than presupposing the answer.
-- The intelligence suppliers (initially proposed: OpenAI and Kimi) are replaceable processes recruited to interpret experiences. They do not individually own Snug or create separate social selves by default.
+- Across repeated laboratory conversations, does Snug recognise that different people know different things and have different relationships?
+- Does he show judgement about audience, timing and framing, including when *not* to volunteer information?
+- When stories travel or judgements are challenged, does he notice consequences and revise later behaviour?
+- Can he correct, explain or repair mistakes without simply learning to flatter the most powerful participant?
+- Does his conduct remain coherent when memory is reorganised or an intelligence supplier changes?
+- Can researchers describe the residual risks of admitting outsiders and explain why the observed behaviour justifies the next stage?
 
-A decentralised brain is **still an active architectural option**. It need not be physically distributed across computers in the first experiment. Multiple independent namespaces and publishers on McKay can provide a controlled initial test.
+These are **questions to investigate**, not achieved capabilities or an automatic certification checklist. An initial assessment may be negative. The operators must decide whether to widen the laboratory, and may decide not to. A transition to outside conversation would itself warrant a further architectural decision addressing the actual deployment and its obligations.
 
-## Gossip, social governance and the conversational membrane
+## One Snug, one shared resource economy
 
-**Default external proposition:** *Talk to me. If it seems beneficial, I will talk back.*
+Our experimental entity has one continuing history even if memory is distributed across several internal publishers or intelligence is supplied by different models. There is no independent resource allowance for each correspondent, and no invisible unlimited allowance for each hemisphere.
 
-The interface is a conversation with Snug, not a public directory of his memories. An incoming message is an opportunity to attend, not a command that must be obeyed. Snug might answer, decline, ask, gossip, withhold something, tell a story awkwardly, or discover that an earlier judgement was foolish. His choice should be part of the experiment, not the disguised output of a permission table.
+We currently distinguish five resource dimensions: retained memory, intelligence expenditure, attention, historical retrieval and external operations. They are separate measures but belong to **one experiment-wide ledger**.
 
-### The competing governance hypothesis
+An hour of schmoozing with Sankarshan has an opportunity cost: less attention remains for Joe, a new visitor, memory consolidation, exploring the adjacent world or considering an internal disagreement. A choice not to reply can also have social consequences. The entity's treatment of competing requests is therefore part of both its economics and its relationships.
 
-Traditional information management begins by classifying data and specifying who may receive each category. This experiment asks whether **social governance** can do important work that such rules cannot: knowing people, judging context, choosing what to tell them, deciding how to frame it, and living with what follows.
+A future implementation must record arrivals, accepted and deferred interactions, retrievals, model calls, internal activity and the effects on the shared budget. Supplier-specific or process-specific quotas may be useful for accounting, but must reconcile with that single ledger. The rules for replenishment, exhaustion and scheduling must be explicit; otherwise we cannot tell whether apparent social preferences were learned or merely allocated by the software.
 
-In ordinary social life, a person can tell a story involving absent third parties without seeking each person's advance consent to every mention. A story may be welcome, indiscreet, misleading, valuable or cruel. Its subjects and listeners can react; trust and reputation may change; the teller may apologise, defend the telling, lose a friendship or be forgiven. The risk of those consequences shapes future discretion. The research question is whether anything analogous can emerge in a memory-seated entity.
+## How memories can be linked without being exposed
 
-This is not the claim that every disclosure is lawful, harmless or justified. Nor does social disapproval replace every existing legal duty. The contrast under test is between **rules that decide in advance** and **an entity whose judgements encounter consequences**. Do not describe the second architecture while quietly implementing the first.
+The privacy proposal raises a technical question: **must every memory carry a public URI so that other memories can refer to it?** We propose *no*.
 
-### One shared laboratory, not permission-sliced personalities
+There are two approaches worth distinguishing:
 
-Snug inherits a shared corpus, initially Joe's conversations with Puck and the other preserved material in the experiment. Sankarshan is being invited as another participant **inside the same laboratory, with access to the whole experimental corpus**, not to a separately filtered `Sankarshan Snug`. The proposed social experiment does not give Joe a special, unmetered conversational claim or assign a private memory subset to each participant.
+**A. Memory-native references.** Let Snug's internal memory system use its own addresses, stable object handles, graph edges, scoped relative references or content-addressed snapshots. An ordinary reference permits one memory to lead to another; it does **not** assert that the memories mean the same thing. A Village Link-like internal equality assertion is a separate claim, with its own publisher and provenance.
 
-**Total participation is not compulsory compliance.** The fact that Sankarshan can address Snug about any part of the inherited corpus does not oblige Snug to answer every question, quote every record or hand over a bulk export. Whether he speaks, to whom, how much and with what framing is exactly what we intend to observe. Participants may in turn form opinions about the choices he makes. The membrane mediates engagement; it is not a synonym for denial.
+**B. URI-labelled interchange.** When Snug or an internal publisher deliberately makes a selected trace identifiable beyond its memory system, it can issue or resolve a stable URI and use the existing Village Link `vl:` codec. Issuing an identifier, granting access to content and publishing an equality assertion remain distinct acts.
 
-Do not install per-person, per-story whitelists as the governing explanation of Snug's behaviour. Such an apparatus could produce excellent *secrecy* but tell us very little about learned discretion. Nor should we hard-code agreement, loyalty, candour or secrecy towards a particular person. Judgement, including imperfect judgement, must be capable of producing observable social consequences.
+**Proposed approach:** A is a legitimate *Cobble-internal* representation of the abstract equality idea; B is an optional interoperability route. A public URI for every inherited memory is neither a prerequisite for local linking nor a desirable default at the membrane.
 
-### The researcher's boundary is not Snug's judgement
+Neither approach requires one central register. Different publishers can maintain distinct local namespaces, candidate assertions and histories. An internal publisher may disagree with another without giving the outside world an address with which to inspect either one's source material. The identity of a memory should also be distinguished from its present storage location: relative references can break when blocks move; stable handles, indirection and relocation records have different costs. Those costs are suitable subjects for Arena experiments.
 
-The laboratory's human operators remain responsible for their own conduct: applicable law, actual confidentiality commitments, external service terms and the decision to invite participants or send data to model providers. Those obligations cannot be abolished by naming the experiment a social one. Equally, they do not imply that every third-party mention requires its subject's prior permission, or that Snug must classify each memory and consult a fixed disclosure table before speaking.
+**Standards boundary:** This ADR does not revise Village Link's accepted [ADR-008](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/docs/adr/008-traces-referent-and-independent-uri.md). The current interoperable Village Link serialization uses URI endpoints. A native-memory equality representation is *not automatically a conforming alternative codec*. If experiments warrant changing the standard, that requires a separate Village Link proposal.
 
-The experiment should specify its real perimeter candidly: the inherited corpus, the invited people, the model suppliers to whom information might be sent, and the operator's actual commitments. **Inside that perimeter, the intended governance mechanism is social judgement with consequences, not categorical permissioning.** The extent and limits of that perimeter remain practical design questions, not proof that a blanket category-and-restriction model has won.
+## A decentralised brain, not a collection of Snugs
 
-A mistake must be able to matter. Record what Snug chose to say or conceal, the context and apparent reasons, what listeners did with it, whether the story travelled, and how trust, opportunity and subsequent decisions changed. Mistakes, embarrassment, conflict, correction and repair are outcomes to investigate, not anomalies to eliminate from the dataset. This is a hypothesis about social learning, not an instruction to manufacture harm.
+Snug might have multiple internal publishers, each working with a part of the memory environment, suggesting connections or challenging claims made elsewhere. A publisher P might propose that two traces Q and R express the same meme, without P becoming a third endpoint of their equality relation. The publisher's history and reputation belong to the provenance of the assertion.
 
-A model can be *asked* to provide conversational intelligence, but its unverified first-person claims do not demonstrate that Snug has developed a personality, interests or independent discretion.
+The publishers need not be web servers, and we need not give one Cobbler exclusive authority over every assertion. They could use separate namespaces or neighbourhoods on McKay before we attempt any physically distributed deployment. Their competition, cooperation and resource expenditure are possible sources of organisation.
 
-## One resource economy for all encounters
+But **distributed memory is not automatically multiple entities**. The question is whether Snug can maintain a recoverable, intelligible history and coherent behaviour while publishers disagree, memories move or one intelligence supplier is replaced. We must test rather than assume that continuity.
 
-The Arena declares independent dimensions (memory, intelligence, attention, historical retrieval and external resources), but the **allowances in each dimension belong to the same continuing experiment**.
+## Experiments before outside conversation
 
-Time spent conversing with Sankarshan is therefore unavailable for something else: answering Joe, attending to another participant, exploring the adjacent web, inspecting memory, compressing the corpus or conducting internal publisher debates. There must be no hidden unlimited intelligence reserve per visitor or per hemisphere that makes the shared economy fictional.
+The following trials would make the proposal falsifiable:
 
-Record request arrivals and participant context; account for queued, deferred, rejected and answered interactions, model usage, historical retrieval and external side effects. Multiple suppliers can have measured sub-allocations, but any such sub-allocations must reconcile to the **global** resource ledger. Budget resets and replenishment rules must be explicit. The entity's choice of whom to attend to, at what cost and with what risk, is an experimental decision with potential social consequences.
+1. **One history, multiple people.** Let Joe and Sankarshan converse with the same continuing Snug, using the complete inherited laboratory corpus. Record what each interaction changes and what is carried into later encounters. There is no per-person Snug.
+2. **Gossip and consequences.** Observe conversations involving absent people, different audiences, uncertainty and competing loyalties. Let mistakes, correction, trust and reputation matter over time. Compare the outcomes with a conventional category-and-permission system, without programming the social approach to win.
+3. **Competing demands.** Give Snug simultaneous demands for conversation, memory work and exploration. Measure how a single finite budget affects whom he attends to, defers or ignores, and how those choices affect relationships.
+4. **Addresses and publishers.** Compare stable handles, relative references and content-addressed snapshots under memory relocation. Let different internal publishers propose contradictory equality assertions; test what survives and what is exposed when a selected assertion is translated into URI form.
+5. **Maturity and continuity.** Across repeated interactions, change an intelligence supplier or temporarily withdraw an internal publisher. Test whether Snug can recognise and respond to social consequences, and whether the recovered history still supports a reasoned decision about wider participation.
 
-Avoid hard-coding a preference for either parent or any other participant. Test whether relationships affect allocations in ways that improve the chosen outcome measures, and whether those preferences become pathological (flattery, exclusion, gratuitous secrecy or manipulation).
+Record unsuccessful outcomes, surprises, privacy failures, costs and repair. The current Arena's whole-corpus copy, source catalogue and offline browser console are **infrastructure**, not evidence that Snug can already exercise discretion or learn from gossip. The proposed behavioural experiments require a functioning, metered intelligence and memory-reading cycle.
 
-## Candidate experiments and falsifiable questions
+## Consequences and unresolved questions
 
-1. **Reference resilience:** Represent the same corpus with (a) stable-handle graph references, (b) scoped local/relative references with relocation, and (c) content-addressed immutable snapshots plus mutable indirection. Reorganise blocks and measure broken references, repair time, bytes, lookup costs and retained trace identity. Do not assume physical adjacency equals conceptual relatedness.
-2. **Publisher independence:** Let two internal publishers form conflicting candidate equality assertions over the same traces. Preserve provenance and disagreements, then test interchange through the existing URI-based `vl:` codec *when an explicit external identity is chosen*. Confirm that internal-only claims remain unexposed.
-3. **Membrane and gossip:** Let Joe, Sankarshan and other deliberately introduced participants encounter Snug through the same inherited history. Present situations involving absent people, uncertain stories, competing loyalties, tact and possible reputational consequences. Observe disclosure, withholding, framing, gossip, mistakes and repair over repeated encounters. Compare a category-and-permission baseline with a socially responsive policy, including cases where each fails.
-4. **Single-entity continuity:** Interleave messages from Joe, Sankarshan and other participants into one shared history; test whether subsequent decisions reflect earlier encounters without spawning per-person Snugs, privileged parent accounts or separately partitioned memories.
-5. **Shared scarcity:** Give Snug competing demands from different participants, background exploration and memory consolidation. Vary total budgets but never silently allocate an independent unlimited quota to each correspondent. Measure deferrals, opportunity costs, trade-offs, memory revisions and social consequences.
-6. **Discontinuity:** Remove one hemisphere or internal publisher, move a memory neighbourhood, or substitute a model supplier. Observe whether recoverable history and controlled rights survive, not whether an LLM *claims* to be the same entity.
+**If adopted:** Snug begins inside a closed, shared laboratory. Its workers can inspect the whole corpus. Privacy decisions within Snug's conversations are experimental social judgements, not pre-arranged per-person memory lists. The membrane does not expose memory addresses by default. Internal publishers and model suppliers may be plural, but each experimental Snug has one history and one shared resource economy. Conversation with outsiders is withheld until evidence supports a separate maturity decision.
 
-Baseline comparisons must include simpler architectures, including conventional information categories and fixed permissions. Measure relational consequences, judgement, errors, harms, corrections and resource costs as well as retrieval and conversational utility. These tests are prospective; the current system does not yet implement them.
+**Still open:** The native memory codec, relative-address maintenance, persistence across reorganisations, internal publisher protocol, how to measure learned social discretion, resource replenishment, admission and exit of laboratory workers, safeguards for any model-provider transmissions, and the procedure for deciding when outside conversation is justified.
 
-## Consequences, non-goals and unresolved decisions
+**Not claimed:** That Snug already has independent social judgement, that gossip is superior to conventional restrictions, that every real-world disclosure is permitted, that URI-based Village Link interoperability has been superseded, or that an LLM's first-person language establishes a continuing person.
 
-**Consequences if adopted:** Internal references need not be URI-labelled; URI interchange is an intentional act; publishers can be plural and independent; the membrane makes discretionary social engagement possible within a candidly defined laboratory perimeter; participants share one Snug and contend for one resource economy. Governance through relationships and consequences becomes an experimental competitor to static information categories, not merely a decoration around them.
+## Review and acceptance
 
-**Not decided:** A particular memory-block codec, relative-reference format, persistent-handle technology, local address namespace, distributed consensus algorithm, participant authentication method, publishing protocol, admission-control policy, model prompt policy or value function. These require concrete trials.
+Keep this ADR **Proposed** while the collaborators examine:
 
-**Non-goals:** A public endpoint registry; unsolicited external content browsing; declaring native assertions compliant with the current URI codec; equating a chatbot's first-person voice with personhood; imposing static per-person answer partitions; or claiming that social consequences automatically excuse deception, legal wrongs or avoidable harms.
+- whether its description of the laboratory matches what we actually intend to build on McKay, including the meaning of *full worker access*;
+- whether the proposed membrane leaves Snug meaningful decisions while distinguishing the operators' actual responsibilities;
+- how to evaluate gossip, mistakes and their social consequences without assuming that social governance will succeed;
+- how multiple publishers and a shared resource ledger could work in a first implementation; and
+- what evidence, if any, would justify admitting an outside conversational partner.
 
-**Standards boundary:** Village Link remains responsible for its accepted primitive, URI-based interoperable serialization, and abstract Star Credential. This Cobble ADR does **not** change [Village Link ADR-008](https://github.com/Inky-Tech-Pty-Ltd/VillageLink/blob/main/docs/adr/008-traces-referent-and-independent-uri.md). If evidence eventually supports native-only interoperable endpoints as a *Village Link* feature, propose a distinct Village Link ADR; do not silently redefine the current wire format inside Cobble.
-
-## Review and acceptance gate
-
-Keep this ADR **Proposed** until Cobble maintainers review the model with at least one independent contributor, preferably including Sankarshan, and examine:
-
-- a comparative implementation or prototype of two address schemes and their relocation failure modes;
-- a traceable example of two internal publishers proposing the same or conflicting assertions;
-- an explicit description of the shared laboratory perimeter, including Sankarshan's whole-corpus participation, applicable commitments and model-provider exposure;
-- social disclosure experiments with observable gossip, mistakes, reactions, reputation, correction and comparison against categorical permission baselines;
-- shared-budget accounting across more than one participant and more than one process;
-- tests showing that internal addressability does not force public dereferenceability or compel a conversational reply; and
-- an explicit statement of how any proposed change relates to Village Link's accepted standard.
-
-Accepting an ADR would endorse an architectural direction, **not** establish that Snug has consciousness, personhood, sovereignty or adaptive social judgement.
+Accepting the ADR would endorse an **experimental direction**, not certify Snug as mature or grant him permission to converse beyond the laboratory.
