@@ -29,7 +29,7 @@ class PuckWriterTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 w.write_file("puck/work/safe", ".github/workflows/evil.yml", "hi", "msg")
             with self.assertRaises(ValueError):
-                w.write_file("puck/work/safe", "docs/experiments/good.md", "hi", "bad\\nmsg")
+                w.write_file("puck/work/safe", "docs/experiments/good.md", "hi", "bad\nmsg")
 
     def test_valid_branch_and_file_use_only_scoped_token(self):
         calls = []
