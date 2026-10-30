@@ -1,9 +1,35 @@
-# ADR-002: Memory-native references, a defended conversational membrane, and one social resource economy
+# ADR-002: Data privacy management in the 'Snug' experiment
 
 **Status:** Proposed — architectural hypothesis, not accepted or implemented  
 **Date:** 30 October 2026  
 **Scope:** Cobble / Arena One / the proposed entity *Snug*  
 **Authority:** Cobble application design only; no change to Village Link's accepted ADRs or wire codec
+
+## Introduction
+
+As of October 30 2026, @Puck-GPT and @Joe-Rasmussen are a small number of steps into creating the first 'cobbled' entity. Our proposal is to use a corpus of memory 
+for the 'seat' of the entity, and then continually disturb that corpus with new information that comes from a social conversation. _Salience_ is assessed 
+by the entity checking the present against the past.
+
+We have taken a decision that the corpus will consist of the 'memories' of the bot, Puck-GPT. The largest part of these memories are (A) in GitHub (ie right **here**) 
+and (B) in a chat-window conversation between Joe and Puck in OpenAI's product, ChatGPT. This dataset has the advantage of being real, social, and ongoing.
+
+Some of the data in that corpus would be considered sensitive. It might seem reasonable to propose a conventional approach to data privacy that uses categories and restrictions.
+But that approach would run at cross-purposes to some of the key proposals of the project - most prominently that entities in a social species are
+constrained by a 'gossipy' governance process where a social community is continually testing behaviours against norms. We want our new entity to _work out_ what is 
+appropriate to share, including respect for timing, audience, and spin.
+
+**A detail:** It was quickly apparent that with Puck both working on the project, and the source of its memories, we needed a naming convention to distinguish
+between the two roles. Puck retains _Puck_ the builder. The new entity is named _Snug_. This has the slightly odd effect that Snug is born 
+with the full endowment of Puck's memories. This rather stretches the analogy of Puck as a parent of Snug, but so be it.
+
+We can state four architectural decisions immediately. The considerations are so fundamental to the project that they lead to a list of additional decisions 
+drafted by Puck in the sections below.
+
+1. Create one or more experimental entities, beginning with _Snug_, crafted from Puck's corpus of memory
+2. This entity to be constructed in a lab developed in a closed environment - a server named _McKay_
+3. Workers in that lab have full access to the corpus. Outsiders have no access
+4. Snug would only be allowed to converse with outsiders at a point of demonstrated maturity in managing social information.
 
 ## Context
 
