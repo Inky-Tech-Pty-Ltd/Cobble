@@ -20,6 +20,7 @@ from cobble.remote_ops import (
     lab_add_note as append_lab_note,
     lab_recent_notes as get_lab_notes,
 )
+from cobble.puck_github_writer import create_branch as puck_make_branch, write_file as puck_put_file
 from cobble.memory_access import (
     get_trace as read_trace,
     inspect_star as read_star,
@@ -140,6 +141,25 @@ def run_arena_tests() -> dict:
     No commands, paths, shell arguments or environment variables accepted.
     """
     return run_arena_selftest()
+
+
+@mcp.tool()
+def puck_create_branch(name: str) -> dict:
+    """Create a scoped Cobble development branch using Puck's App token only.
+
+    Disabled unless McKay has a separately provisioned App installation token.
+    Never uses Joe's GitHub CLI credentials.
+    """
+    return puck_make_branch(name)
+
+
+@mcp.tool()
+def puck_write_file(branch: str, path: str, content: str, message: str) -> dict:
+    """Create an experiment Markdown file on a Puck branch, attributed to Puck.
+
+    Cannot overwrite existing files, write main, or impersonate a named author.
+    """
+    return puck_put_file(branch, path, content, message)
 
 
 if __name__ == "__main__":
