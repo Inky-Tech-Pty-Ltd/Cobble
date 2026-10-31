@@ -47,10 +47,15 @@ def _token():
 
 def _installation(token):
     # Personal OAuth tokens must not be accepted as the writer credential.
-    result = _request("GET", "/installation/repositories?per_page=100", token)
+    installation = _request("GET", "/installation/repositories?per_page=100", token)
     if not any(item.get("full_name") == REPOSITORY
-               for item in result.get("repositories", [])):
+               for item in installation.get("repositories", [])):
         raise PermissionError("Puck installation token lacks Cobble access")
+    # This endpoint returns the App ID authenticated by the actual bearer
+    # credential. Merely checking the ghs_ prefix or repository is inadequate.
+    app = _request("GET", "/app", token)
+    if app.get("id") != 4708095:
+        raise PermissionError("Not the Puck-GPT GitHub App")
 
 
 def create_branch(name):
