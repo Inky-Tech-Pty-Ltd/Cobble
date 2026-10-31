@@ -38,14 +38,18 @@ def _dispatch_identity():
     if os.environ.get("COBBLE_MCP_ALLOW_PUCK_DISPATCH") != "1":
         raise PermissionError("Puck Actions dispatcher disabled")
     token = os.environ.get("PUCK_DISPATCH_TOKEN", "")
-    expected = os.environ.get("PUCK_DISPATCH_LOGIN", "")
-    if not token or len(token) > 2048 or not expected or expected.lower() == "joe-rasmussen":
-        raise PermissionError("Dedicated non-Joe dispatch identity is not configured")
-    actor = _api("GET", "/user", token)
-    if actor.get("login") != expected:
-        raise PermissionError("Dispatch credential does not belong to the configured service identity")
-    if actor.get("login", "").lower() == "joe-rasmussen":
-        raise PermissionError("Joe's account is not a Puck dispatch identity")
+    if not token.startswith("ghs_") or len(token) > 2048:
+        raise PermissionError("Dedicated App installation token unavailable")
+    # This is an installation token, not a human OAuth token. The /user
+    # endpoint does not authenticate an App installation. Verify access to
+    # InkyTech; App identity is established by the trusted token issuer
+    # using Puck-Dispatcher's App ID 5549836, never by this check alone.
+    installation = _api("GET", "/installation/repositories?per_page=100", token)
+    repositories = installation.get("repositories", [])
+    if installation.get("total_count") != 1 or len(repositories) != 1 or (
+        repositories[0].get("full_name") != _REPO
+    ):
+        raise PermissionError("Dispatcher token must be limited to InkyTech")
     return token
 
 
