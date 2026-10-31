@@ -1,66 +1,65 @@
-"""Offline denial tests for the Puck-scoped GitHub writer."""
+"""Offline negative and dispatch-contract tests."""
+import base64
+import json
 import os
 import unittest
 from unittest.mock import patch
-
 from cobble import puck_github_writer as w
 
 
-class PuckWriterTests(unittest.TestCase):
-    def test_disabled_even_with_joe_oauth_token(self):
-        with patch.dict(os.environ, {"GH_TOKEN": "gho_joe", "GITHUB_TOKEN": "gho_joe"}, clear=True):
+class PuckDispatcherTests(unittest.TestCase):
+    def test_disabled_when_only_joe_credentials_exist(self):
+        with patch.dict(os.environ, {"GH_TOKEN": "gho_joe"}, clear=True):
             with self.assertRaises(PermissionError):
-                w.create_branch("puck/work/safe")
+                w.submit_write("docs/experiments/a.md", "hi", "write")
 
-    def test_refuses_joe_token_even_if_enabled(self):
-        with patch.dict(os.environ, {
-            "COBBLE_MCP_ALLOW_PUCK_WRITES": "1",
-            "PUCK_GITHUB_INSTALLATION_TOKEN": "gho_joe",
-        }, clear=True):
+    def test_refuses_joe_as_configured_identity(self):
+        with patch.dict(os.environ, {"COBBLE_MCP_ALLOW_PUCK_DISPATCH": "1",
+                                     "PUCK_DISPATCH_LOGIN": "Joe-Rasmussen",
+                                     "PUCK_DISPATCH_TOKEN": "ghp_joe"}, clear=True):
             with self.assertRaises(PermissionError):
-                w.create_branch("puck/work/safe")
+                w.submit_write("docs/experiments/a.md", "hi", "write")
 
-    def test_invalid_target_rejected_without_network(self):
-        with patch.object(w, "_request", side_effect=AssertionError("network accessed")):
+    def test_invalid_payload_never_uses_network(self):
+        with patch.object(w, "_api", side_effect=AssertionError("network")):
+            for path in (".github/workflows/x.yml", "../escape.md", "README.md"):
+                with self.assertRaises(ValueError):
+                    w.submit_write(path, "hi", "test")
             with self.assertRaises(ValueError):
-                w.create_branch("main")
+                w.submit_write("docs/experiments/a.md", "hi", "two\nlines")
             with self.assertRaises(ValueError):
-                w.write_file("main", "docs/experiments/test.md", "hi", "msg")
-            with self.assertRaises(ValueError):
-                w.write_file("puck/work/safe", ".github/workflows/evil.yml", "hi", "msg")
-            with self.assertRaises(ValueError):
-                w.write_file("puck/work/safe", "docs/experiments/good.md", "hi", "bad\nmsg")
+                w.submit_write("docs/experiments/a.md", "x" * 12001, "test")
 
-    def test_valid_branch_and_file_use_only_scoped_token(self):
+    def test_wrong_authenticated_actor_refused(self):
+        with patch.dict(os.environ, {"COBBLE_MCP_ALLOW_PUCK_DISPATCH": "1",
+                                     "PUCK_DISPATCH_LOGIN": "puck-trigger",
+                                     "PUCK_DISPATCH_TOKEN": "service-secret"}, clear=True):
+            with patch.object(w, "_api", return_value={"login": "Joe-Rasmussen"}):
+                with self.assertRaises(PermissionError):
+                    w.submit_write("docs/experiments/a.md", "hi", "test")
+
+    def test_valid_dispatch_is_bounded_and_not_a_commit(self):
         calls = []
-        def fake(method, path, token, body=None):
-            calls.append((method, path, token, body))
-            if path.startswith("/installation/repositories"):
-                return {"repositories": [{"full_name": w.REPOSITORY}]}
-            if method == "GET":
-                return {"object": {"sha": "abc123"}}
-            if method == "POST":
-                return {"ref": "refs/heads/puck/work/good"}
-            return {"commit": {"sha": "def456"}}
-        with patch.dict(os.environ, {
-            "COBBLE_MCP_ALLOW_PUCK_WRITES": "1",
-            "PUCK_GITHUB_INSTALLATION_TOKEN": "ghs_puckfake",
-            "GH_TOKEN": "gho_joe",
-        }, clear=True), patch.object(w, "_request", side_effect=fake):
-            result = w.create_branch("puck/work/good")
-            self.assertTrue(result["created"])
-            result = w.write_file("puck/work/good", "docs/experiments/test.md", "body", "message")
-            self.assertEqual(result["commit_sha"], "def456")
-        self.assertTrue(all(call[2] == "ghs_puckfake" for call in calls))
-        write = [c for c in calls if c[0] == "PUT"][0]
-        self.assertEqual(write[3]["author"]["name"], w.BOT_NAME)
-        self.assertEqual(write[3]["committer"]["name"], w.BOT_NAME)
-        self.assertNotIn("gho_joe", str(calls))
-
-    def test_installation_must_include_repository(self):
-        with patch.object(w, "_request", return_value={"repositories": []}):
-            with self.assertRaises(PermissionError):
-                w._installation("ghs_puckfake")
+        def api(method, path, token, payload=None):
+            calls.append((method, path, token, payload))
+            if path == "/user":
+                return {"login": "puck-trigger"}
+            return {}
+        with patch.dict(os.environ, {"COBBLE_MCP_ALLOW_PUCK_DISPATCH": "1",
+                                     "PUCK_DISPATCH_LOGIN": "puck-trigger",
+                                     "PUCK_DISPATCH_TOKEN": "service-secret",
+                                     "GH_TOKEN": "gho_joe"}, clear=True):
+            with patch.object(w, "_api", side_effect=api):
+                result = w.submit_write("docs/experiments/a.md", "hello", "test")
+        self.assertTrue(result["submitted"])
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[1][0], "POST")
+        self.assertEqual(calls[1][2], "service-secret")
+        self.assertEqual(calls[1][3]["ref"], "main")
+        self.assertEqual(set(calls[1][3]["inputs"]), {"request_b64"})
+        request = json.loads(base64.b64decode(calls[1][3]["inputs"]["request_b64"]))
+        self.assertEqual(request, {"path": "docs/experiments/a.md",
+                                   "content": "hello", "message": "test"})
 
 
 if __name__ == "__main__":
