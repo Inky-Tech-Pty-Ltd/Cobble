@@ -51,11 +51,9 @@ def _installation(token):
     if not any(item.get("full_name") == REPOSITORY
                for item in installation.get("repositories", [])):
         raise PermissionError("Puck installation token lacks Cobble access")
-    # This endpoint returns the App ID authenticated by the actual bearer
-    # credential. Merely checking the ghs_ prefix or repository is inadequate.
-    app = _request("GET", "/app", token)
-    if app.get("id") != 4708095:
-        raise PermissionError("Not the Puck-GPT GitHub App")
+    # A repository-access check cannot establish which App minted the
+    # installation token. The separate trusted token broker must bind
+    # App ID 4708095 to the issued credential; do not claim otherwise.
 
 
 def create_branch(name):
