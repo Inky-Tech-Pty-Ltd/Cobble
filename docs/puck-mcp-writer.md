@@ -1,72 +1,64 @@
-# Puck GitHub writer: first McKay MCP slice (31 October 2026)
+# Puck Actions dispatcher — implementation slice (31 October 2026)
 
-This code is **staged for testing**. It is not a completed identity boundary.
-VillageLink Issue #5 remains open.
+**Prototype, not production-authorised.** VillageLink Issue #5 remains open.
 
-The new tools are `puck_create_branch(name)` and
-`puck_write_file(branch, path, content, message)`. They use GitHub's HTTPS
-API directly and never invoke `gh`, `git`, subprocess, credential helper,
-or `~/.config/gh/hosts.yml`.
+Puck's actual GitHub **writer** is GitHub Actions in InkyTech.
+The workflow alone creates a repository-scoped GitHub App token from
+`PUCK_GPT_PRIVATE_KEY` and commits as `puck-gpt[bot]`.
 
-For this first cut:
-- Repository is fixed to `Inky-Tech-Pty-Ltd/Cobble`.
-- Branch must start `puck/work/`, and files must be **new** Markdown files
-  under `docs/experiments/`.
-- Both actor/committer fields are fixed to `puck-gpt[bot]`.
-- Token must be `PUCK_GITHUB_INSTALLATION_TOKEN` (GitHub App installation
-  token, normally beginning `ghs_`) and switch
-  `COBBLE_MCP_ALLOW_PUCK_WRITES=1` must be enabled.
-- The token is checked against the GitHub App installation repositories API,
-  which rejects personal OAuth credentials.
-- The token is never returned to the caller or persisted by the tool.
-- A bogus or unavailable token fails closed. There is no Joe fallback.
+The new Cobble MCP tool `puck_submit_write(path, content, message)`
+only *requests* an Actions run using the InkyTech workflow_dispatch API.
+The submitted request is a base64-encoded JSON object. GitHub Actions
+validates the resulting JSON, limits it to one **new** Markdown file under
+`docs/experiments/`, creates `puck/work-<run_id>` from Cobble main,
+and uses the Puck App installation token for the actual push.
+The workflow also retains its earlier manually staged branch mode.
 
-**This is not sufficient to prove the token belongs to the Puck-GPT App**:
-a token from *another* GitHub App installation with Cobble access might also
-pass the repository test. Nor does it prevent the MCP process, if running as
-Joe's `cobbler` user, from accessing Joe's home directory outside these
-individual tool functions. The final implementation needs a broker issuing
-tokens specifically for App 4708095 and an OS-level isolated runtime, then
-must disable the connected Joe-authenticated mutation route.
+## Identity separation
 
-## Safe activation requirements
+**Do not use Joe's credentials as the dispatcher.** The MCP process requires
+three opt-ins: `COBBLE_MCP_ALLOW_PUCK_DISPATCH=1`,
+`PUCK_DISPATCH_LOGIN=<dedicated-non-Joe-service-login>`, and
+`PUCK_DISPATCH_TOKEN=<credential-issued-to-that-login>`.
 
-Do NOT put Joe's `gho_` token, the Puck App private key, or a persistent
-App token into the Cobble tunnel's shell profile. Do NOT set the write switch
-until a dedicated token broker and isolated runtime are established.
+Before dispatch the tool calls GitHub `GET /user` with *that same* token
+and requires the login to equal the configured non-Joe service identity.
+It does not read `GH_TOKEN`, `GITHUB_TOKEN`, `gh auth`, the `git`
+credential helper or any GitHub App private key.
 
-The current tunnel wrapper intentionally does **not** set the write switch.
-The tools should therefore appear but refuse all writes after refresh. This
-is expected and is a meaningful, limited negative test.
+The token holder must have narrowly limited GitHub Actions dispatch
+permission on InkyTech. The exact permissions and identity must be
+verified during provisioning; do not assume a generic PAT is safely scoped.
+Importantly, this token is still a secret that needs protected storage
+and rotation. Avoid setting it in McKay's general interactive shell or
+the existing memory MCP process if it also has access to Joe's home.
+A separate restricted OS identity/service is the intended deployment.
+The check of the service login inside Python is defence in depth;
+**OS-level separation and deauthorisation of the Joe GitHub connector
+are still essential** to the full impersonation-negative-test.
 
-Run offline tests before any credential setup:
+As shipped the MCP tool is **disabled**: the existing `lab_tunnel.sh`
+does not opt into dispatch or load a dispatch token. No active remote
+writer is added until an independent service identity is provisioned.
 
+## Testing
+
+Offline:
 ```sh
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_lab_puck_writer.py' -v
 ```
 
-The next implementation milestone is the separately credentialed broker,
-which must never expose Joe's credential to the MCP process. Only after it
-exists can the positive remote write and the full no-impersonation denial
-test be run.
+Then inspect the InkyTech Actions workflow changes. Publish the workflow
+through Puck's established process. The complete end-to-end test requires
+a dedicated service identity and restricted execution context; no
+Joe-authenticated fallback is acceptable.
 
-## Review correction: credential identity
+## Current boundaries
 
-GitHub's REST API does not permit treating a repository-access check as
-proof of a specific GitHub App identity. The `GET /app` endpoint cannot
-serve as a reliable identity check for an installation token: the
-authenticated-app operation requires a GitHub App JWT. We deliberately
-rejected that approach during review rather than publishing a broken
-credential check.
-
-The secure invariant is **provenance at token issuance**: a trusted,
-separately authorised broker must use only the known Puck-GPT App
-private key (App ID 4708095), mint a repository-restricted installation
-token and deliver it only to the isolated writer process. The writer's
-repository check is defence in depth, not identity proof.
-
-The existing GitHub Actions writer already has the correct bot credential
-and has made a real attributed write. A McKay broker is **not built** yet.
-The connected Joe-authenticated ChatGPT GitHub plugin remains a bypass
-until replaced or disconnected; therefore the full negative test is not
-yet satisfied.
+- Supported: bounded new Cobble Markdown file request; Puck-attributed
+  Actions commit after successful dispatch.
+- Not supported: arbitrary files, edits or shell commands; publication
+  to main; direct Puck private-key access on McKay.
+- Not yet proven: service-principal provisioning, isolated runtime,
+  operation through the live MCP tunnel, removal of Joe-authenticated
+  GitHub mutations, or the full end-to-end negative impersonation test.
