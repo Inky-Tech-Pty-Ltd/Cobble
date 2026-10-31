@@ -1,0 +1,32 @@
+[Unit]
+Description=Isolated Puck GitHub Actions dispatch broker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=puck-dispatch
+Group=puck-dispatch-clients
+WorkingDirectory=/opt/puck-dispatch
+Environment=PYTHONPATH=/opt/puck-dispatch
+Environment=PUCK_BROKER_SOCKET=/run/puck-dispatch/broker.sock
+Environment=PUCK_DISPATCH_PRIVATE_KEY_FILE=/etc/puck-dispatch/private-key.pem
+ExecStart=/usr/bin/python3 -m cobble.puck_dispatch_broker
+Restart=on-failure
+RestartSec=5
+RuntimeDirectory=puck-dispatch
+RuntimeDirectoryMode=0750
+UMask=0117
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+ReadWritePaths=/run/puck-dispatch
+
+[Install]
+WantedBy=multi-user.target

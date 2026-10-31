@@ -87,8 +87,9 @@ def main():
     key_path = Path(os.environ["PUCK_DISPATCH_PRIVATE_KEY_FILE"])
     if not key_path.is_file() or key_path.is_symlink():
         raise RuntimeError("Missing protected Puck-Dispatcher key")
-    if key_path.stat().st_mode & 0o077:
-        raise RuntimeError("Private key must not be group/world accessible")
+    key_stat = key_path.stat()
+    if key_stat.st_mode & 0o077 or key_stat.st_uid != os.geteuid():
+        raise RuntimeError("Private key must be service-owned and mode 0600")
     if socket_path.exists():
         raise RuntimeError("Socket already exists; investigate before restarting")
     oldmask = os.umask(0o117)  # Unix socket 0660, directory must be restricted too
