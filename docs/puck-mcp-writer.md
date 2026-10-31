@@ -49,3 +49,24 @@ The next implementation milestone is the separately credentialed broker,
 which must never expose Joe's credential to the MCP process. Only after it
 exists can the positive remote write and the full no-impersonation denial
 test be run.
+
+## Review correction: credential identity
+
+GitHub's REST API does not permit treating a repository-access check as
+proof of a specific GitHub App identity. The `GET /app` endpoint cannot
+serve as a reliable identity check for an installation token: the
+authenticated-app operation requires a GitHub App JWT. We deliberately
+rejected that approach during review rather than publishing a broken
+credential check.
+
+The secure invariant is **provenance at token issuance**: a trusted,
+separately authorised broker must use only the known Puck-GPT App
+private key (App ID 4708095), mint a repository-restricted installation
+token and deliver it only to the isolated writer process. The writer's
+repository check is defence in depth, not identity proof.
+
+The existing GitHub Actions writer already has the correct bot credential
+and has made a real attributed write. A McKay broker is **not built** yet.
+The connected Joe-authenticated ChatGPT GitHub plugin remains a bypass
+until replaced or disconnected; therefore the full negative test is not
+yet satisfied.
