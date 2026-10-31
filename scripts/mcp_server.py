@@ -20,6 +20,7 @@ from cobble.remote_ops import (
     lab_add_note as append_lab_note,
     lab_recent_notes as get_lab_notes,
 )
+from cobble.puck_github_writer import submit_write as dispatch_puck_write
 from cobble.memory_access import (
     get_trace as read_trace,
     inspect_star as read_star,
@@ -141,6 +142,16 @@ def run_arena_tests() -> dict:
     """
     return run_arena_selftest()
 
+
+@mcp.tool()
+def puck_submit_write(path: str, content: str, message: str) -> dict:
+    """Submit a bounded writing request to the existing Puck-GPT Actions writer.
+
+    Requires a dedicated, non-Joe service identity with Actions dispatch
+    permission; never uses McKay's GitHub CLI login or the Puck App private key.
+    Disabled unless COBBLE_MCP_ALLOW_PUCK_DISPATCH=1 is set.
+    """
+    return dispatch_puck_write(path, content, message)
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
