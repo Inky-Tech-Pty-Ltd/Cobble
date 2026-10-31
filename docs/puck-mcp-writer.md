@@ -17,23 +17,26 @@ The workflow also retains its earlier manually staged branch mode.
 ## Identity separation
 
 **Do not use Joe's credentials as the dispatcher.** The MCP process requires
-three opt-ins: `COBBLE_MCP_ALLOW_PUCK_DISPATCH=1`,
-`PUCK_DISPATCH_LOGIN=<dedicated-non-Joe-service-login>`, and
-`PUCK_DISPATCH_TOKEN=<credential-issued-to-that-login>`.
+two opt-ins: `COBBLE_MCP_ALLOW_PUCK_DISPATCH=1` and
+`PUCK_DISPATCH_TOKEN=<short-lived Puck-Dispatcher App installation token>`.
+The credential issuer must use App ID **5549836** and installation ID
+**177074425**, and restrict the token to **InkyTech** with Actions write
+permission (and only required read permissions).
 
-Before dispatch the tool calls GitHub `GET /user` with *that same* token
-and requires the login to equal the configured non-Joe service identity.
-It does not read `GH_TOKEN`, `GITHUB_TOKEN`, `gh auth`, the `git`
+Before dispatch the tool calls GitHub `GET /installation/repositories`
+with that same token and requires exactly one repository: InkyTech.
+This check alone **does not prove which App issued the token**;
+that assurance belongs to the isolated issuer. It does not read `GH_TOKEN`, `GITHUB_TOKEN`, `gh auth`, the `git`
 credential helper or any GitHub App private key.
 
-The token holder must have narrowly limited GitHub Actions dispatch
-permission on InkyTech. The exact permissions and identity must be
+The Puck-Dispatcher App installation must have narrowly limited GitHub
+Actions dispatch permission on InkyTech. The exact permissions and identity must be
 verified during provisioning; do not assume a generic PAT is safely scoped.
 Importantly, this token is still a secret that needs protected storage
 and rotation. Avoid setting it in McKay's general interactive shell or
 the existing memory MCP process if it also has access to Joe's home.
 A separate restricted OS identity/service is the intended deployment.
-The check of the service login inside Python is defence in depth;
+The installation repository check inside Python is defence in depth;
 **OS-level separation and deauthorisation of the Joe GitHub connector
 are still essential** to the full impersonation-negative-test.
 
