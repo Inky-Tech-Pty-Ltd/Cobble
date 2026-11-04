@@ -83,3 +83,51 @@ real rsync, without credentials or network contact. Before installing a new
 Windows Task Scheduler job, check the first live run and news output. Choose
 a time that fits around the existing 23:00 GitHub sync and 01:00 encrypted
 backup; a merge does **not** install a schedule or begin remote acquisition.
+
+## Unattended sync on McKay (Windows 11 / Ubuntu WSL)
+
+`scripts/run_hosting_sync.sh` runs both sources through the Python
+synchroniser and writes a private timestamped log under
+`~/cobble-data/logs/hosting-sync/sync-*.log`. The Python synchroniser
+already holds a non-blocking per-run lock in that directory, so overlapping
+hosting runs are rejected. Both scripts propagate a nonzero status on failure.
+
+After merging this change, verify the scheduled entry point manually from
+**Ubuntu WSL**, before creating a Windows schedule:
+
+```bash
+cd ~/Cobble
+git pull --ff-only
+python3 -m unittest discover -s tests -p 'test_run_hosting_sync.py' -v
+bash scripts/run_hosting_sync.sh --dry-run
+ls -t ~/cobble-data/logs/hosting-sync/sync-*.log | head -n 1
+tail -n 30 "$(ls -t ~/cobble-data/logs/hosting-sync/sync-*.log | head -n 1)"
+```
+
+Install the following job from **Windows PowerShell** under the Windows
+account owning the Ubuntu WSL distribution, not from Ubuntu. The proposed
+time is **midnight Sydney/Windows local time**, after the 23:00 GitHub job
+and before the existing 01:00 encrypted backup. A 45-minute run limit leaves
+some separation before backup, but cannot guarantee consistency if an earlier
+job overruns, Windows sleeps, or a delayed task starts late.
+
+```powershell
+$taskName = 'Cobble - Daily Hosting Sync'
+$action = New-ScheduledTaskAction -Execute "$env:WINDIR\System32\wsl.exe" -Argument '-d Ubuntu -u cobbler -- /bin/bash /home/cobbler/Cobble/scripts/run_hosting_sync.sh'
+$trigger = New-ScheduledTaskTrigger -Daily -At 00:00
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 45)
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description 'Versioned Cobble capture and news from Inky Tech and Village Link hosting'
+```
+
+To test the installed schedule from PowerShell:
+
+```powershell
+Start-ScheduledTask -TaskName 'Cobble - Daily Hosting Sync'
+Get-ScheduledTaskInfo -TaskName 'Cobble - Daily Hosting Sync'
+```
+
+Then inspect the latest private Ubuntu log for both sources reporting
+`complete` and a final `exit=0`. The task is **not installed by
+merging this PR**. The system can only run while the Windows/WSL machine,
+network and SSH credentials are available. Task Scheduler's
+`StartWhenAvailable` is opportunistic, not a guaranteed catch-up.
