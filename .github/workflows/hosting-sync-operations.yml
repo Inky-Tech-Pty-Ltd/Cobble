@@ -1,0 +1,29 @@
+name: Hosting filesystem sync offline tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/sync_hosting_filesystems.py'
+      - 'tests/test_sync_hosting_filesystems.py'
+      - 'docs/hosting-filesystem-sync.md'
+      - '.github/workflows/hosting-sync-operations.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/sync_hosting_filesystems.py'
+      - 'tests/test_sync_hosting_filesystems.py'
+      - 'docs/hosting-filesystem-sync.md'
+      - '.github/workflows/hosting-sync-operations.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test versioned local rsync and news without remote credentials
+        run: python3 -m unittest discover -s tests -p 'test_sync_hosting_filesystems.py' -v
