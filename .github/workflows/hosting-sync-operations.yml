@@ -5,6 +5,10 @@ on:
     paths:
       - 'scripts/sync_hosting_filesystems.py'
       - 'tests/test_sync_hosting_filesystems.py'
+      - 'scripts/run_hosting_sync.sh'
+      - 'tests/test_run_hosting_sync.py'
+      - 'scripts/run_hosting_sync.sh'
+      - 'tests/test_run_hosting_sync.py'
       - 'docs/hosting-filesystem-sync.md'
       - '.github/workflows/hosting-sync-operations.yml'
   push:
@@ -27,3 +31,5 @@ jobs:
           persist-credentials: false
       - name: Test versioned local rsync and news without remote credentials
         run: python3 -m unittest discover -s tests -p 'test_sync_hosting_filesystems.py' -v
+      - name: Test scheduled runner (private logs and failure handling)
+        run: python3 -m unittest discover -s tests -p 'test_run_hosting_sync.py' -v
