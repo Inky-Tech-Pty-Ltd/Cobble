@@ -56,3 +56,64 @@ it never pushes to GitHub.
 
 This is **source acquisition**, deliberately independent of arenas, hypothesis
 links, memory addresses, salience and any proposed memory graph architecture.
+
+## Unattended daily sync on McKay (Windows 11 / Ubuntu WSL)
+
+The checked-in `scripts/run_github_sync.sh` is a narrow operational wrapper
+around the existing importer. It saves a private timestamped log under
+`~/cobble-data/logs/github-sync/`, takes a non-blocking `flock` lock so
+two scheduled runs cannot overlap, and propagates failures to Task Scheduler.
+Exit code 75 means an already-running sync prevented another invocation.
+It does **not** change the importer or update the Cobble checkout.
+
+From Ubuntu, verify the wrapper before installing a schedule:
+
+```bash
+cd ~/Cobble
+bash scripts/run_github_sync.sh --dry-run
+ls -t ~/cobble-data/logs/github-sync/sync-*.log | head -n 1
+tail -n 25 "$(ls -t ~/cobble-data/logs/github-sync/sync-*.log | head -n 1)"
+```
+
+The wrapper logs even a dry run, but forwards `--dry-run` to the importer,
+so no archive content or checkouts are changed by this test.
+
+On **McKay**, run the following in **Windows PowerShell under the Windows
+account that owns the Ubuntu WSL installation**, not in the Ubuntu shell.
+It schedules daily at **11:00 pm Sydney/Windows local time**, leaving a
+two-hour window before the existing 1:00 am encrypted backup. Windows
+Task Scheduler is used because a Linux cron timer inside a stopped WSL
+instance cannot reliably start that instance.
+
+```powershell
+$taskName = 'Cobble - Daily GitHub Sync'
+$action = New-ScheduledTaskAction -Execute "$env:WINDIR\System32\wsl.exe" -Argument '-d Ubuntu -u cobbler -- /bin/bash /home/cobbler/Cobble/scripts/run_github_sync.sh'
+$trigger = New-ScheduledTaskTrigger -Daily -At 23:00
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 90)
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description 'Archive Inky Tech GitHub sources to Cobble before the 01:00 backup'
+```
+
+The schedule is **not installed by checking out this repository**. Its
+first real run needs verification. To exercise the newly registered task:
+
+```powershell
+Start-ScheduledTask -TaskName 'Cobble - Daily GitHub Sync'
+Get-ScheduledTaskInfo -TaskName 'Cobble - Daily GitHub Sync'
+```
+
+Inspect the latest log in Ubuntu for `Sync complete: ...` and `exit=0`.
+A failed run can leave earlier repositories refreshed and later ones
+unchanged; rerunning remains safe. A successful run does not prove historical
+gap closure or that every upstream API item was available.
+
+Task Scheduler can only start the job when Windows and the relevant user
+session/credentials permit it. If McKay is asleep or off, the run may occur
+later or not at all. `StartWhenAvailable` provides a catch-up opportunity,
+**not** guaranteed completion before backup. The 90-minute limit also
+does not establish transactional consistency with a backup that begins
+during a delayed or unusually long sync. Check the task history and logs.
+
+Logs and the lock file remain in the private corpus store and are included
+in the existing encrypted backup; they are not committed to Git. The log
+files are owner-readable only. Keep GitHub authentication in `gh`'s existing
+credential store, not in a scheduled-task command line.
