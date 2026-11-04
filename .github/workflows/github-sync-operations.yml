@@ -1,0 +1,33 @@
+name: GitHub corpus sync operations
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/sync_github_corpus.sh'
+      - 'scripts/run_github_sync.sh'
+      - 'tests/test_sync_github_corpus.py'
+      - 'tests/test_run_github_sync.py'
+      - '.github/workflows/github-sync-operations.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/sync_github_corpus.sh'
+      - 'scripts/run_github_sync.sh'
+      - 'tests/test_sync_github_corpus.py'
+      - 'tests/test_run_github_sync.py'
+      - '.github/workflows/github-sync-operations.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify importer wrapper with mocked GitHub commands
+        run: python3 -m unittest discover -s tests -p 'test_sync_github_corpus.py' -v
+      - name: Verify scheduled runner (lock, logs, failure propagation)
+        run: python3 -m unittest discover -s tests -p 'test_run_github_sync.py' -v
