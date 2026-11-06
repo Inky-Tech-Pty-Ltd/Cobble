@@ -52,6 +52,7 @@ def prepare_message(request):
     return {
         "model": MODEL,
         "max_tokens": MAX_OUTPUT_TOKENS,
+        "thinking": {"type": "disabled"},  # Haiku 5.5 supports at default effort
         "system": SYSTEM,
         "messages": [{"role": "user", "content": json.dumps(content, ensure_ascii=False)}],
     }
@@ -152,6 +153,7 @@ def _parse_reply(result, *, synthetic=False):
             "network_calls": 0 if synthetic else 1,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "stop_reason": result.get("stop_reason"),
             "estimated_provider_cost_usd": str(dollars),
             "cost_is_estimate": True,
         },
