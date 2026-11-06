@@ -1,0 +1,27 @@
+name: Four-source local search regression
+on:
+  pull_request:
+    paths:
+      - 'src/cobble/local_search.py'
+      - 'scripts/search_cobble.py'
+      - 'tests/test_local_search.py'
+      - '.github/workflows/four-source-search.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/cobble/local_search.py'
+      - 'scripts/search_cobble.py'
+      - 'tests/test_local_search.py'
+      - '.github/workflows/four-source-search.yml'
+jobs:
+  synthetic-offline-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: No user data or external services
+        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_local_search.py' -v
