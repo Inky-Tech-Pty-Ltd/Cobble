@@ -50,8 +50,8 @@ class SnugExchangeTests(unittest.TestCase):
 
     def test_switch_provider_retains_explicit_prior_exchange(self):
         first = self.ask()
-        second = self.ask(provider="fixture-indigo", memory_ids=[],
-                          allowed_sources=[], prior_ids=[first["event_id"]])
+        second = self.ask(provider="fixture-indigo",
+                          prior_ids=[first["event_id"]])
         self.assertEqual(second["provider"], "fixture-indigo")
         self.assertEqual(second["previous_exchange_ids"], [first["event_id"]])
         self.assertIn("1 expressly supplied", second["answer"])
