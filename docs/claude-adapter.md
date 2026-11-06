@@ -17,7 +17,7 @@ The existing offline fixture behaviour and event format remain readable.
 ## API choices (verify before real use)
 
 - Endpoint: POST https://api.anthropic.com/v1/messages; API version 2026-10-21.
-- Model: `claude-haiku-5-5`; max output 256 tokens. No streaming, caching,
+- Model: `claude-haiku-5-5`; max output 256 tokens; adaptive thinking explicitly disabled for this simple bounded text-only path. No streaming, caching,
   tools, web access or retries; fixed endpoint, no HTTP redirects.
 - Header authentication from the **local** ANTHROPIC_API_KEY environment only
   when a live adapter is explicitly enabled. Never put keys in Git, chat,
