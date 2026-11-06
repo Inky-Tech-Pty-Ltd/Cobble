@@ -1,0 +1,27 @@
+name: Snug offline exchange regression
+on:
+  pull_request:
+    paths:
+      - 'src/cobble/snug_exchange.py'
+      - 'scripts/snug_exchange.py'
+      - 'tests/test_snug_exchange.py'
+      - '.github/workflows/snug-exchange.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/cobble/snug_exchange.py'
+      - 'scripts/snug_exchange.py'
+      - 'tests/test_snug_exchange.py'
+      - '.github/workflows/snug-exchange.yml'
+jobs:
+  offline-fixture-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: All synthetic, no API credentials or external model calls
+        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_exchange.py' -v
