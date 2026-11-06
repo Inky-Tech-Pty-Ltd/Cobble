@@ -37,7 +37,9 @@ The command prints a 32-character `event_id`. Use it in the second call:
 
     PYTHONPATH=src python3 scripts/snug_exchange.py ask \
       --participant operator --provider fixture-indigo \
-      --question 'Can you see the previous exchange?' \
+      --question 'Can you see the previous exchange and source?' \
+      --allow-source github \
+      --memory-id 1dea2041445ab800580a28b6 \
       --previous EVENT_ID_FROM_FIRST_CALL
 
 Second call supplies the chosen earlier question and answer but **not**
