@@ -58,7 +58,7 @@ def _validate(question, participant, provider, memory_ids, allowed_sources, prio
         raise ValueError("Question must have 1–2000 characters")
     if not isinstance(participant, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", participant):
         raise ValueError("Participant must be a short local identifier")
-    if not isinstance(provider, str) or not provider.startswith("fixture-"):
+    if provider not in ("fixture-amber", "fixture-indigo", "claude"):
         raise ValueError("Only offline fixture providers are supported")
     if (not isinstance(memory_ids, (list, tuple)) or
             len(memory_ids) > MAX_CONTEXTS or len(set(memory_ids)) != len(memory_ids) or
@@ -147,10 +147,29 @@ def exchange(*, store, index, question, participant, provider,
     request = ExchangeRequest(participant=participant, question=question,
                               selected_memories=tuple(memories),
                               previous_exchanges=tuple(prior_context))
+    if provider == "claude" and adapter is None:
+        raise PermissionError("Claude adapter must be explicitly supplied")
     intelligence = adapter if adapter is not None else FixtureIntelligence(provider)
     if getattr(intelligence, "name", None) != provider:
         raise ValueError("Adapter identity mismatch")
-    answer = intelligence.answer(request)
+    response = intelligence.answer(request)
+    if provider == "claude":
+        # Real providers MUST return truthful accounting. Refuse any bare
+        # string that could silently be recorded as an offline fixture.
+        from cobble.claude_adapter import ProviderReply
+        if not isinstance(response, ProviderReply):
+            raise ValueError("Claude provider must return an accounted reply")
+        answer = response.text
+        usage = response.usage
+        if (usage.get("kind") not in ("anthropic-api", "mock-claude-api") or
+                type(usage.get("network_calls")) is not int):
+            raise ValueError("Unrecognised provider accounting")
+        model, request_id = response.model, response.request_id
+    else:
+        answer = response
+        usage = {"network_calls": 0, "provider_cost": 0,
+                 "kind": "offline-fixture"}
+        model, request_id = None, None
     if not isinstance(answer, str) or not 0 < len(answer) <= MAX_REPLY:
         raise ValueError("Invalid or oversized intelligence answer")
 
@@ -164,8 +183,9 @@ def exchange(*, store, index, question, participant, provider,
         "selected_memories": memories,
         "previous_exchange_ids": list(prior_ids),
         "answer": answer,
-        "usage": {"network_calls": 0, "provider_cost": 0,
-                  "kind": "offline-fixture"},
+        "provider_model": model,
+        "provider_request_id": request_id,
+        "usage": usage,
     }
     _save_event(store, event)
     return event
