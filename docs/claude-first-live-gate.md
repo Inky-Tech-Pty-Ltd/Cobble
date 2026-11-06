@@ -1,0 +1,82 @@
+# Helen's first live telephone call: one-shot safety gate
+
+**Status:** source implementation, no API key, credits, or live calls made.
+The user previously confirmed Claude Console exists with **$0.00 credits**.
+
+The operator must deliberately configure spending controls in Anthropic's
+Console, arrange payment, create an expiry-bounded workspace-scoped API
+key and authorise the specific call before any network request.
+
+## Scope
+
+- Only a fixed harmless greeting is sendable through this first-call CLI.
+- No ChatGPT, GitHub, InkyTech or VillageLink source excerpts; no previous
+  conversation or private search result; no arbitrary user prompt.
+- Default invocation is an offline, keyless preview. Status also reads only
+  local files. Merely checking out or importing the module performs no call.
+- Live call requires THREE conditions: `--send-live`, exact consent phrase,
+  and affirmative operator acknowledgement of vendor workspace spend limits.
+  It also requires a local `ANTHROPIC_API_KEY` in the process environment.
+- The code still uses the fixed Haiku 5.5 Messages adapter and 256 output
+  tokens, without streaming, retries, tools, cache or redirect following.
+- Local preflight estimates are NOT guaranteed maximum charges. A vendor
+  workspace limit is a separate independent financial control.
+
+## Offline acceptance on McKay
+
+After switching to this PR's feature branch:
+
+    PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_claude_first_call.py' -v
+    PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_claude_adapter.py' -v
+    PYTHONPATH=src python3 scripts/first_live_claude.py
+    PYTHONPATH=src python3 scripts/first_live_claude.py --status
+
+Preview shows the model, bound on input bytes, local estimate, and a zero
+count of selected memories and previous exchanges. It does **not** read an
+API key, contact Anthropic, or write an event or audit entry.
+
+## Durable attempt-before-send journal
+
+On a future **explicitly authorised** live call, a private
+`~/cobble-data/snug/provider-attempts/first-live-claude.json` marker
+is atomically written BEFORE the network call. This is a one-shot lock.
+An immutable `ATTEMPT-ID.outcome.json` is written afterwards when possible.
+On success it references a Snug exchange event that preserves the provider
+message ID, returned token usage and *estimated* USD charge. Failure records
+`outcome_unknown`, with `actual_charge_usd: null`: a timeout may already
+have incurred charges. A crash may leave only the marker; that also means
+**unknown**, not no charge.
+
+No attempt is automatically retried, including after an ambiguous error.
+Re-arming or repeating must be a separate, audited operator decision.
+All audit and exchange records remain in `~/cobble-data`, never in Git.
+
+## Future human-controlled activation checklist
+
+1. On platform.claude.com, create a dedicated Cobble *workspace*.
+2. In that workspace, set a low **monthly spending limit**. The provider
+   documents workspace spend controls at:
+   https://platform.claude.com/docs/en/manage-claude/workspaces
+3. Decide whether to buy the smallest practical prepaid credit balance.
+   Keep auto-reload OFF. Console's funding UI and taxes may vary.
+4. Create a workspace-scoped, expiring API key in the Console. Store it
+   locally on McKay with a secrets manager; never paste it into chat,
+   GitHub or a command history. See:
+   https://platform.claude.com/docs/en/manage-claude/authentication
+5. Verify workspace spending controls and approve the exact harmless
+   greeting. Only then will we guide the operator through the separately
+   gated live command. We do **not** include a ready-to-copy live invocation
+   here to reduce accidental charges or disclosure.
+
+## Important limitations
+
+- A workspace monthly spend limit is independent of our local **estimate**;
+  check billing after the first call and do not interpret the estimate as
+  an invoice or a financial guarantee.
+- There is no integration with vendor billing to reconcile actual charges.
+- The one-shot ledger is local and single-machine only, not a distributed
+  transaction system or a customer-ready payment service.
+- There is no automatic retry. Uncertain outcomes require human checking.
+- No API call may take place in GitHub CI; all tests use synthetic adapters.
+- This path is **only for the first empty-memory call**. Connecting
+  real inherited memories requires a distinct consent/privacy increment.
