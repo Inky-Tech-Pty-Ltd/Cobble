@@ -61,6 +61,7 @@ class ClaudeAdapterTests(unittest.TestCase):
         payload = prepare_message(self.request)
         self.assertEqual(payload["model"], MODEL)
         self.assertEqual(payload["max_tokens"], MAX_OUTPUT_TOKENS)
+        self.assertEqual(payload["thinking"], {"type": "disabled"})
         self.assertEqual(len(payload["messages"]), 1)
         self.assertEqual(payload["messages"][0]["role"], "user")
         self.assertIn("Koala memory", payload["messages"][0]["content"])
