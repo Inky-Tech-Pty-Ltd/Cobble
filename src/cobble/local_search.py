@@ -3,6 +3,7 @@
 This is the first read-only navigation slice, NOT a provider-facing memory API.
 No model calls, remote requests, source writes or automatic sharing.
 """
+from contextlib import closing
 import hashlib
 import json
 import os
@@ -162,6 +163,8 @@ def build(store, index):
                 root = store / "github" / "conversations"
             else:
                 root = store / "hosting" / source
+            if root.is_symlink():
+                raise ValueError("Source root must not be a symlink")
             report[source]["present"] = root.is_dir()
             if not root.is_dir():
                 continue
@@ -210,7 +213,7 @@ def search(index, words, limit=8):
     if not isinstance(limit, int) or not 1 <= limit <= 20:
         raise ValueError("Limit must be between 1 and 20")
     expression = " AND ".join('"' + token.replace('"', '""') + '"' for token in terms)
-    with _readonly(index) as conn:
+    with closing(_readonly(index)) as conn:
         cursor = conn.execute(
             "SELECT docid, source, ref, title, "
             "snippet(memory, 4, '[', ']', '…', 16) "
@@ -225,7 +228,7 @@ def show(index, docid, max_chars=1800):
         raise ValueError("Invalid search document identifier")
     if type(max_chars) is not int or not 100 <= max_chars <= 12000:
         raise ValueError("max_chars must be 100 to 12000")
-    with _readonly(index) as conn:
+    with closing(_readonly(index)) as conn:
         row = conn.execute(
             "SELECT source, ref, title, body FROM memory WHERE docid = ? LIMIT 1",
             (docid,)).fetchone()
