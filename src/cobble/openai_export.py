@@ -123,8 +123,11 @@ def import_export(source, store, dry_run=False):
     Repeated imports of the same ZIP are no-ops. No Arena is changed.
     All JSON is validated before any store write.
     """
-    source = Path(source).expanduser().resolve(strict=True)
-    if source.is_symlink() or not source.is_file():
+    source_path = Path(source).expanduser()
+    if source_path.is_symlink():
+        raise ValueError("Refusing to follow a source ZIP symlink")
+    source = source_path.resolve(strict=True)
+    if not source.is_file():
         raise ValueError("Source must be an ordinary ZIP file")
     store = Path(store).expanduser().resolve()
     root = store / "openai"
