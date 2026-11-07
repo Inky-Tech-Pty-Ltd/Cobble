@@ -58,7 +58,7 @@ def _validate(question, participant, provider, memory_ids, allowed_sources, prio
         raise ValueError("Question must have 1–2000 characters")
     if not isinstance(participant, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", participant):
         raise ValueError("Participant must be a short local identifier")
-    if provider not in ("fixture-amber", "fixture-indigo", "claude", "mistral"):
+    if provider not in ("fixture-amber", "fixture-indigo", "claude", "mistral", "openai"):
         raise ValueError("Unsupported provider")
     if (not isinstance(memory_ids, (list, tuple)) or
             len(memory_ids) > MAX_CONTEXTS or len(set(memory_ids)) != len(memory_ids) or
@@ -147,13 +147,13 @@ def exchange(*, store, index, question, participant, provider,
     request = ExchangeRequest(participant=participant, question=question,
                               selected_memories=tuple(memories),
                               previous_exchanges=tuple(prior_context))
-    if provider in ("claude", "mistral") and adapter is None:
+    if provider in ("claude", "mistral", "openai") and adapter is None:
         raise PermissionError("Real provider adapter must be explicitly supplied")
     intelligence = adapter if adapter is not None else FixtureIntelligence(provider)
     if getattr(intelligence, "name", None) != provider:
         raise ValueError("Adapter identity mismatch")
     response = intelligence.answer(request)
-    if provider in ("claude", "mistral"):
+    if provider in ("claude", "mistral", "openai"):
         # Real providers MUST return truthful accounting. Refuse any bare
         # string that could silently be recorded as an offline fixture.
         from cobble.claude_adapter import ProviderReply
@@ -161,8 +161,11 @@ def exchange(*, store, index, question, participant, provider,
             raise ValueError("Real provider must return an accounted reply")
         answer = response.text
         usage = response.usage
-        expected_kinds = (("anthropic-api", "mock-claude-api") if provider == "claude"
-                          else ("mistral-api", "mock-mistral-api"))
+        expected_kinds = {
+            "claude": ("anthropic-api", "mock-claude-api"),
+            "mistral": ("mistral-api", "mock-mistral-api"),
+            "openai": ("openai-api", "mock-openai-api"),
+        }[provider]
         if (usage.get("kind") not in expected_kinds or
                 type(usage.get("network_calls")) is not int or
                 usage["network_calls"] not in (0, 1)):
