@@ -6,7 +6,7 @@ import sys
 
 from cobble.openai_adapter import OpenAIAdapter
 from cobble.openai_first_call import (
-    CONSENT, _request, first_call_status, first_live_hello
+    CONSENT, REVIEWED_CONSENT, _request, first_call_status, first_live_hello
 )
 
 
@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--index", type=Path, help="Default: STORE/index/search.sqlite3")
     parser.add_argument("--status", action="store_true")
     parser.add_argument("--send-live", action="store_true")
+    parser.add_argument("--reviewed-retry", action="store_true")
     parser.add_argument("--confirm", default="")
     parser.add_argument("--project-limit-confirmed", action="store_true")
     args = parser.parse_args()
@@ -39,7 +40,8 @@ def main():
                      "first_call_status": first_call_status(store)})
         print(json.dumps(plan, indent=2))
         return
-    if args.confirm != CONSENT or not args.project_limit_confirmed:
+    required_consent = REVIEWED_CONSENT if args.reviewed_retry else CONSENT
+    if args.confirm != required_consent or not args.project_limit_confirmed:
         parser.error("Exact consent and project-limit confirmation required")
     # Consumed only following explicit authorisation; never printed or persisted.
     key = sys.stdin.read(4096).strip()
@@ -47,7 +49,7 @@ def main():
         parser.error("Valid key required on stdin")
     result = first_live_hello(store=store, index=index, live=True,
                               confirm=args.confirm, project_limit_confirmed=True,
-                              api_key=key)
+                              api_key=key, reviewed_retry=args.reviewed_retry)
     print(json.dumps(result, indent=2))
 
 
