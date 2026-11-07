@@ -4,7 +4,7 @@ import tempfile
 import unittest
 
 from cobble.openai_adapter import OpenAIAdapter, MODEL
-from cobble.openai_first_call import CONSENT, _request, first_call_status, first_live_hello
+from cobble.openai_first_call import CONSENT, REVIEWED_CONSENT, _request, first_call_status, first_live_hello
 
 
 def fake_response():
@@ -88,6 +88,36 @@ class FirstLiveOpenAITests(unittest.TestCase):
         self.call(live=True, confirm=CONSENT, project_limit_confirmed=True)
         ledger = self.store / "snug" / "provider-attempts"
         self.assertNotIn("test-only", "".join(p.read_text() for p in ledger.iterdir()))
+
+    def test_reviewed_retry_after_unknown_preserves_original(self):
+        class FailingAdapter:
+            name = "openai"
+            def answer(self, request):
+                raise TimeoutError("unknown")
+        with self.assertRaises(TimeoutError):
+            first_live_hello(store=self.store, index=self.index, live=True,
+                confirm=CONSENT, project_limit_confirmed=True,
+                api_key="test-only", adapter=FailingAdapter())
+        original = first_call_status(self.store)
+        result = self.call(live=True, confirm=REVIEWED_CONSENT,
+                           project_limit_confirmed=True, reviewed_retry=True)
+        self.assertEqual(result["review_of_attempt_id"], original["attempt_id"])
+        self.assertEqual(first_call_status(self.store), original)
+        with self.assertRaises(FileExistsError):
+            self.call(live=True, confirm=REVIEWED_CONSENT,
+                      project_limit_confirmed=True, reviewed_retry=True)
+
+    def test_reviewed_retry_requires_unknown_outcome(self):
+        with self.assertRaises(PermissionError):
+            self.call(live=True, confirm=REVIEWED_CONSENT,
+                      project_limit_confirmed=True, reviewed_retry=True)
+        self.assertFalse(first_call_status(self.store)["reserved"])
+
+    def test_reviewed_retry_requires_distinct_consent(self):
+        with self.assertRaises(PermissionError):
+            self.call(live=True, confirm=CONSENT,
+                      project_limit_confirmed=True, reviewed_retry=True)
+        self.assertFalse(first_call_status(self.store)["reserved"])
 
 
 if __name__ == "__main__":
