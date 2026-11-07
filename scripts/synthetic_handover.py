@@ -44,7 +44,7 @@ def _prepare(root):
     index, ledger = _locations(root)
     note = root / "hosting" / "inkytech" / "fictional-lighthouse.txt"
     if note.exists():
-        if note.is_symlink() or note.read_text(encoding="utf-8") != MEMORY:
+        if note.is_symlink() or json.loads(note.read_text(encoding="utf-8")) != MEMORY:
             raise ValueError("Synthetic note differs from expected fixture")
     else:
         note.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
