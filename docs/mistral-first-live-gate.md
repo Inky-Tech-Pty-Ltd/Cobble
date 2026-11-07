@@ -1,11 +1,11 @@
 # Mistral's first live telephone call: one-shot safety gate
 
-**Status:** source implementation, no API key, credits, or live calls made.
+**Status:** source implementation; this runner has not made a live API call.
 The user has accessed Mistral Studio and previously tested a direct API call. Funding, data-use settings, and current spend limits have not been verified.
 
-The operator must deliberately configure spending controls in Anthropic's
-Console, arrange payment, create an expiry-bounded workspace-scoped API
-key and authorise the specific call before any network request.
+The operator must verify spending controls in Mistral Studio, review the
+applicable data-use terms, configure a local API key and authorise the
+specific harmless call before any network request.
 
 ## Scope
 
@@ -17,7 +17,7 @@ key and authorise the specific call before any network request.
 - Live call requires THREE conditions: `--send-live`, exact consent phrase,
   and affirmative operator acknowledgement of vendor workspace spend limits.
   It also requires a local `MISTRAL_API_KEY` in the process environment.
-- The code still uses the fixed Haiku 5.5 Messages adapter and 256 output
+- The code still uses the Mistral Small Chat Completions adapter and 256 output
   tokens, without streaming, retries, tools, cache or redirect following.
 - Local preflight estimates are NOT guaranteed maximum charges. A vendor
   workspace limit is a separate independent financial control.
@@ -33,7 +33,7 @@ After switching to this PR's feature branch:
 
 Preview shows the model, bound on input bytes, local estimate, and a zero
 count of selected memories and previous exchanges. It does **not** read an
-API key, contact Anthropic, or write an event or audit entry.
+API key, contact Mistral, or write an event or audit entry.
 
 ## Durable attempt-before-send journal
 
