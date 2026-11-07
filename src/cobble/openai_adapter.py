@@ -110,8 +110,12 @@ def _parse_reply(result, *, synthetic=False):
         raise ValueError("Missing OpenAI response output")
     texts = []
     for item in output:
+        # Reasoning models may include a reasoning item before the assistant
+        # message. Do not display, interpret or retain the reasoning item.
+        if isinstance(item, dict) and item.get("type") == "reasoning":
+            continue
         if not isinstance(item, dict) or item.get("type") != "message" or item.get("role") != "assistant":
-            raise ValueError("Non-message OpenAI output is not permitted")
+            raise ValueError("Unexpected OpenAI output item")
         content = item.get("content")
         if not isinstance(content, list) or not content:
             raise ValueError("Missing OpenAI message content")
