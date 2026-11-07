@@ -18,7 +18,7 @@ from cobble.mistral_adapter import (
 from cobble.snug_exchange import ExchangeRequest, exchange
 
 HELLO = "Hello, Mistral. You are speaking to Snug's local memory steward. Please say hello in one sentence."
-CONSENT = "I AUTHORIZE ONE CLAUDE API CALL"
+CONSENT = "I AUTHORIZE ONE MISTRAL API CALL"
 FORMAT = "snug-first-live-attempt-1"
 
 
