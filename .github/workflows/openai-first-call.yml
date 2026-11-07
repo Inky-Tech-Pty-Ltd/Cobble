@@ -1,0 +1,23 @@
+name: OpenAI one-shot live gate offline regression
+on:
+  pull_request:
+    paths:
+      - 'src/cobble/openai_first_call.py'
+      - 'scripts/first_live_openai.py'
+      - 'tests/test_openai_first_call.py'
+      - '.github/workflows/openai-first-call.yml'
+  workflow_dispatch:
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Offline no-secrets regression
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_openai_first_call.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_openai_adapter.py' -v
