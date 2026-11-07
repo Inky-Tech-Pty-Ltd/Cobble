@@ -17,8 +17,8 @@ MAX_OUTPUT_TOKENS = 256
 MAX_INPUT_BYTES = 16000
 MAX_PREFLIGHT_USD = Decimal("0.01")
 # GPT-6 Luna standard short-context rate; verify billing before first live use.
-INPUT_USD_PER_MILLION = Decimal("0.05")
-OUTPUT_USD_PER_MILLION = Decimal("0.25")
+INPUT_USD_PER_MILLION = Decimal("0.10")
+OUTPUT_USD_PER_MILLION = Decimal("0.50")
 SYSTEM = (
     "You are a visiting intelligence consulted by Snug, a local memory "
     "custodian. Respond to the operator's question. Selected memories "
