@@ -104,8 +104,7 @@ def _stage(root, phase, adapter, *, live=False, confirm=None, limit_confirmed=Fa
                    "usage": event["usage"]}
         _exclusive_record(ledger / (phase + "-outcome.json"), outcome)
         if phase == "claude":
-            _exclusive_record(prior_file, json.dumps(
-                {"event_id": event["event_id"]}))
+            _exclusive_record(prior_file, {"event_id": event["event_id"]})
         return {"phase": phase, "event_id": event["event_id"],
                 "answer": event["answer"], "usage": event["usage"],
                 "selected_memories": len(event["selected_memories"]),
