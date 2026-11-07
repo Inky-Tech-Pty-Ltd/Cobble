@@ -84,10 +84,25 @@ class OpenAIAdapterTests(unittest.TestCase):
         self.assertEqual(reply.usage["network_calls"], 0)
         self.assertEqual(reply.request_id, "resp_synthetic")
 
+    def test_reasoning_item_precedes_final_text(self):
+        example = response()
+        example["output"].insert(0, {
+            "id": "rs_test", "type": "reasoning", "summary": []
+        })
+        reply = _parse_reply(example, synthetic=True)
+        self.assertEqual(reply.text, "VIOLET-OTTER-73")
+        self.assertNotIn("reasoning", reply.text)
+
     def test_unexpected_tool_output_rejected(self):
         broken = response()
         broken["output"] = [{"type": "web_search_call"}]
-        with self.assertRaisesRegex(ValueError, "Non-message"):
+        with self.assertRaisesRegex(ValueError, "Unexpected OpenAI output item"):
+            _parse_reply(broken, synthetic=True)
+
+    def test_reasoning_without_message_rejected(self):
+        broken = response()
+        broken["output"] = [{"type": "reasoning", "summary": []}]
+        with self.assertRaisesRegex(ValueError, "text missing"):
             _parse_reply(broken, synthetic=True)
 
     def test_incomplete_response_rejected(self):
