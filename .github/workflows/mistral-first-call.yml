@@ -1,0 +1,30 @@
+name: Mistral first live call safeguards
+on:
+  pull_request:
+    paths:
+      - 'src/cobble/mistral_first_call.py'
+      - 'scripts/first_live_mistral.py'
+      - 'tests/test_mistral_first_call.py'
+      - '.github/workflows/mistral-first-call.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/cobble/mistral_first_call.py'
+      - 'scripts/first_live_mistral.py'
+      - 'tests/test_mistral_first_call.py'
+      - '.github/workflows/mistral-first-call.yml'
+jobs:
+  synthetic-safety:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: No external services or credentials
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_mistral_first_call.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_mistral_adapter.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_exchange.py' -v
