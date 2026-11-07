@@ -1,7 +1,7 @@
-"""Bounded two-supplier handover with synthetic memory and append-only audit.
+"""Bounded three-supplier handover with synthetic memory and append-only audit.
 
 No ambient corpus is read. Stage 1 selects one invented local source for Claude.
-Stage 2 gives Mistral only the explicitly identified Claude exchange.
+Stage 2 gives Mistral only the Claude exchange; stage 3 gives GPT only Mistral's exchange.
 Dry runs use synthetic providers and never read API keys or contact a network.
 """
 import argparse
@@ -14,6 +14,7 @@ import uuid
 
 from cobble.claude_adapter import ClaudeAdapter
 from cobble.mistral_adapter import MistralAdapter
+from cobble.openai_adapter import OpenAIAdapter
 from cobble.local_search import build, search
 from cobble.snug_exchange import exchange, read_event
 from cobble.mistral_first_call import _exclusive_record
@@ -23,7 +24,7 @@ FIRST_QUESTION = "Read the selected fictional note and tell me its lighthouse ke
 SECOND_QUESTION = "Using ONLY the explicitly included earlier exchange, what fictional lighthouse keeper password was recorded? If it is absent, say unknown."
 CONSENT = "I AUTHORIZE ONE SYNTHETIC HANDOVER API CALL"
 FORMAT = "snug-synthetic-handover-1"
-PHASES = ("claude", "mistral")
+PHASES = ("claude", "mistral", "openai")
 
 
 def _safe_root(root):
@@ -66,14 +67,23 @@ def _stage(root, phase, adapter, *, live=False, confirm=None, limit_confirmed=Fa
     root = _safe_root(root)
     index, ledger, docid = _prepare(root)
     prior_file = ledger / "claude-event.json"
-    if phase == "mistral":
-        if not prior_file.is_file() or prior_file.is_symlink():
-            raise PermissionError("Claude phase must complete before Mistral")
-        prior = json.loads(prior_file.read_text(encoding="utf-8"))
+    if phase in ("mistral", "openai"):
+        earlier = "claude" if phase == "mistral" else "mistral"
+        prior_path = (prior_file if phase == "mistral"
+                      else ledger / "mistral-outcome.json")
+        if not prior_path.is_file() or prior_path.is_symlink():
+            raise PermissionError(f"{earlier} phase must complete before {phase}")
+        prior = json.loads(prior_path.read_text(encoding="utf-8"))
+        if phase == "openai" and prior.get("status") != "completed":
+            raise PermissionError("Mistral phase has no completed exchange")
         prior_id = prior["event_id"]
         recorded = read_event(root, prior_id)
-        if recorded["provider"] != "claude" or len(recorded["selected_memories"]) != 1:
-            raise ValueError("Prior event does not contain the synthetic Claude exchange")
+        expected_memories = 1 if earlier == "claude" else 0
+        expected_prior = 0 if earlier == "claude" else 1
+        if (recorded["provider"] != earlier or
+                len(recorded["selected_memories"]) != expected_memories or
+                len(recorded["previous_exchange_ids"]) != expected_prior):
+            raise ValueError(f"Prior event does not contain the synthetic {earlier} exchange")
     else:
         prior_id = None
     if live and (confirm != CONSENT or limit_confirmed is not True):
@@ -145,8 +155,11 @@ def main():
     key = sys.stdin.read(4096).strip()
     if not key or len(key) > 512:
         p.error("A valid API key must be supplied on stdin")
-    adapter = (ClaudeAdapter(allow_network=True, key=key) if args.phase == "claude"
-               else MistralAdapter(allow_network=True, key=key))
+    adapter = {
+        "claude": ClaudeAdapter,
+        "mistral": MistralAdapter,
+        "openai": OpenAIAdapter,
+    }[args.phase](allow_network=True, key=key)
     result = _stage(args.root, args.phase, adapter, live=True,
                     confirm=args.confirm, limit_confirmed=True)
     print(json.dumps(result, indent=2))
