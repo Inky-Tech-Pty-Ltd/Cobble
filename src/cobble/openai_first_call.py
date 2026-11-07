@@ -15,6 +15,8 @@ from cobble.mistral_first_call import _exclusive_record
 
 HELLO = "Hello GPT. You are visiting Snug's locally owned memory workspace. Please greet Snug in one short sentence."
 CONSENT = "I AUTHORIZE ONE OPENAI API CALL"
+REVIEWED_CONSENT = "I AUTHORIZE ONE REVIEWED OPENAI RETRY"
+REVIEWED_FORMAT = "snug-openai-reviewed-retry-1"
 FORMAT = "snug-openai-first-live-1"
 
 
@@ -50,8 +52,10 @@ def first_call_status(store):
 
 
 def first_live_hello(*, store, index, live=False, confirm=None,
-                     project_limit_confirmed=False, api_key=None, adapter=None):
-    if live is not True or confirm != CONSENT:
+                     project_limit_confirmed=False, api_key=None, adapter=None,
+                     reviewed_retry=False):
+    required_consent = REVIEWED_CONSENT if reviewed_retry else CONSENT
+    if live is not True or confirm != required_consent:
         raise PermissionError("OpenAI live call requires exact operator consent")
     if project_limit_confirmed is not True:
         raise PermissionError("Confirm OpenAI project limit before live call")
@@ -66,11 +70,22 @@ def first_live_hello(*, store, index, live=False, confirm=None,
     if any((p / ".git").exists() for p in (store, *store.parents)):
         raise ValueError("Refusing to write inside a Git checkout")
 
+    previous_attempt = None
+    if reviewed_retry:
+        previous = first_call_status(store)
+        if not previous["reserved"] or previous["state"] != "outcome_unknown":
+            raise PermissionError("Reviewed retry requires an unknown-outcome first attempt")
+        previous_attempt = previous["attempt_id"]
+
     plan = check_preflight(prepare_message(_request()))
     root = store / "snug" / "provider-attempts"
     attempt_id = uuid.uuid4().hex
-    _exclusive_record(root / "first-live-openai.json", {
-        "format": FORMAT, "attempt_id": attempt_id, "created_utc": _utc(),
+    marker = ("reviewed-retry-openai.json" if reviewed_retry
+              else "first-live-openai.json")
+    audit_format = REVIEWED_FORMAT if reviewed_retry else FORMAT
+    _exclusive_record(root / marker, {
+        "format": audit_format,
+        "review_of_attempt_id": previous_attempt, "attempt_id": attempt_id, "created_utc": _utc(),
         "status": "attempted", "provider": "openai", "model": MODEL,
         "selected_memories": 0, "previous_exchanges": 0,
         "operator_confirmed_external_disclosure": True,
@@ -87,7 +102,8 @@ def first_live_hello(*, store, index, live=False, confirm=None,
                          adapter=intelligence, memory_ids=(),
                          allowed_sources=(), prior_ids=())
         _exclusive_record(root / (attempt_id + ".outcome.json"), {
-            "format": FORMAT, "attempt_id": attempt_id,
+            "format": audit_format, "attempt_id": attempt_id,
+            "review_of_attempt_id": previous_attempt,
             "completed_utc": _utc(), "status": "completed",
             "event_id": event["event_id"],
             "provider_request_id": event["provider_request_id"],
@@ -95,12 +111,13 @@ def first_live_hello(*, store, index, live=False, confirm=None,
             "billing_note": "Estimated tokens only; check actual invoice",
         })
         return {"attempt_id": attempt_id, "state": "completed",
-                "provider": "openai", "model": MODEL,
+                "review_of_attempt_id": previous_attempt, "provider": "openai", "model": MODEL,
                 "inherited_memories_sent": 0, "event_id": event["event_id"],
                 "usage": event["usage"]}
     except Exception as exc:
         _exclusive_record(root / (attempt_id + ".outcome.json"), {
-            "format": FORMAT, "attempt_id": attempt_id,
+            "format": audit_format, "attempt_id": attempt_id,
+            "review_of_attempt_id": previous_attempt,
             "completed_utc": _utc(), "status": "outcome_unknown",
             "error_type": type(exc).__name__, "actual_charge_usd": None,
             "billing_note": "Provider may charge even if request fails",
