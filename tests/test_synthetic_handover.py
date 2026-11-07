@@ -34,7 +34,7 @@ class MockSupplier:
             assert len(request.previous_exchanges) == 1
             assert "VIOLET-OTTER-73" in request.previous_exchanges[0]["answer"]
             response = "VIOLET-OTTER-73"
-            kind = "mock-mistral-api"
+            kind = "mock-openai-api" if self.name == "openai" else "mock-mistral-api"
         return ProviderReply(
             text=response, model="synthetic", request_id="synthetic",
             usage={"kind": kind, "network_calls": 0,
@@ -51,10 +51,12 @@ class HandoverTests(unittest.TestCase):
         self.root = Path(temp.name) / "handover"
         self.claude = MockSupplier("claude", self.root)
         self.mistral = MockSupplier("mistral", self.root)
+        self.openai = MockSupplier("openai", self.root)
 
     def stage(self, phase, adapter=None, **kw):
         return _stage(self.root, phase, adapter or (
-            self.claude if phase == "claude" else self.mistral), **kw)
+            {"claude": self.claude, "mistral": self.mistral,
+             "openai": self.openai}[phase]), **kw)
 
     def test_full_handover_preserves_local_memory_without_disclosing_again(self):
         first = self.stage("claude")
@@ -123,6 +125,45 @@ class HandoverTests(unittest.TestCase):
         result = self.stage("claude", live=True, confirm=CONSENT,
                             limit_confirmed=True)
         self.assertEqual(result["usage"]["network_calls"], 0)
+
+    def test_three_suppliers_with_no_raw_memory_at_gpt(self):
+        first = self.stage("claude")
+        second = self.stage("mistral")
+        third = self.stage("openai")
+        self.assertEqual(third["selected_memories"], 0)
+        self.assertEqual(third["previous_exchanges"], 1)
+        self.assertIn("VIOLET-OTTER-73", third["answer"])
+        self.assertEqual(len(self.openai.requests), 1)
+        previous = self.openai.requests[0].previous_exchanges[0]
+        self.assertEqual(previous["event_id"], second["event_id"])
+        self.assertEqual(previous["provider"], "mistral")
+        self.assertEqual(previous["answer"], second["answer"])
+        self.assertEqual(read_event(self.root, third["event_id"])["previous_exchange_ids"],
+                         [second["event_id"]])
+        self.assertEqual(read_event(self.root, third["event_id"])["selected_memories"], [])
+        self.assertEqual(read_event(self.root, first["event_id"])["provider"], "claude")
+
+    def test_gpt_cannot_start_without_mistral(self):
+        self.stage("claude")
+        with self.assertRaises(PermissionError):
+            self.stage("openai")
+        self.assertFalse(self.openai.requests)
+
+    def test_gpt_single_attempt(self):
+        self.stage("claude")
+        self.stage("mistral")
+        self.stage("openai")
+        with self.assertRaises(FileExistsError):
+            self.stage("openai")
+        self.assertEqual(len(self.openai.requests), 1)
+
+    def test_gpt_live_requires_new_consent(self):
+        self.stage("claude")
+        self.stage("mistral")
+        with self.assertRaises(PermissionError):
+            self.stage("openai", live=True, confirm="wrong",
+                       limit_confirmed=True)
+        self.assertFalse(self.openai.requests)
 
 
 if __name__ == "__main__":
