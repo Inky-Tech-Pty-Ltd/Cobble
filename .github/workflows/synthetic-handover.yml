@@ -1,0 +1,24 @@
+name: Synthetic intelligence supplier handover
+on:
+  pull_request:
+    paths:
+      - 'scripts/synthetic_handover.py'
+      - 'tests/test_synthetic_handover.py'
+      - '.github/workflows/synthetic-handover.yml'
+  workflow_dispatch:
+jobs:
+  synthetic-offline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: No keys or external model calls
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_synthetic_handover.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_mistral_adapter.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_claude_adapter.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_exchange.py' -v
