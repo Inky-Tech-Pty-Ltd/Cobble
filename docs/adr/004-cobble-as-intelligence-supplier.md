@@ -1,7 +1,7 @@
 # ADR-004: Cobble may supply intelligence as well as consume it
 
 **Date:** 8 November 2026  
-**Status:** Proposed — requires architectural approval  
+**Status:** Accepted  
 **Project:** Cobble  
 **Related:** [ADR-003](003-separate-corpus-sovereignty-from-village-link-research.md), [Issue #1](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/1), [Issue #28](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/28), [Issue #29](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/29)
 
@@ -23,7 +23,7 @@ organisation.
 This raises an interface-level question now, even though implementing
 Cobble-to-Cobble communication is not on the immediate demo critical path.
 
-## Proposed decision
+## Decision
 
 **Keep the intelligence supplier boundary composable: a Cobble instance should
 be able to act as a supplier to another Cobble instance through substantially
@@ -67,7 +67,7 @@ for the present product.
 
 ## Consequences
 
-The proposed principle allows specialised, separately governed entities to
+This decision allows specialised, separately governed entities to
 participate as suppliers and leaves open markets for intelligence, delegation
 and federated collaboration. None of those results is proven by this ADR.
 
@@ -86,9 +86,7 @@ consent, provenance, budgets, cycles, failure behaviour and continuity.
 
 ## Review and acceptance
 
-**Proposed only.** Acceptance would establish the interface-level design
-direction; it would **not** authorise deployment of a network-accessible
-Cobble service or disclosure of real private corpora.
+**Accepted as an interface-level design direction.** This does **not** authorise deployment of a network-accessible Cobble service or disclosure of real private corpora.
 
 This proposal extends ADR-003's corpus sovereignty principle without
 reintroducing graph/salience research as a dependency for the demo.
