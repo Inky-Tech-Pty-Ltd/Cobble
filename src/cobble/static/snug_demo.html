@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snug's Boardroom · Cobble</title>
+<style>
+:root{font-family:ui-sans-serif,system-ui,sans-serif;color:#26352f;background:#f5f1e8}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1040px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-family:Georgia,serif;font-size:2.1rem;margin:0}.eyebrow{color:#637567;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
+.pill{border:1px solid #a9b7a9;border-radius:40px;padding:8px 12px;font-size:.77rem}
+.boardroom{background:#e7eddf;border:2px solid #c4cdbf;border-radius:28px;min-height:235px;margin:22px 0;padding:20px;position:relative}
+.table{background:#a17d59;border:10px solid #bc9875;border-radius:48%;height:116px;max-width:440px;margin:46px auto 10px;box-shadow:0 12px 0 #806448;display:grid;place-items:center;color:#fff8ed;font:italic 1.6rem Georgia,serif}
+.seats{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-evenly;gap:4px}
+.seat{background:#faf8f3;border:2px solid #728e82;border-radius:16px;padding:10px 14px;cursor:pointer;font-weight:700;min-width:115px}
+.seat.active{background:#315f50;color:white;transform:translateY(15px);box-shadow:0 5px 0 #214337}
+.seat:disabled{opacity:.5;cursor:not-allowed}.sub{font-size:.7rem;font-weight:400;display:block}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:#fffdf8;border:1px solid #e0dccf;border-radius:18px;padding:18px}
+h2{font-size:1.1rem;margin:0 0 14px}label{display:block;font-size:.85rem;font-weight:650;margin:12px 0 6px}
+input,textarea{width:100%;border:1px solid #b9c6ba;padding:10px;border-radius:10px;font:inherit;background:white}
+textarea{min-height:76px}button{font:inherit;cursor:pointer}.button{border:0;background:#315f50;color:white;padding:10px 16px;border-radius:9px;margin:10px 5px 0 0}
+.button.secondary{background:#e1eae1;color:#274638}
+.result{border:1px solid #e0dccf;border-radius:10px;margin:8px 0;padding:9px;font-size:.83rem}
+.result summary{cursor:pointer;font-weight:650}.result pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;font:inherit}
+.result small,.muted{color:#687768}.transcript{min-height:140px;max-height:400px;overflow:auto}
+.message{padding:10px;border-radius:12px;background:#e9efe7;margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.88rem}
+.message.user{background:#f3e7d6}.error{color:#973e36}.cost{font-size:.78rem;color:#436456}
+footer{color:#667568;font-size:.78rem;margin:20px 0}
+@media(max-width:680px){.grid{grid-template-columns:1fr}.wrap{padding:14px}.seat{min-width:auto;padding:8px}.table{font-size:1.1rem}}
+</style>
+</head>
+<body><main class="wrap">
+<header><div><div class="eyebrow">Cobble · local laboratory</div><h1>Snug's Boardroom</h1></div><span class="pill">Private / offline first slice</span></header>
+<section class="boardroom" aria-label="Boardroom">
+ <div class="seats">
+  <button class="seat active" id="amber" aria-pressed="true">Helen's rehearsal<span class="sub">Fixture Amber · $0</span></button>
+  <button class="seat" id="indigo" aria-pressed="false">Mistral's rehearsal<span class="sub">Fixture Indigo · $0</span></button>
+  <button class="seat" disabled title="Live supplier integration to follow">GPT<span class="sub">Not yet connected</span></button>
+ </div><div class="table">Snug<br><span style="font-size:.7rem">Memory stays here</span></div>
+</section>
+<div class="grid">
+<section class="panel"><h2>1 · Find memories</h2>
+<label for="query">Search the local GitHub archive</label>
+<input id="query" maxlength="240" value="Sankarshan G1">
+<button class="button" id="search">Find relevant memories</button>
+<div id="results" aria-live="polite"></div></section>
+<section class="panel"><h2>2 · Ask Snug</h2>
+<label for="question">Your question</label><textarea id="question">What do the selected GitHub memories tell us about the G1 experiment?</textarea>
+<p class="muted" id="selection">No memories selected. Nothing will be disclosed to an external supplier.</p>
+<div id="preview" aria-live="polite"></div>
+<button class="button secondary" id="review">Review selected context</button>
+<button class="button" id="send" disabled>Approve &amp; run offline exchange</button>
+<div id="status" class="muted" aria-live="polite"></div></section>
+</div>
+<section class="panel" style="margin-top:18px"><h2>Conversation · retained locally</h2>
+<div class="transcript" id="transcript"><div class="message">Hello! Choose some memories, inspect exactly what they contain, and approve a local rehearsal exchange. Real providers come next.</div></div>
+</section>
+<footer>Only fixture intelligences participate in this increment. No private memory leaves McKay. Future live calls will require separate provider credentials, an exact disclosure review and an audited pre-call gate.</footer>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+let provider='fixture-amber',chosen=new Set(),previous=[],reviewed=false;
+async function api(path,data){
+ const r=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
+ const j=await r.json();if(!r.ok)throw Error(j.error||'Local request failed');return j;
+}
+function notice(text,error=false){$('status').textContent=text;$('status').className=error?'error':'muted'}
+function invalidate(){reviewed=false;$('send').disabled=true;$('preview').replaceChildren();$('selection').textContent=chosen.size+' memory passage(s) selected; inspect before approval.'}
+function text(tag,string){const el=document.createElement(tag);el.textContent=string;return el}
+for(const [id,name] of [['amber','fixture-amber'],['indigo','fixture-indigo']]){
+ $(id).onclick=()=>{provider=name;for(const el of [$('amber'),$('indigo')]){el.classList.toggle('active',el.id===id);el.setAttribute('aria-pressed',String(el.id===id))}invalidate()};
+}
+$('question').oninput=invalidate;
+$('search').onclick=async()=>{
+ try{
+  chosen.clear();invalidate();$('results').replaceChildren();
+  const {results}=await api('search',{query:$('query').value});
+  if(!results.length){$('results').append(text('p','No GitHub results. Try fewer search terms.'));return}
+  for(const item of results){
+   const d=document.createElement('details');d.className='result';
+   const summary=document.createElement('summary');summary.textContent=item.title+' · '+item.reference;d.append(summary);
+   d.append(text('p',item.excerpt));
+   const label=document.createElement('label'),cb=document.createElement('input');cb.type='checkbox';cb.style.width='auto';
+   label.append(cb,document.createTextNode(' Include this memory'));d.append(label);
+   cb.onchange=()=>{if(cb.checked&&chosen.size>=3){cb.checked=false;notice('At most three passages per exchange.',true);return}
+     if(cb.checked)chosen.add(item.id);else chosen.delete(item.id);invalidate()};
+   d.ontoggle=async()=>{if(d.open&&!d.dataset.loaded){try{const doc=await api('inspect',{id:item.id});
+     d.append(text('pre',doc.text+(doc.truncated?'\n\n[Passage truncated to 1500 characters]':'')));
+     d.dataset.loaded='yes'}catch(e){notice(e.message,true)}}};
+   $('results').append(d);
+  }notice('Search stays on McKay. Expand each result to inspect its actual text.');
+ }catch(e){notice(e.message,true)}
+};
+$('review').onclick=async()=>{
+ try{const previews=[];for(const id of chosen){previews.push(await api('inspect',{id}))}
+  $('preview').replaceChildren(text('p','Exactly '+previews.length+' memory passage(s) will be included in this offline exchange.'));
+  for(const item of previews){const details=document.createElement('details');details.className='result';
+   details.append(text('summary',item.title+' · '+item.reference),text('pre',item.text));$('preview').append(details)}
+  $('preview').append(text('p','Question: '+$('question').value),
+      text('p','Supplier: '+provider+' · prior exchange count: '+previous.length+' · external network calls: 0'));
+  reviewed=true;$('send').disabled=false;notice('Review the selected material, then approve the local rehearsal.');
+ }catch(e){notice(e.message,true)}
+};
+$('send').onclick=async()=>{
+ if(!reviewed)return;reviewed=false;$('send').disabled=true;
+ try{const question=$('question').value;
+  const ev=await api('exchange',{question,memory_ids:[...chosen],previous_ids:previous.slice(-4),
+    provider,confirmed:true});
+  $('transcript').append(text('div','You: '+question));const msg=text('div',provider+': '+ev.answer);
+  msg.className='message';$('transcript').append(msg);
+  $('transcript').append(text('p','Event '+ev.event_id+' · '+ev.usage.kind+' · network calls '+ev.usage.network_calls));
+  previous.push(ev.event_id);notice('Exchange retained on McKay. Change chairs to test continuity.');
+ }catch(e){notice(e.message,true)}
+};
+})();
+</script></body></html>
