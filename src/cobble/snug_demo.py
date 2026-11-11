@@ -11,7 +11,8 @@ import time
 
 from cobble.local_search import search, show
 from cobble.snug_exchange import (
-    exchange, prepare_exchange_request, MAX_CONTEXTS, MAX_PRIOR,
+    exchange, prepare_exchange_request, request_context_digest,
+    MAX_CONTEXTS, MAX_PRIOR,
 )
 
 APPROVAL_TTL_SECONDS = 300
@@ -78,6 +79,7 @@ class DemoService:
             "selected_memories": list(request.selected_memories),
             "previous_exchanges": list(request.previous_exchanges),
             "network_calls": 0,
+            "context_sha256": request_context_digest(request),
         }
 
     def reviewed_exchange(self, *, approval_token):
