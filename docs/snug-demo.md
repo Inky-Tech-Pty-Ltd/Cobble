@@ -22,11 +22,12 @@ The boardroom lets you:
 
 1. Search the *indexed GitHub conversation* corpus on McKay.
 2. Expand each result and see its exact bounded passage.
-3. Select up to three memory IDs and review them alongside the exact question.
-4. Explicitly approve an **offline fixture** exchange, persisted in
-   `~/cobble-data/snug/events` with source references.
-5. Move between Amber and Indigo rehearsal chairs and preserve previous
-   exchanges without including the original indexed memory again.
+3. Select up to three memory IDs and preview the full bounded source passages,
+   question, and any earlier exchange questions and answers supplied as context.
+4. Execute the **one-time reviewed snapshot** through an offline fixture. The
+   event is persisted in `~/cobble-data/snug/events` with source references.
+5. Move between Amber and Indigo rehearsal chairs and explicitly re-review
+   the next snapshot, including whichever earlier exchanges are included.
 
 **The fixtures do not provide AI answers.** The labels are rehearsals rather
 than real provider identities. Costs are zero. The existing legacy console at
@@ -38,8 +39,18 @@ The server listens only on localhost and validates Host, Origin and a custom
 request header. No source file or arbitrary path-serving endpoint exists.
 Only the previously built SQLite index is queried. Inspect and search are
 operator-local, not external disclosure. Source selection is limited to GitHub
-and at most three bounded passages. Approval is required to persist an exchange.
-This local approval is **not** consent for a network API call.
+and at most three bounded passages. The preview creates a server-held snapshot with an unguessable one-time approval
+identifier, valid for five minutes. Exchange consumes that approval before
+execution and uses the precise reviewed source and historical context, even if
+an indexed passage or previously stored event changes afterward. Editing the
+question, selection or supplier requires a new review. There is no durable
+pre-network attempt ledger in this offline slice, and approval state is lost on
+server restart. A preview is bounded local evidence, not authenticated or
+transactionally complete historical evidence.
+
+This local approval is **not** consent for a network API call. The HTTP exchange
+endpoint refuses ordinary `confirmed=true` requests and accepts only a valid
+one-time preview token. Live suppliers remain unavailable.
 
 Before live suppliers are enabled, implement a persistent pre-call ledger that
 records attempts (including uncertain outcomes), an exact immutable reviewed
@@ -48,7 +59,7 @@ local server process, vendor account spending controls, safe error handling,
 and tests. Do not interpret the existing adapter's estimated price ceiling as
 a hard cap or assume vendor-side data retention is zero.
 
-Run offline tests:
+Run offline tests (also included in the Snug exchange workflow):
 
 ```sh
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_snug_demo.py' -v
