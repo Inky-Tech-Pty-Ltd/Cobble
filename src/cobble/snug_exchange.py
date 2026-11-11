@@ -4,7 +4,7 @@ Only explicitly chosen indexed passages and prior exchanges enter a request.
 This first implementation offers two deterministic *fixtures*, not real AI
 providers. It does not call a network API or modify the original corpus.
 """
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -110,13 +110,18 @@ def _save_event(store, record):
         Path(temporary).unlink(missing_ok=True)
 
 
-def exchange(*, store, index, question, participant, provider,
-             memory_ids=(), allowed_sources=(), prior_ids=(), adapter=None):
-    """Explicitly scoped, one-shot private conversation; return an immutable event.
+def request_context_digest(request):
+    """Fingerprint the exact selected memories and prior exchange text."""
+    if not isinstance(request, ExchangeRequest):
+        raise TypeError("Expected an assembled exchange request")
+    encoded = json.dumps(asdict(request), sort_keys=True, ensure_ascii=False,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
-    Model-ready payload is built only from exact selected IDs. No automatic
-    retrieval or ambient context is shared. Prior exchange history is opt-in.
-    """
+
+def prepare_exchange_request(*, store, index, question, participant, provider,
+                             memory_ids=(), allowed_sources=(), prior_ids=()):
+    """Build the exact, source-scoped request for a local preview or exchange."""
     _validate(question, participant, provider, memory_ids, allowed_sources, prior_ids)
     store = Path(store).expanduser().resolve()
     index = Path(index).expanduser().resolve(strict=True)
@@ -147,6 +152,32 @@ def exchange(*, store, index, question, participant, provider,
     request = ExchangeRequest(participant=participant, question=question,
                               selected_memories=tuple(memories),
                               previous_exchanges=tuple(prior_context))
+    return request
+
+
+def exchange(*, store, index, question, participant, provider,
+             memory_ids=(), allowed_sources=(), prior_ids=(), adapter=None,
+             prepared_request=None):
+    """Explicitly scoped, one-shot private conversation; return an immutable event.
+
+    Model-ready payload is built only from exact selected IDs. No automatic
+    retrieval or ambient context is shared. Prior exchange history is opt-in.
+    """
+    if prepared_request is None:
+        request = prepare_exchange_request(
+            store=store, index=index, question=question, participant=participant,
+            provider=provider, memory_ids=memory_ids,
+            allowed_sources=allowed_sources, prior_ids=prior_ids)
+    else:
+        _validate(question, participant, provider, memory_ids, allowed_sources, prior_ids)
+        if not isinstance(prepared_request, ExchangeRequest):
+            raise ValueError("Expected a prepared exchange request")
+        if (prepared_request.participant != participant or
+                prepared_request.question != question or
+                tuple(m["document_id"] for m in prepared_request.selected_memories) != tuple(memory_ids) or
+                tuple(p["event_id"] for p in prepared_request.previous_exchanges) != tuple(prior_ids)):
+            raise ValueError("Prepared exchange context does not match requested identifiers")
+        request = prepared_request
     if provider in ("claude", "mistral", "openai") and adapter is None:
         raise PermissionError("Real provider adapter must be explicitly supplied")
     intelligence = adapter if adapter is not None else FixtureIntelligence(provider)
@@ -186,7 +217,8 @@ def exchange(*, store, index, question, participant, provider,
         "participant": participant,
         "provider": provider,
         "question": question,
-        "selected_memories": memories,
+        "selected_memories": list(request.selected_memories),
+        "context_sha256": request_context_digest(request),
         "previous_exchange_ids": list(prior_ids),
         "answer": answer,
         "provider_model": model,

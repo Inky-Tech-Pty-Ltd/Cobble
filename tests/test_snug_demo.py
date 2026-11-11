@@ -39,23 +39,79 @@ class DemoTests(unittest.TestCase):
             self.service.inspect(self.private_id)
 
     def test_explicit_exchange_and_supplier_substitution(self):
-        first = self.service.reviewed_exchange(
+        first_preview = self.service.preview_exchange(
             question="What was examined?", document_ids=[self.github_id])
-        second = self.service.reviewed_exchange(
+        self.assertEqual(len(first_preview["selected_memories"]), 1)
+        self.assertEqual(first_preview["network_calls"], 0)
+        self.assertEqual(len(first_preview["context_sha256"]), 64)
+        first = self.service.reviewed_exchange(
+            approval_token=first_preview["approval_token"])
+        self.assertEqual(first["context_sha256"], first_preview["context_sha256"])
+        second_preview = self.service.preview_exchange(
             question="Do you retain continuity?", document_ids=[],
             previous_ids=[first["event_id"]], fixture="fixture-indigo")
-        self.assertEqual(first["usage"]["network_calls"], 0)
+        self.assertEqual(second_preview["previous_exchanges"][0]["question"],
+                         "What was examined?")
+        self.assertEqual(second_preview["previous_exchanges"][0]["answer"],
+                         first["answer"])
+        second = self.service.reviewed_exchange(
+            approval_token=second_preview["approval_token"])
         self.assertEqual(second["previous_exchange_ids"], [first["event_id"]])
         self.assertEqual(second["selected_memories"], [])
         self.assertIn("1 expressly supplied", second["answer"])
         self.assertEqual(read_event(self.store, first["event_id"]), first)
 
+    def test_approval_is_single_use_and_does_not_re_read_sources(self):
+        preview = self.service.preview_exchange(
+            question="Show remembered source", document_ids=[self.github_id])
+        # Remove the index after approval. Execution must use the precise
+        # snapshot already reviewed, not a second retrieval of altered state.
+        self.index.unlink()
+        result = self.service.reviewed_exchange(
+            approval_token=preview["approval_token"])
+        self.assertEqual(result["selected_memories"],
+                         preview["selected_memories"])
+        self.assertEqual(result["context_sha256"], preview["context_sha256"])
+        with self.assertRaises(PermissionError):
+            self.service.reviewed_exchange(
+                approval_token=preview["approval_token"])
+
+    def test_prior_exchange_snapshot_survives_history_change(self):
+        earlier = self.service.reviewed_exchange(
+            approval_token=self.service.preview_exchange(
+                question="Earlier prompt", document_ids=[])["approval_token"])
+        preview = self.service.preview_exchange(
+            question="Use prior context", document_ids=[],
+            previous_ids=[earlier["event_id"]])
+        # Alter the local earlier record after review. The approved request
+        # must not silently pick up this unreviewed content.
+        event_path = self.store / "snug" / "events" / (earlier["event_id"] + ".json")
+        altered = json.loads(event_path.read_text())
+        altered["question"] = "UNREVIEWED DIFFERENT QUESTION"
+        event_path.write_text(json.dumps(altered))
+        from unittest.mock import patch
+        from cobble import snug_demo
+        actual_exchange = snug_demo.exchange
+        captured = []
+        def capture(**kwargs):
+            captured.append(kwargs["prepared_request"])
+            return actual_exchange(**kwargs)
+        with patch.object(snug_demo, "exchange", side_effect=capture):
+            result = self.service.reviewed_exchange(approval_token=preview["approval_token"])
+        self.assertEqual(result["context_sha256"], preview["context_sha256"])
+        self.assertEqual(captured[0].previous_exchanges[0]["question"],
+                         "Earlier prompt")
+        self.assertNotEqual(captured[0].previous_exchanges[0]["question"],
+                            altered["question"])
+
     def test_live_supplier_refused_before_any_event(self):
         with self.assertRaises(PermissionError):
-            self.service.reviewed_exchange(question="No", document_ids=[],
+            self.service.preview_exchange(question="No", document_ids=[],
                                           fixture="claude")
         with self.assertRaises(PermissionError):
-            self.service.reviewed_exchange(question="No", document_ids=[self.private_id])
+            self.service.preview_exchange(question="No", document_ids=[self.private_id])
+        with self.assertRaises(PermissionError):
+            self.service.reviewed_exchange(approval_token="invalid")
         self.assertFalse((self.store / "snug" / "events").exists())
 
     def test_local_http_browser_security_and_confirmation(self):
@@ -96,10 +152,25 @@ class DemoTests(unittest.TestCase):
                 status, _ = request("/api/inspect", {"id": self.private_id})
                 self.assertEqual(status, 400)
                 status, _ = request("/api/exchange", {"question": "Hi",
-                    "memory_ids": [self.github_id], "confirmed": False})
+                    "memory_ids": [self.github_id], "confirmed": True})
                 self.assertEqual(status, 400)
-                status, _ = request("/api/exchange", {"question": "Hi",
-                    "memory_ids": [], "provider": "claude", "confirmed": True})
+                status, _ = request("/api/preview", {"question": "Hi",
+                    "memory_ids": [], "provider": "claude"})
+                self.assertEqual(status, 400)
+                status, data = request("/api/preview", {"question": "Hi",
+                    "memory_ids": [self.github_id]})
+                self.assertEqual(status, 200)
+                approved = json.loads(data)
+                self.assertEqual(len(approved["selected_memories"]), 1)
+                status, _ = request("/api/exchange", {"approval_token":
+                    approved["approval_token"], "question": "changed"})
+                self.assertEqual(status, 400)
+                status, data = request("/api/exchange",
+                    {"approval_token": approved["approval_token"]})
+                self.assertEqual(status, 200)
+                self.assertEqual(json.loads(data)["question"], "Hi")
+                status, _ = request("/api/exchange",
+                    {"approval_token": approved["approval_token"]})
                 self.assertEqual(status, 400)
                 status, _ = request("/api/search", {"query": "Sankarshan"},
                                    {"Host": "evil.example"})
