@@ -15,6 +15,11 @@ on:
     branches: [main]
     paths:
       - 'src/cobble/snug_exchange.py'
+      - 'src/cobble/snug_demo.py'
+      - 'src/cobble/static/snug_demo.html'
+      - 'scripts/snug_demo_web.py'
+      - 'tests/test_snug_demo.py'
+      - 'docs/snug-demo.md'
       - 'scripts/snug_exchange.py'
       - 'tests/test_snug_exchange.py'
       - '.github/workflows/snug-exchange.yml'
