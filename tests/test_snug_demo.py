@@ -43,8 +43,10 @@ class DemoTests(unittest.TestCase):
             question="What was examined?", document_ids=[self.github_id])
         self.assertEqual(len(first_preview["selected_memories"]), 1)
         self.assertEqual(first_preview["network_calls"], 0)
+        self.assertEqual(len(first_preview["context_sha256"]), 64)
         first = self.service.reviewed_exchange(
             approval_token=first_preview["approval_token"])
+        self.assertEqual(first["context_sha256"], first_preview["context_sha256"])
         second_preview = self.service.preview_exchange(
             question="Do you retain continuity?", document_ids=[],
             previous_ids=[first["event_id"]], fixture="fixture-indigo")
@@ -69,6 +71,7 @@ class DemoTests(unittest.TestCase):
             approval_token=preview["approval_token"])
         self.assertEqual(result["selected_memories"],
                          preview["selected_memories"])
+        self.assertEqual(result["context_sha256"], preview["context_sha256"])
         with self.assertRaises(PermissionError):
             self.service.reviewed_exchange(
                 approval_token=preview["approval_token"])
@@ -94,7 +97,8 @@ class DemoTests(unittest.TestCase):
             captured.append(kwargs["prepared_request"])
             return actual_exchange(**kwargs)
         with patch.object(snug_demo, "exchange", side_effect=capture):
-            self.service.reviewed_exchange(approval_token=preview["approval_token"])
+            result = self.service.reviewed_exchange(approval_token=preview["approval_token"])
+        self.assertEqual(result["context_sha256"], preview["context_sha256"])
         self.assertEqual(captured[0].previous_exchanges[0]["question"],
                          "Earlier prompt")
         self.assertNotEqual(captured[0].previous_exchanges[0]["question"],
