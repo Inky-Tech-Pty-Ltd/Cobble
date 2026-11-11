@@ -40,7 +40,9 @@ request header. No source file or arbitrary path-serving endpoint exists.
 Only the previously built SQLite index is queried. Inspect and search are
 operator-local, not external disclosure. Source selection is limited to GitHub
 and at most three bounded passages. The preview creates a server-held snapshot with an unguessable one-time approval
-identifier, valid for five minutes. Exchange consumes that approval before
+identifier, valid for five minutes. Both preview and retained event expose the
+SHA-256 digest of the exact assembled request (including prior conversation text)
+for evidence correlation; the digest is not proof that a memory claim is true. Exchange consumes that approval before
 execution and uses the precise reviewed source and historical context, even if
 an indexed passage or previously stored event changes afterward. Editing the
 question, selection or supplier requires a new review. There is no durable
