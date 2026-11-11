@@ -4,7 +4,7 @@ Only explicitly chosen indexed passages and prior exchanges enter a request.
 This first implementation offers two deterministic *fixtures*, not real AI
 providers. It does not call a network API or modify the original corpus.
 """
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -110,6 +110,15 @@ def _save_event(store, record):
         Path(temporary).unlink(missing_ok=True)
 
 
+def request_context_digest(request):
+    """Fingerprint the exact selected memories and prior exchange text."""
+    if not isinstance(request, ExchangeRequest):
+        raise TypeError("Expected an assembled exchange request")
+    encoded = json.dumps(asdict(request), sort_keys=True, ensure_ascii=False,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def prepare_exchange_request(*, store, index, question, participant, provider,
                              memory_ids=(), allowed_sources=(), prior_ids=()):
     """Build the exact, source-scoped request for a local preview or exchange."""
@@ -209,6 +218,7 @@ def exchange(*, store, index, question, participant, provider,
         "provider": provider,
         "question": question,
         "selected_memories": list(request.selected_memories),
+        "context_sha256": request_context_digest(request),
         "previous_exchange_ids": list(prior_ids),
         "answer": answer,
         "provider_model": model,
