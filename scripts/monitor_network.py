@@ -127,11 +127,12 @@ def save(db, observation):
 def report(db):
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat(timespec="seconds")
     row = db.execute("""SELECT COUNT(*), SUM(CASE WHEN router_ok=0 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN router_ok IS NULL THEN 1 ELSE 0 END),
         SUM(CASE WHEN internet_ok=0 THEN 1 ELSE 0 END),
         SUM(CASE WHEN openai_ok=0 THEN 1 ELSE 0 END),
         SUM(CASE WHEN tunnel_status!='ok' THEN 1 ELSE 0 END),
         MAX(timestamp_utc) FROM samples WHERE timestamp_utc >= ?""", (cutoff,)).fetchone()
-    return dict(zip(("samples_24h", "router_no_reply", "internet_failures", "openai_failures",
+    return dict(zip(("samples_24h", "router_no_reply", "router_unchecked", "internet_failures", "openai_failures",
                      "tunnel_non_ok", "last_sample_utc"), row))
 
 
