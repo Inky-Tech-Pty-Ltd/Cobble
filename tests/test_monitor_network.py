@@ -45,6 +45,11 @@ class NetworkMonitorTests(unittest.TestCase):
                 totals = monitor.report(db)
                 self.assertEqual(totals["samples_24h"], 1)
                 self.assertEqual(totals["internet_failures"], 1)
+                self.assertEqual(totals["router_unchecked"], 0)
+                obs["router_ok"] = None
+                obs["gateway_ip"] = None
+                monitor.save(db, obs)
+                self.assertEqual(monitor.report(db)["router_unchecked"], 1)
                 self.assertEqual(totals["tunnel_non_ok"], 1)
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
 
