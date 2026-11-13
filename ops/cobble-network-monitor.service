@@ -1,0 +1,12 @@
+[Unit]
+Description=Cobble private connectivity monitor (McKay)
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/cobbler/Cobble/scripts/monitor_network.py
+Restart=on-failure
+RestartSec=10
+UMask=0077
+
+[Install]
+WantedBy=default.target
