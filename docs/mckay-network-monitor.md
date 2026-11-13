@@ -6,14 +6,18 @@ library only. Takes one sample per minute and retains a rolling **31 days**
 in private SQLite at `~/cobble-data/monitoring/network.sqlite3`, outside Git.
 No API keys, prompts, browsing contents, or response bodies are recorded.
 
-- Router: ping the **Windows physical Ethernet gateway**, not WSL's virtual NAT gateway.
+- Router: ping the **Windows physical Ethernet gateway**, not WSL's virtual NAT gateway. McKay's unit pins the verified gateway at `192.168.20.1`.
 - General internet: HTTP 204 from Google's `generate_204` endpoint.
 - OpenAI: unauthenticated GET to `https://api.openai.com/v1/models`, expecting HTTP 401.
 - Tunnel: local read-only `http://127.0.0.1:8080/health/control-plane`.
 
-The script discovers the physical router address from Windows PowerShell once
-when it starts. If gateway discovery fails, the saved sample reports a null
-gateway and router status rather than misleadingly pinging the WSL gateway.
+The interactive script discovers the physical router address from Windows PowerShell.
+The background systemd service instead passes `--gateway 192.168.20.1`, because
+PowerShell gateway discovery failed in its noninteractive environment. If McKay's
+router IP changes, update that value in the unit and redeploy. If an interactive
+run cannot discover the router, the saved sample reports a null gateway and
+router status rather than misleadingly pinging the WSL gateway. The report
+explicitly counts such untested samples under `router_unchecked`.
 An ICMP non-response is not conclusive when a router blocks ping; first
 establish a successful router baseline.
 
@@ -30,6 +34,8 @@ mkdir -p ~/.config/systemd/user
 cp ops/cobble-network-monitor.service ~/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable --now cobble-network-monitor.service
+# Existing installations: restart to apply updated ExecStart.
+systemctl --user restart cobble-network-monitor.service
 systemctl --user is-active cobble-network-monitor.service
 ```
 
