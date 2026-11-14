@@ -48,25 +48,25 @@ footer{color:#667568;font-size:.78rem;margin:20px 0}
 <label for="question">Your question</label><textarea id="question">What do the selected GitHub memories tell us about the G1 experiment?</textarea>
 <p class="muted" id="selection">No memories selected. Nothing will be disclosed to an external supplier.</p>
 <div id="preview" aria-live="polite"></div>
-<button class="button secondary" id="review">Review selected context</button>
+<button class="button secondary" id="review">Review entire offline context</button>
 <button class="button" id="send" disabled>Approve &amp; run offline exchange</button>
 <div id="status" class="muted" aria-live="polite"></div></section>
 </div>
 <section class="panel" style="margin-top:18px"><h2>Conversation · retained locally</h2>
 <div class="transcript" id="transcript"><div class="message">Hello! Choose some memories, inspect exactly what they contain, and approve a local rehearsal exchange. Real providers come next.</div></div>
 </section>
-<footer>Only fixture intelligences participate in this increment. No private memory leaves McKay. Future live calls will require separate provider credentials, an exact disclosure review and an audited pre-call gate.</footer>
+<footer>Only fixture intelligences participate. Preview approval is single-use and never authorises external transmission. No private memory leaves McKay. Future live calls will require separate provider credentials, an exact disclosure review and an audited pre-call gate.</footer>
 </main>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-let provider='fixture-amber',chosen=new Set(),previous=[],reviewed=false;
+let provider='fixture-amber',chosen=new Set(),previous=[],approval=null,revision=0;
 async function api(path,data){
  const r=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
  const j=await r.json();if(!r.ok)throw Error(j.error||'Local request failed');return j;
 }
 function notice(text,error=false){$('status').textContent=text;$('status').className=error?'error':'muted'}
-function invalidate(){reviewed=false;$('send').disabled=true;$('preview').replaceChildren();$('selection').textContent=chosen.size+' memory passage(s) selected; inspect before approval.'}
+function invalidate(){revision++;approval=null;$('send').disabled=true;$('preview').replaceChildren();$('selection').textContent=chosen.size+' memory passage(s) selected; inspect before approval.'}
 function text(tag,string){const el=document.createElement(tag);el.textContent=string;return el}
 for(const [id,name] of [['amber','fixture-amber'],['indigo','fixture-indigo']]){
  $(id).onclick=()=>{provider=name;for(const el of [$('amber'),$('indigo')]){el.classList.toggle('active',el.id===id);el.setAttribute('aria-pressed',String(el.id===id))}invalidate()};
@@ -93,24 +93,43 @@ $('search').onclick=async()=>{
  }catch(e){notice(e.message,true)}
 };
 $('review').onclick=async()=>{
- try{const previews=[];for(const id of chosen){previews.push(await api('inspect',{id}))}
-  $('preview').replaceChildren(text('p','Exactly '+previews.length+' memory passage(s) will be included in this offline exchange.'));
-  for(const item of previews){const details=document.createElement('details');details.className='result';
-   details.append(text('summary',item.title+' · '+item.reference),text('pre',item.text));$('preview').append(details)}
-  $('preview').append(text('p','Question: '+$('question').value),
-      text('p','Supplier: '+provider+' · prior exchange count: '+previous.length+' · external network calls: 0'));
-  reviewed=true;$('send').disabled=false;notice('Review the selected material, then approve the local rehearsal.');
- }catch(e){notice(e.message,true)}
+ const question=$('question').value,chair=provider;
+ const memories=[...chosen],history=previous.slice(-4);
+ invalidate();
+ const reviewing=revision;
+ try{
+  const response=await api('preview',{question,memory_ids:memories,
+    previous_ids:history,provider:chair});
+  if(revision!==reviewing)return;
+  $('preview').replaceChildren(text('p','This exact offline context is frozen for one execution. Review all source and earlier conversation text before approval.'));
+  for(const item of response.selected_memories){
+   const details=document.createElement('details');details.className='result';
+   details.append(text('summary',item.title+' · '+item.reference),text('pre',item.text));
+   $('preview').append(details);
+  }
+  for(const item of response.previous_exchanges){
+   const details=document.createElement('details');details.className='result';
+   details.append(text('summary','Prior '+item.event_id+' · '+item.provider),
+     text('pre','Question: '+item.question+'\nAnswer: '+item.answer));
+   $('preview').append(details);
+  }
+  $('preview').append(text('p','Question: '+response.question),
+    text('p','Supplier: '+response.provider+' · earlier exchanges: '+response.previous_exchanges.length+' · network calls: 0'));
+  approval=response.approval_token;$('send').disabled=false;
+  notice('The reviewed snapshot will be used once, even if indexed records change. External transmission remains disabled.');
+ }catch(e){if(revision===reviewing)notice(e.message,true)}
 };
 $('send').onclick=async()=>{
- if(!reviewed)return;reviewed=false;$('send').disabled=true;
- try{const question=$('question').value;
-  const ev=await api('exchange',{question,memory_ids:[...chosen],previous_ids:previous.slice(-4),
-    provider,confirmed:true});
-  $('transcript').append(text('div','You: '+question));const msg=text('div',provider+': '+ev.answer);
+ if(!approval)return;
+ const token=approval;invalidate();
+ try{
+  const ev=await api('exchange',{approval_token:token});
+  $('transcript').append(text('div','You: '+ev.question));
+  const msg=text('div',ev.provider+': '+ev.answer);
   msg.className='message';$('transcript').append(msg);
   $('transcript').append(text('p','Event '+ev.event_id+' · '+ev.usage.kind+' · network calls '+ev.usage.network_calls));
-  previous.push(ev.event_id);notice('Exchange retained on McKay. Change chairs to test continuity.');
+  previous.push(ev.event_id);
+  notice('Reviewed exchange retained locally. Review again after switching chairs.');
  }catch(e){notice(e.message,true)}
 };
 })();

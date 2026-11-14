@@ -64,7 +64,7 @@ def create_server(store, index, port=8766):
         def do_POST(self):
             if not self.trusted():
                 return
-            if self.path not in ("/api/search", "/api/inspect", "/api/exchange"):
+            if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange"):
                 self.reply(404, {"error": "Not found"})
                 return
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
@@ -85,14 +85,17 @@ def create_server(store, index, port=8766):
                     result = {"results": service.find(data.get("query"))}
                 elif self.path == "/api/inspect":
                     result = service.inspect(data.get("id"))
-                else:
-                    if data.get("confirmed") is not True:
-                        raise PermissionError("Explicit operator approval required")
-                    result = service.reviewed_exchange(
+                elif self.path == "/api/preview":
+                    result = service.preview_exchange(
                         question=data.get("question"),
                         document_ids=data.get("memory_ids"),
                         previous_ids=data.get("previous_ids", []),
                         fixture=data.get("provider", "fixture-amber"))
+                else:
+                    if set(data) != {"approval_token"}:
+                        raise PermissionError("Execute only a reviewed one-shot approval")
+                    result = service.reviewed_exchange(
+                        approval_token=data["approval_token"])
                 self.reply(200, result)
             except (ValueError, TypeError, KeyError, PermissionError) as error:
                 self.reply(400, {"error": str(error)})
