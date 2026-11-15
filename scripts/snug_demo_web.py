@@ -8,6 +8,9 @@ import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
+import sys
+
+from cobble.openai_adapter import OpenAIAdapter
 from pathlib import Path
 
 from cobble.snug_demo import DemoService
@@ -135,12 +138,24 @@ def main():
     parser.add_argument("--index", type=Path)
     parser.add_argument("--port", type=int, default=8766)
     parser.add_argument("--live-gpt", action="store_true",
-                        help="Explicitly enable billable GPT calls (requires OPENAI_API_KEY)")
+                        help="Explicitly enable billable GPT calls")
+    parser.add_argument("--key-stdin", action="store_true",
+                        help="Read the existing API key once from stdin (not from shell history)")
     args = parser.parse_args()
-    if args.live_gpt and not os.environ.get("OPENAI_API_KEY"):
-        parser.error("--live-gpt requires OPENAI_API_KEY in the local WSL environment")
+    if args.key_stdin and not args.live_gpt:
+        parser.error("--key-stdin requires --live-gpt")
+    injected_adapter = None
+    if args.key_stdin:
+        key = sys.stdin.read(4096).strip()
+        if not 1 <= len(key) <= 512:
+            parser.error("Invalid API key from stdin")
+        injected_adapter = OpenAIAdapter(
+            allow_network=True, key=key, output_tokens=2048)
+    elif args.live_gpt and not os.environ.get("OPENAI_API_KEY"):
+        parser.error("--live-gpt requires OPENAI_API_KEY or --key-stdin")
     index = args.index or args.store / "index" / "search.sqlite3"
-    with create_server(args.store, index, args.port, live_gpt=args.live_gpt) as server:
+    with create_server(args.store, index, args.port, live_gpt=args.live_gpt,
+                       live_adapter=injected_adapter) as server:
         mode = "live GPT enabled" if args.live_gpt else "offline"
         print(f"Snug demo ({mode}): http://127.0.0.1:{server.server_port}/", flush=True)
         print("Live GPT calls require one-time exact context review." if args.live_gpt
