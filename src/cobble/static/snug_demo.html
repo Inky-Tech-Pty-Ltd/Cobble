@@ -4,133 +4,258 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Snug's Boardroom · Cobble</title>
 <style>
-:root{font-family:ui-sans-serif,system-ui,sans-serif;color:#26352f;background:#f5f1e8}
-*{box-sizing:border-box}body{margin:0}.wrap{max-width:1040px;margin:auto;padding:24px}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-h1{font-family:Georgia,serif;font-size:2.1rem;margin:0}.eyebrow{color:#637567;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
-.pill{border:1px solid #a9b7a9;border-radius:40px;padding:8px 12px;font-size:.77rem}
-.boardroom{background:#e7eddf;border:2px solid #c4cdbf;border-radius:28px;min-height:235px;margin:22px 0;padding:20px;position:relative}
-.table{background:#a17d59;border:10px solid #bc9875;border-radius:48%;height:116px;max-width:440px;margin:46px auto 10px;box-shadow:0 12px 0 #806448;display:grid;place-items:center;color:#fff8ed;font:italic 1.6rem Georgia,serif}
-.seats{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-evenly;gap:4px}
-.seat{background:#faf8f3;border:2px solid #728e82;border-radius:16px;padding:10px 14px;cursor:pointer;font-weight:700;min-width:115px}
-.seat.active{background:#315f50;color:white;transform:translateY(15px);box-shadow:0 5px 0 #214337}
-.seat:disabled{opacity:.5;cursor:not-allowed}.sub{font-size:.7rem;font-weight:400;display:block}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:#fffdf8;border:1px solid #e0dccf;border-radius:18px;padding:18px}
-h2{font-size:1.1rem;margin:0 0 14px}label{display:block;font-size:.85rem;font-weight:650;margin:12px 0 6px}
-input,textarea{width:100%;border:1px solid #b9c6ba;padding:10px;border-radius:10px;font:inherit;background:white}
-textarea{min-height:76px}button{font:inherit;cursor:pointer}.button{border:0;background:#315f50;color:white;padding:10px 16px;border-radius:9px;margin:10px 5px 0 0}
-.button.secondary{background:#e1eae1;color:#274638}
-.result{border:1px solid #e0dccf;border-radius:10px;margin:8px 0;padding:9px;font-size:.83rem}
-.result summary{cursor:pointer;font-weight:650}.result pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;font:inherit}
-.result small,.muted{color:#687768}.transcript{min-height:140px;max-height:400px;overflow:auto}
-.message{padding:10px;border-radius:12px;background:#e9efe7;margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.88rem}
-.message.user{background:#f3e7d6}.error{color:#973e36}.cost{font-size:.78rem;color:#436456}
-footer{color:#667568;font-size:.78rem;margin:20px 0}
-@media(max-width:680px){.grid{grid-template-columns:1fr}.wrap{padding:14px}.seat{min-width:auto;padding:8px}.table{font-size:1.1rem}}
+:root{font-family:system-ui,sans-serif;color:#283a32;background:#f5f1e9}*{box-sizing:border-box}
+body{margin:0}button,select,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #ac8558;outline-offset:3px}
+.wrap{max-width:1060px;margin:auto;padding:22px}header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+h1{font:normal 2.1rem Georgia,serif;margin:0}.eyebrow{color:#67786b;text-transform:uppercase;letter-spacing:.15em;font-size:.75rem}
+.pill{border:1px solid #b1c0b0;border-radius:30px;padding:8px 12px;font-size:.76rem}.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.action{border:0;border-radius:10px;background:#315f50;color:white;padding:10px 14px;font-weight:650}.action.secondary{border:1px solid #a9b9a8;background:#e7eee4;color:#254b3a}.action.small{font-size:.82rem;padding:8px 11px}
+.boardroom{background:linear-gradient(#eaf0e4,#dfe8d8);border:1px solid #c1d0bf;border-radius:25px;padding:24px 18px;margin-bottom:16px}
+.chair{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:17px}
+.face{width:50px;height:56px;flex-shrink:0;border-radius:47%;background:#f0cc9d;border:3px solid #816c57;position:relative;box-shadow:0 6px 0 #345c4c}
+.face:before{content:"•   •";position:absolute;top:12px;left:10px;white-space:pre;color:#594232;letter-spacing:6px}
+.face:after{content:"";position:absolute;top:31px;left:15px;width:15px;height:6px;border-bottom:2px solid #624632;border-radius:50%}
+.chair strong{font:normal 1.4rem Georgia,serif;display:block}.chair small,.muted{color:#64766a;font-size:.79rem}
+.speech{max-width:610px;margin:0 auto;background:#fffefa;border:1px solid #aebcad;border-radius:17px;padding:16px;box-shadow:0 5px 0 #c5d1c0;position:relative}
+.speech:before{content:"";position:absolute;top:-10px;left:50%;width:17px;height:17px;transform:translateX(-50%) rotate(45deg);border-top:1px solid #aebcad;border-left:1px solid #aebcad;background:#fffefa}
+.speech label{display:block;font-weight:750;margin-bottom:7px;font-size:.84rem}
+textarea{width:100%;min-height:84px;border:1px solid #b5c4b6;border-radius:9px;padding:10px;resize:vertical;color:#263b30}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.hint{font-size:.77rem;color:#64776c;margin:7px 0 2px}
+#target{font-size:.79rem;font-weight:700;color:#35624c;margin-top:9px}#status{font-size:.81rem;min-height:1.1em;margin-top:8px;color:#37674b}.error{color:#a33e38!important}
+.table{background:radial-gradient(ellipse,#b28a64,#956e4e);border:11px solid #bb9570;box-shadow:0 13px 0 #79583e,0 16px 25px #33433433;color:#fff8ed;max-width:570px;min-height:155px;width:90%;border-radius:49%/45%;margin:26px auto 26px;display:grid;place-items:center;text-align:center;padding:13px 30px}
+.table.dragover{outline:4px dashed #315f50;outline-offset:5px}.table strong{font:italic 1.55rem Georgia,serif}
+.table p{font-size:.77rem;margin:5px 0}.table label{display:inline-block;margin:5px;cursor:pointer;background:#fff4e4;color:#604327;padding:5px 10px;border-radius:15px;font-size:.77rem}
+#table-files{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.docs{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:7px}
+.doc{background:#fff4e5;color:#543b25;border-radius:8px;padding:6px 9px;font-size:.76rem;max-width:220px;overflow-wrap:anywhere}
+.doc button{background:none;border:0;color:#6d4731;font-weight:800}
+.zone-label{text-align:center;font-size:.79rem;color:#4c6a59;text-transform:uppercase;letter-spacing:.07em;font-weight:750;margin:16px 0 8px}
+.seat-zone{min-height:72px;display:flex;justify-content:center;align-items:stretch;gap:12px;flex-wrap:wrap;padding:7px;border-radius:14px}
+.seat-zone.drop-target{background:#c7decc;outline:2px dashed #4f7962}
+.participant{width:178px;max-width:100%;border:2px solid #a4b4a6;border-radius:15px;background:#fffdf7;padding:11px;text-align:center;cursor:grab;box-shadow:0 4px 0 #c9d4c8}
+.participant.chosen{border-color:#315f50;box-shadow:0 4px 0 #315f50}.participant .symbol{background:#e2eae0;border-radius:50%;width:28px;height:28px;margin:0 auto 5px;display:grid;place-items:center;font-weight:750}
+.participant strong{font-size:.9rem}.participant small{font-size:.71rem;color:#66756a;display:block;margin-top:3px}
+.participant select{width:100%;font-size:.77rem;margin-top:8px;border:1px solid #a9baae;border-radius:7px;padding:5px;background:#fff}
+.participant button{width:100%;margin-top:7px}.participant.out{opacity:.75;background:#f3f2ed}
+.quiet-zone{margin-top:10px;padding:9px;border:1px dashed #c1d0c1;border-radius:13px;background:#f3f6ed}
+.outside{padding:12px 13px;border:1px dashed #cac7be;border-radius:14px;margin-bottom:16px}
+.conversation{background:#fffdf8;border:1px solid #dbd9d0;border-radius:18px;padding:19px}
+.heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h2{font:normal 1.45rem Georgia,serif;margin:0}.transcript{max-height:440px;min-height:130px;overflow-y:auto;padding:8px 3px;margin-top:9px}
+.line{display:grid;grid-template-columns:142px minmax(0,1fr);gap:13px;border-bottom:1px solid #ece9e2;padding:13px 4px}
+.line dt{font-size:.8rem;font-weight:800;letter-spacing:.04em;color:#335a48}.line dd{margin:0;font-size:.94rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.line small{display:block;color:#728073;font-size:.7rem;font-weight:400;letter-spacing:0}
+.event-meta{font-size:.74rem;color:#748174;margin:6px 0 6px 156px}.stage{color:#748174;font:italic .87rem Georgia,serif;margin:12px 0}
+details>summary{cursor:pointer;color:#3a6350;font-weight:700}
+.context{margin:7px 4px 12px 156px}.context pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:160px;overflow:auto}
+.context .result,dialog .result{border:1px solid #dce2d9;border-radius:9px;padding:9px;margin:7px 0;font-size:.8rem}
+dialog{border:1px solid #91ad9b;border-radius:18px;padding:22px;width:min(92vw,730px);max-height:85vh;overflow:auto;background:#fffdf8;box-shadow:0 25px 65px #14281f66}
+dialog::backdrop{background:#13271eb0}.dialogtop{display:flex;justify-content:space-between;gap:12px;align-items:center}
+dialog input[type=text]{width:100%;padding:10px;border-radius:9px;border:1px solid #abbeb1}
+dialog label{font-size:.85rem;display:block;margin:10px 0 5px;font-weight:700}.result label{display:flex;align-items:center;gap:7px}
+.result pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:175px;overflow:auto;font:inherit}
+footer{font-size:.77rem;color:#69796d;line-height:1.55;margin-top:17px}
+@media(max-width:670px){.wrap{padding:12px}.boardroom{padding:17px 9px}.table{width:97%;min-height:125px;padding:13px}.participant{width:140px;padding:8px}.line{grid-template-columns:1fr;gap:4px}.context,.event-meta{margin-left:4px}}
 </style>
 </head>
+
 <body><main class="wrap">
-<header><div><div class="eyebrow">Cobble · local laboratory</div><h1>Snug's Boardroom</h1></div><span class="pill">Private / offline first slice</span></header>
+<header>
+ <div><div class="eyebrow">Cobble · local laboratory</div><h1>Snug's Boardroom</h1></div>
+ <div class="tools"><span class="pill">Offline rehearsal · no live suppliers</span><button class="action secondary small" id="archive-open">Archivist's room</button></div>
+</header>
 <section class="boardroom" aria-label="Boardroom">
- <div class="seats">
-  <button class="seat active" id="amber" aria-pressed="true">Helen's rehearsal<span class="sub">Fixture Amber · $0</span></button>
-  <button class="seat" id="indigo" aria-pressed="false">Mistral's rehearsal<span class="sub">Fixture Indigo · $0</span></button>
-  <button class="seat" disabled title="Live supplier integration to follow">GPT<span class="sub">Not yet connected</span></button>
- </div><div class="table">Snug<br><span style="font-size:.7rem">Memory stays here</span></div>
+ <div class="chair"><div class="face" aria-hidden="true"></div><div><strong>Snug · Chair</strong><small class="muted">You provide Snug's voice at the table</small></div></div>
+ <div class="speech">
+  <label for="question">Speak as Snug</label>
+  <textarea id="question" maxlength="2000">What do the selected GitHub memories tell us about the G1 experiment?</textarea>
+  <div id="target">Speaking to Claude's offline rehearsal</div>
+  <p class="hint" id="selection">No memories selected from the archivist.</p>
+  <div class="actions"><button class="action secondary" id="review">Review exact context</button><button class="action" id="send" disabled>Approve &amp; speak (offline)</button></div>
+  <div id="status" aria-live="polite"></div>
+ </div>
+ <div class="table" id="table-drop" aria-label="Tabled documents">
+   <div><strong>On the table</strong><div class="docs" id="table-docs"></div>
+    <p>Drag a document here, or select a file.</p>
+    <label for="table-files">Choose document</label><input id="table-files" type="file" multiple>
+    <p>Staging only: contents are not yet shared or retained.</p>
+   </div>
+ </div>
+ <div class="zone-label">At the table · speak and listen</div><div class="seat-zone" id="at-table" data-presence="table"></div>
+ <div class="quiet-zone"><div class="zone-label">In the room · listen only</div><div class="seat-zone" id="in-room" data-presence="room"></div></div>
 </section>
-<div class="grid">
-<section class="panel"><h2>1 · Find memories</h2>
-<label for="query">Search the local GitHub archive</label>
-<input id="query" maxlength="240" value="Sankarshan G1">
-<button class="button" id="search">Find relevant memories</button>
-<div id="results" aria-live="polite"></div></section>
-<section class="panel"><h2>2 · Ask Snug</h2>
-<label for="question">Your question</label><textarea id="question">What do the selected GitHub memories tell us about the G1 experiment?</textarea>
-<p class="muted" id="selection">No memories selected. Nothing will be disclosed to an external supplier.</p>
-<div id="preview" aria-live="polite"></div>
-<button class="button secondary" id="review">Review entire offline context</button>
-<button class="button" id="send" disabled>Approve &amp; run offline exchange</button>
-<div id="status" class="muted" aria-live="polite"></div></section>
-</div>
-<section class="panel" style="margin-top:18px"><h2>Conversation · retained locally</h2>
-<div class="transcript" id="transcript"><div class="message">Hello! Choose some memories, inspect exactly what they contain, and approve a local rehearsal exchange. Real providers come next.</div></div>
+<div class="outside"><div class="zone-label">Out of the room · neither speak nor listen</div><div class="seat-zone" id="outside" data-presence="out"></div></div>
+<section class="conversation"><div class="heading"><h2>Conversation</h2><span class="muted">The play so far · scroll to read</span></div>
+ <div class="transcript" id="transcript" role="log" aria-live="polite"><p class="stage">The Chair calls the meeting to order. Offline suppliers await their cues.</p></div>
 </section>
-<footer>Only fixture intelligences participate. Preview approval is single-use and never authorises external transmission. No private memory leaves McKay. Future live calls will require separate provider credentials, an exact disclosure review and an audited pre-call gate.</footer>
+<dialog id="archive"><div class="dialogtop"><h2>Archivist's room</h2><button class="action secondary small" id="archive-close">Return to boardroom</button></div>
+ <p class="muted">Local GitHub-memory search. Select up to three passages to bring into the next reviewed exchange. Searching does not disclose anything externally.</p>
+ <label for="query">Find memories</label><input type="text" id="query" maxlength="240" value="Sankarshan G1">
+ <button class="action" id="search">Search the archive</button><div id="results" aria-live="polite"></div>
+</dialog>
+<dialog id="preview-dialog"><div class="dialogtop"><h2>Review the exact context</h2><button class="action secondary small" id="preview-close">Close</button></div>
+ <div id="preview"></div><p class="muted">One-use approval, valid for five minutes. This is an offline fixture call only.</p>
+</dialog>
+<footer>Privacy boundary: supplier presence controls currently govern only this local rehearsal UI. Real providers, remote humans, per-participant listening histories and scoped corpus permissions are not yet connected. Offline fixture exchanges are stored locally; this page does not yet reload past sessions. Tabled file names stay in this browser session, and their contents are not transmitted.</footer>
 </main>
+
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-let provider='fixture-amber',chosen=new Set(),previous=[],approval=null,revision=0;
+const people={
+ amber:{name:'Claude',provider:'fixture-amber',presence:'table',symbol:'C',connected:true},
+ indigo:{name:'Mistral',provider:'fixture-indigo',presence:'room',symbol:'M',connected:true},
+ gpt:{name:'GPT',provider:null,presence:'out',symbol:'G',connected:false}
+};
+let speaking='amber',chosen=new Set(),previous=[],approval=null,reviewed=null,revision=0,staged=[];
 async function api(path,data){
- const r=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
- const j=await r.json();if(!r.ok)throw Error(j.error||'Local request failed');return j;
+ const response=await fetch('/api/'+path,{method:'POST',
+  headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
+ const result=await response.json();
+ if(!response.ok)throw Error(result.error||'Local request failed');return result;
 }
-function notice(text,error=false){$('status').textContent=text;$('status').className=error?'error':'muted'}
-function invalidate(){revision++;approval=null;$('send').disabled=true;$('preview').replaceChildren();$('selection').textContent=chosen.size+' memory passage(s) selected; inspect before approval.'}
-function text(tag,string){const el=document.createElement(tag);el.textContent=string;return el}
-for(const [id,name] of [['amber','fixture-amber'],['indigo','fixture-indigo']]){
- $(id).onclick=()=>{provider=name;for(const el of [$('amber'),$('indigo')]){el.classList.toggle('active',el.id===id);el.setAttribute('aria-pressed',String(el.id===id))}invalidate()};
+function node(tag,content){const e=document.createElement(tag);if(content!==undefined)e.textContent=content;return e}
+function notice(value,bad=false){$('status').textContent=value;$('status').classList.toggle('error',bad)}
+function updateSelection(){$('selection').textContent=chosen.size+' archivist passage(s) chosen for review.'}
+function invalidate(){
+ revision++;approval=null;reviewed=null;$('send').disabled=true;$('preview').replaceChildren();updateSelection();
 }
+function chosenSpeaker(){
+ if(!speaking||people[speaking].presence!=='table'||!people[speaking].connected){
+  speaking=Object.keys(people).find(k=>people[k].presence==='table'&&people[k].connected)||null;
+ }
+ const canSpeak=!!speaking;
+ $('review').disabled=!canSpeak;
+ $('target').textContent=canSpeak?'Speaking to '+people[speaking].name+' (offline rehearsal)':'No connected intelligence at the table';
+}
+function relocate(id,where){
+ if(!people[id]||!['table','room','out'].includes(where))return;
+ people[id].presence=where;invalidate();chosenSpeaker();renderSeats();
+ notice(people[id].name+' is '+(where==='table'?'at the table':where==='room'?'in the room':'out of the room')+'. These are rehearsal controls, not live-provider permissions.');
+}
+function renderSeats(){
+ for(const id of ['at-table','in-room','outside'])$(id).replaceChildren();
+ const targets={table:$('at-table'),room:$('in-room'),out:$('outside')};
+ for(const [id,p] of Object.entries(people)){
+  const card=node('div');card.className='participant'+(speaking===id&&p.presence==='table'?' chosen':'')+(p.presence==='out'?' out':'');
+  card.draggable=true;card.dataset.participant=id;card.setAttribute('aria-label',p.name+' · '+p.presence);
+  card.ondragstart=e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'};
+  const avatar=node('div',p.symbol);avatar.className='symbol';
+  card.append(avatar,node('strong',p.name),node('small',p.connected?'Offline rehearsal fixture':'Not connected'));
+  const select=node('select');select.setAttribute('aria-label','Move '+p.name+' to');
+  for(const [where,label] of [['table','At the table'],['room','In the room'],['out','Out of the room']]){
+   const opt=node('option',label);opt.value=where;select.append(opt);
+  }
+  select.value=p.presence;select.onchange=()=>relocate(id,select.value);card.append(select);
+  if(p.presence==='table'){
+   const b=node('button',p.connected?(speaking===id?'Current speaker':'Address '+p.name):'Not connected');
+   b.className='action secondary small';b.disabled=!p.connected||speaking===id;
+   b.onclick=()=>{speaking=id;invalidate();chosenSpeaker();renderSeats()};card.append(b);
+  }
+  targets[p.presence].append(card);
+ }
+}
+for(const id of ['at-table','in-room','outside']){
+ const zone=$(id);zone.ondragover=e=>{if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();zone.classList.add('drop-target')}};
+ zone.ondragleave=()=>zone.classList.remove('drop-target');
+ zone.ondrop=e=>{e.preventDefault();zone.classList.remove('drop-target');
+  const id=e.dataTransfer.getData('text/plain');if(people[id])relocate(id,zone.dataset.presence)};
+}
+function stageFiles(files){
+ for(const file of files){
+  if(staged.length>=8){notice('At most eight staged documents.',true);break}
+  if(!file||!file.name)continue;
+  staged.push({name:file.name,size:file.size});
+ }
+ renderFiles();notice('Documents are visually staged only. No bytes are read or shared with the supplier.');
+}
+function renderFiles(){
+ $('table-docs').replaceChildren();
+ staged.forEach((f,i)=>{const item=node('div');item.className='doc';
+  item.append(node('span','📄 '+f.name+' ('+Math.ceil(f.size/1024)+' KB)'));
+  const remove=node('button','×');remove.title='Remove '+f.name;
+  remove.onclick=()=>{staged.splice(i,1);renderFiles()};item.append(remove);$('table-docs').append(item);
+ });
+}
+$('table-files').onchange=e=>{stageFiles(e.target.files);e.target.value=''};
+const table=$('table-drop');
+table.ondragover=e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();table.classList.add('dragover')}};
+table.ondragleave=()=>table.classList.remove('dragover');
+table.ondrop=e=>{if(!e.dataTransfer.files.length)return;e.preventDefault();table.classList.remove('dragover');stageFiles(e.dataTransfer.files)};
+$('archive-open').onclick=()=>$('archive').showModal();
+$('archive-close').onclick=()=>$('archive').close();
+$('preview-close').onclick=()=>$('preview-dialog').close();
 $('question').oninput=invalidate;
 $('search').onclick=async()=>{
  try{
   chosen.clear();invalidate();$('results').replaceChildren();
   const {results}=await api('search',{query:$('query').value});
-  if(!results.length){$('results').append(text('p','No GitHub results. Try fewer search terms.'));return}
+  if(!results.length){$('results').append(node('p','No GitHub results. Try fewer terms.'));return}
   for(const item of results){
-   const d=document.createElement('details');d.className='result';
-   const summary=document.createElement('summary');summary.textContent=item.title+' · '+item.reference;d.append(summary);
-   d.append(text('p',item.excerpt));
-   const label=document.createElement('label'),cb=document.createElement('input');cb.type='checkbox';cb.style.width='auto';
+   const d=node('details');d.className='result';d.append(node('summary',item.title+' · '+item.reference),node('p',item.excerpt));
+   const label=node('label'),cb=node('input');cb.type='checkbox';
    label.append(cb,document.createTextNode(' Include this memory'));d.append(label);
-   cb.onchange=()=>{if(cb.checked&&chosen.size>=3){cb.checked=false;notice('At most three passages per exchange.',true);return}
-     if(cb.checked)chosen.add(item.id);else chosen.delete(item.id);invalidate()};
+   cb.onchange=()=>{if(cb.checked&&chosen.size>=3){cb.checked=false;notice('At most three memories in one exchange.',true);return}
+    if(cb.checked)chosen.add(item.id);else chosen.delete(item.id);invalidate()};
    d.ontoggle=async()=>{if(d.open&&!d.dataset.loaded){try{const doc=await api('inspect',{id:item.id});
-     d.append(text('pre',doc.text+(doc.truncated?'\n\n[Passage truncated to 1500 characters]':'')));
-     d.dataset.loaded='yes'}catch(e){notice(e.message,true)}}};
+     d.append(node('pre',doc.text+(doc.truncated?'\n[Passage truncated]':'')));d.dataset.loaded='yes'
+    }catch(e){notice(e.message,true)}}};
    $('results').append(d);
-  }notice('Search stays on McKay. Expand each result to inspect its actual text.');
+  }
+  notice('Archive query stays local. Review selected source passages before speaking.');
  }catch(e){notice(e.message,true)}
 };
+function displayContext(where,record){
+ const root=node('div');
+ for(const m of record.selected_memories){
+  const d=node('details');d.className='result';d.append(node('summary',m.title+' · '+m.reference),node('pre',m.text));root.append(d);
+ }
+ for(const p of record.previous_exchanges){
+  const d=node('details');d.className='result';
+  d.append(node('summary','Earlier exchange · '+p.provider+' · '+p.event_id),node('pre','SNUG: '+p.question+'\n'+p.provider+': '+p.answer));
+  root.append(d);
+ }
+ root.append(node('p','Supplier: '+record.provider+' · prior exchanges: '+record.previous_exchanges.length+' · network calls: 0'),
+  node('p','Context SHA-256: '+record.context_sha256));
+ where.append(root);
+}
 $('review').onclick=async()=>{
- const question=$('question').value,chair=provider;
- const memories=[...chosen],history=previous.slice(-4);
- invalidate();
- const reviewing=revision;
+ if(!speaking)return;
+ const request={question:$('question').value,memory_ids:[...chosen],previous_ids:previous.slice(-4),provider:people[speaking].provider};
+ invalidate();const rev=revision;
  try{
-  const response=await api('preview',{question,memory_ids:memories,
-    previous_ids:history,provider:chair});
-  if(revision!==reviewing)return;
-  $('preview').replaceChildren(text('p','This exact offline context is frozen for one execution. Review all source and earlier conversation text before approval.'));
-  for(const item of response.selected_memories){
-   const details=document.createElement('details');details.className='result';
-   details.append(text('summary',item.title+' · '+item.reference),text('pre',item.text));
-   $('preview').append(details);
-  }
-  for(const item of response.previous_exchanges){
-   const details=document.createElement('details');details.className='result';
-   details.append(text('summary','Prior '+item.event_id+' · '+item.provider),
-     text('pre','Question: '+item.question+'\nAnswer: '+item.answer));
-   $('preview').append(details);
-  }
-  $('preview').append(text('p','Question: '+response.question),
-    text('p','Supplier: '+response.provider+' · earlier exchanges: '+response.previous_exchanges.length+' · network calls: 0'));
-  approval=response.approval_token;$('send').disabled=false;
-  notice('The reviewed snapshot will be used once, even if indexed records change. External transmission remains disabled.');
- }catch(e){if(revision===reviewing)notice(e.message,true)}
+  const result=await api('preview',request);
+  if(rev!==revision)return;
+  reviewed=result;approval=result.approval_token;
+  $('preview').replaceChildren(node('p','The exact following context is frozen for a one-use OFFLINE exchange.'),node('p','SNUG: '+result.question));
+  displayContext($('preview'),result);
+  $('send').disabled=false;$('preview-dialog').showModal();
+  notice('The exact prior exchanges and selected memories are ready for review.');
+ }catch(e){if(rev===revision)notice(e.message,true)}
 };
+function line(name,message,note){
+ const dl=node('dl');dl.className='line';
+ const dt=node('dt',name.toUpperCase()),dd=node('dd',message);
+ if(note)dt.append(node('small',note));
+ dl.append(dt,dd);$('transcript').append(dl);
+}
 $('send').onclick=async()=>{
- if(!approval)return;
- const token=approval;invalidate();
+ if(!approval||!reviewed)return;
+ const token=approval,snapshot=reviewed;
+ invalidate();$('preview-dialog').close();$('send').disabled=true;
  try{
   const ev=await api('exchange',{approval_token:token});
-  $('transcript').append(text('div','You: '+ev.question));
-  const msg=text('div',ev.provider+': '+ev.answer);
-  msg.className='message';$('transcript').append(msg);
-  $('transcript').append(text('p','Event '+ev.event_id+' · '+ev.usage.kind+' · network calls '+ev.usage.network_calls));
+  line('Snug',ev.question,'Operator speaking as Chair');
+  line(snapshot.provider==='fixture-amber'?'Claude':'Mistral',ev.answer,'Offline rehearsal');
+  const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind+' · '+ev.usage.network_calls+' external calls');
+  meta.className='event-meta';$('transcript').append(meta);
+  const d=node('details');d.className='context';d.append(node('summary','Show exact reviewed context for this exchange'));
+  displayContext(d,snapshot);$('transcript').append(d);
+  $('transcript').scrollTop=$('transcript').scrollHeight;
   previous.push(ev.event_id);
-  notice('Reviewed exchange retained locally. Review again after switching chairs.');
+  notice('Reviewed exchange recorded locally. No supplier API was contacted.');
  }catch(e){notice(e.message,true)}
 };
+chosenSpeaker();renderSeats();updateSelection();
 })();
 </script></body></html>
