@@ -27,7 +27,9 @@ SYSTEM = (
 )
 
 
-def prepare_message(request):
+def prepare_message(request, *, output_tokens=MAX_OUTPUT_TOKENS):
+    if type(output_tokens) is not int or not 1 <= output_tokens <= 4096:
+        raise ValueError("GPT output token budget must be 1–4096")
     context = {
         "question": request.question,
         "participant": request.participant,
@@ -38,7 +40,7 @@ def prepare_message(request):
         "model": MODEL,
         "instructions": SYSTEM,
         "input": json.dumps(context, ensure_ascii=False),
-        "max_output_tokens": MAX_OUTPUT_TOKENS,
+        "max_output_tokens": output_tokens,
         "store": False,
         "stream": False,
         "tools": [],
@@ -151,13 +153,17 @@ def _parse_reply(result, *, synthetic=False):
 class OpenAIAdapter:
     name = "openai"
 
-    def __init__(self, *, allow_network=False, key=None, transport=None):
+    def __init__(self, *, allow_network=False, key=None, transport=None,
+                 output_tokens=MAX_OUTPUT_TOKENS):
+        if type(output_tokens) is not int or not 1 <= output_tokens <= 4096:
+            raise ValueError("GPT output token budget must be 1–4096")
+        self.output_tokens = output_tokens
         self.allow_network = allow_network
         self.key = key
         self.transport = transport
 
     def preview(self, request):
-        payload = prepare_message(request)
+        payload = prepare_message(request, output_tokens=self.output_tokens)
         return {
             **check_preflight(payload),
             "selected_memories": [
@@ -172,7 +178,7 @@ class OpenAIAdapter:
         }
 
     def answer(self, request):
-        payload = prepare_message(request)
+        payload = prepare_message(request, output_tokens=self.output_tokens)
         check_preflight(payload)
         if not self.allow_network:
             raise PermissionError("OpenAI network call not enabled")
