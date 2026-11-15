@@ -336,7 +336,7 @@ $('send').onclick=async()=>{
    const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind);
    meta.className='event-meta';$('transcript').append(meta);
    const ctx=node('details');ctx.className='context';
-   ctx.append(node('summary','Exact reviewed offline context'));
+   ctx.append(node('summary','Show exact reviewed context for this exchange'));
    displayContext(ctx,snapshot);$('transcript').append(ctx);
    $('transcript').scrollTop=$('transcript').scrollHeight;
    previous.push(ev.event_id);
