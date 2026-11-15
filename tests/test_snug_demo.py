@@ -1,6 +1,9 @@
 """Tests for the local GitHub-only Snug boardroom slice."""
 import http.client
 import json
+import re
+import shutil
+import subprocess
 import tempfile
 import threading
 import unittest
@@ -30,6 +33,26 @@ class DemoTests(unittest.TestCase):
         self.service = DemoService(self.store, self.index)
         self.github_id = search(self.index, "Sankarshan")[0]["id"]
         self.private_id = search(self.index, "SECRET")[0]["id"]
+
+    def test_boardroom_roles_and_inline_script_syntax(self):
+        """The offline page must distinguish the Chair, archive and presence."""
+        page = (Path(__file__).resolve().parents[1] / "src" / "cobble" /
+                "static" / "snug_demo.html").read_text(encoding="utf-8")
+        for label in ("Speak as Snug", "Archivist's room",
+                      "At the table", "In the room", "Out of the room",
+                      "data-presence=\"table\"", "data-presence=\"room\"",
+                      "data-presence=\"out\"", "table-files",
+                      "Show exact reviewed context", "Offline rehearsal"):
+            self.assertIn(label, page)
+        self.assertNotIn("Helen's rehearsal", page)
+        self.assertNotIn("Ask Snug", page)
+        script = re.search(r"<script>(.*?)</script>", page, re.DOTALL)
+        self.assertIsNotNone(script)
+        if shutil.which("node"):
+            result = subprocess.run(["node", "--check", "-"],
+                                    input=script.group(1), capture_output=True,
+                                    text=True, timeout=10, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_search_and_inspect_allow_only_github(self):
         self.assertEqual(self.service.find("Sankarshan")[0]["id"], self.github_id)
