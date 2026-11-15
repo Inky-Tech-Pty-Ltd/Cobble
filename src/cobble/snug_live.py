@@ -41,6 +41,10 @@ class LiveChatService:
         if any((p / ".git").exists() for p in (self.store, *self.store.parents)):
             raise ValueError("Private conversations must stay outside Git")
         self.root = self.store / "snug" / "live" / "default"
+        # No redirected storage: keep the immutable private ledger on McKay.
+        for directory in (self.store / "snug", self.store / "snug" / "live", self.root):
+            if directory.is_symlink():
+                raise PermissionError("Private live storage must not use symlinks")
         self._lock = threading.Lock()
         self._pending = {}
         self._inflight = False
@@ -58,8 +62,13 @@ class LiveChatService:
     def _write(self, kind, turn_id, value):
         target = self._path(kind, turn_id)
         folder = target.parent
-        folder.mkdir(mode=0o700, parents=True, exist_ok=True)
-        if folder.is_symlink() or target.exists() or target.is_symlink():
+        for directory in (self.store / "snug", self.store / "snug" / "live",
+                          self.root, folder):
+            if directory.is_symlink():
+                raise PermissionError("Private live storage must not use symlinks")
+            directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+            directory.chmod(0o700)
+        if target.exists() or target.is_symlink():
             raise FileExistsError("Live event record already exists or is unsafe")
         raw = (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()
         fd, temp = tempfile.mkstemp(prefix=".pending-", dir=folder)
@@ -137,11 +146,22 @@ class LiveChatService:
         with self._lock:
             turns = self._turns()
             history = self._history(turns)
-            request = ExchangeRequest(
-                participant="operator", question=question,
-                selected_memories=(), previous_exchanges=history)
-            payload = prepare_message(request, output_tokens=OUTPUT_TOKENS)
-            budget = check_preflight(payload)
+            originally_available = len(history)
+            # Keep a conversation viable after long answers: discard the
+            # oldest prior exchanges until the exact payload passes preflight.
+            # The review shows precisely which exchanges survived.
+            while True:
+                request = ExchangeRequest(
+                    participant="operator", question=question,
+                    selected_memories=(), previous_exchanges=history)
+                payload = prepare_message(request, output_tokens=OUTPUT_TOKENS)
+                try:
+                    budget = check_preflight(payload)
+                    break
+                except ValueError as error:
+                    if not history or "exceeds local" not in str(error):
+                        raise
+                    history = history[1:]
             token = secrets.token_urlsafe(32)
             now = time.monotonic()
             self._pending = {
@@ -156,6 +176,7 @@ class LiveChatService:
                 "provider": "openai", "question": question,
                 "selected_memories": [],
                 "previous_exchanges": list(history),
+                "older_exchanges_omitted": originally_available - len(history),
                 "context_sha256": request_context_digest(request),
                 "outbound_payload_sha256": _digest(payload),
                 "preflight": budget,
