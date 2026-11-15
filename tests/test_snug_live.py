@@ -122,6 +122,22 @@ class LiveTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "changed after review"):
             self.svc.send(approval_token=p2["approval_token"])
 
+    def test_long_history_is_trimmed_without_fabricating_context(self):
+        for i in range(4):
+            turn_id = "20261115010203000000-" + format(i, "012x")
+            self.svc._write("turns", turn_id, {
+                "turn_id": turn_id, "created_utc": "2026-11-15T01:02:03+00:00",
+                "provider": "openai", "question": "Question " + str(i),
+                "context_sha256": "abc", "context": {}, "payload": {}})
+            self.svc._write("outcomes", turn_id, {
+                "turn_id": turn_id, "status": "completed",
+                "answer": "long " * 1400, "model": MODEL, "usage": {},
+                "provider_request_id": "resp_test"})
+        p = self.svc.preview(question="Continue our discussion")
+        self.assertGreater(p["older_exchanges_omitted"], 0)
+        self.assertLess(len(p["previous_exchanges"]), 4)
+        self.assertEqual(p["previous_exchanges"][-1]["question"], "Question 3")
+
     def test_bounded_question_and_outgoing_source_scope(self):
         note = self.store / "unshared.txt"
         note.write_text("NEVER-SEND-THIS-SECRET")
