@@ -269,6 +269,7 @@ $('review').onclick=async()=>{
    node('p','SNUG: '+result.question));
   displayContext($('preview'),result);
   if(isLive){
+   if(result.older_exchanges_omitted){$('preview').append(node('p',result.older_exchanges_omitted+' older exchanges omitted to fit the bounded context.'));}
    $('preview').append(node('p','Max output: '+result.preflight.max_output_tokens+
     ' tokens · preflight cost estimate: USD '+result.preflight.estimated_max_cost_usd+
     ' (not a billing cap).'));
