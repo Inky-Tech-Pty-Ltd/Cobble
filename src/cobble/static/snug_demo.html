@@ -62,13 +62,13 @@ footer{font-size:.77rem;color:#69796d;line-height:1.55;margin-top:17px}
 <body><main class="wrap">
 <header>
  <div><div class="eyebrow">Cobble · local laboratory</div><h1>Snug's Boardroom</h1></div>
- <div class="tools"><span class="pill">Offline rehearsal · no live suppliers</span><button class="action secondary small" id="archive-open">Archivist's room</button></div>
+ <div class="tools"><span class="pill" id="mode">Offline rehearsal · no live suppliers</span><button class="action secondary small" id="archive-open">Archivist's room</button></div>
 </header>
 <section class="boardroom" aria-label="Boardroom">
  <div class="chair"><div class="face" aria-hidden="true"></div><div><strong>Snug · Chair</strong><small class="muted">You provide Snug's voice at the table</small></div></div>
  <div class="speech">
   <label for="question">Speak as Snug</label>
-  <textarea id="question" maxlength="2000">What do the selected GitHub memories tell us about the G1 experiment?</textarea>
+  <textarea id="question" maxlength="2000" placeholder="Address the table…">What do the selected GitHub memories tell us about the G1 experiment?</textarea>
   <div id="target">Speaking to Claude's offline rehearsal</div>
   <p class="hint" id="selection">No memories selected from the archivist.</p>
   <div class="actions"><button class="action secondary" id="review">Review exact context</button><button class="action" id="send" disabled>Approve &amp; speak (offline)</button></div>
@@ -94,9 +94,9 @@ footer{font-size:.77rem;color:#69796d;line-height:1.55;margin-top:17px}
  <button class="action" id="search">Search the archive</button><div id="results" aria-live="polite"></div>
 </dialog>
 <dialog id="preview-dialog"><div class="dialogtop"><h2>Review the exact context</h2><button class="action secondary small" id="preview-close">Close</button></div>
- <div id="preview"></div><p class="muted">One-use approval, valid for five minutes. This is an offline fixture call only.</p>
+ <div id="preview"></div><p class="muted" id="preview-note">One-use approval, valid for five minutes.</p>
 </dialog>
-<footer>Privacy boundary: supplier presence controls currently govern only this local rehearsal UI. Real providers, remote humans, per-participant listening histories and scoped corpus permissions are not yet connected. Offline fixture exchanges are stored locally; this page does not yet reload past sessions. Tabled file names stay in this browser session, and their contents are not transmitted.</footer>
+<footer id="footnote">Presence controls are a local UI rehearsal, not yet server-enforced permissions. Remote humans, private tool consultations and scoped corpus sharing are not implemented. Tabled document contents are never sent. In live mode, the question and up to four recent GPT exchanges are transmitted only after exact review; new conversation events are saved on McKay, not in ChatGPT.</footer>
 </main>
 
 <script>
@@ -107,7 +107,7 @@ const people={
  indigo:{name:'Mistral',provider:'fixture-indigo',presence:'room',symbol:'M',connected:true},
  gpt:{name:'GPT',provider:null,presence:'out',symbol:'G',connected:false}
 };
-let speaking='amber',chosen=new Set(),previous=[],approval=null,reviewed=null,revision=0,staged=[];
+let speaking='amber',chosen=new Set(),previous=[],approval=null,reviewed=null,revision=0,staged=[],liveEnabled=false;
 async function api(path,data){
  const response=await fetch('/api/'+path,{method:'POST',
   headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
@@ -116,7 +116,7 @@ async function api(path,data){
 }
 function node(tag,content){const e=document.createElement(tag);if(content!==undefined)e.textContent=content;return e}
 function notice(value,bad=false){$('status').textContent=value;$('status').classList.toggle('error',bad)}
-function updateSelection(){$('selection').textContent=chosen.size+' archivist passage(s) chosen for review.'}
+function updateSelection(){$('selection').textContent=speaking==='gpt'?'GPT uses the saved local conversation; archive passages are not yet sent to GPT.':chosen.size+' archivist passage(s) chosen for offline review.'}
 function invalidate(){
  revision++;approval=null;reviewed=null;$('send').disabled=true;$('preview').replaceChildren();updateSelection();
 }
@@ -126,7 +126,9 @@ function chosenSpeaker(){
  }
  const canSpeak=!!speaking;
  $('review').disabled=!canSpeak;
- $('target').textContent=canSpeak?'Speaking to '+people[speaking].name+' (offline rehearsal)':'No connected intelligence at the table';
+ $('target').textContent=canSpeak?'Speaking to '+people[speaking].name+(speaking==='gpt'?' · live API':' · offline rehearsal'):'No connected intelligence at the table';
+ $('send').textContent=speaking==='gpt'?'Approve & send to GPT':'Approve & speak (offline)';
+ updateSelection();
 }
 function relocate(id,where){
  if(!people[id]||!['table','room','out'].includes(where))return;
@@ -141,7 +143,7 @@ function renderSeats(){
   card.draggable=true;card.dataset.participant=id;card.setAttribute('aria-label',p.name+' · '+p.presence);
   card.ondragstart=e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'};
   const avatar=node('div',p.symbol);avatar.className='symbol';
-  card.append(avatar,node('strong',p.name),node('small',p.connected?'Offline rehearsal fixture':'Not connected'));
+  card.append(avatar,node('strong',p.name),node('small',p.connected?(id==='gpt'?'Live API':'Offline rehearsal'):'Not connected'));
   const select=node('select');select.setAttribute('aria-label','Move '+p.name+' to');
   for(const [where,label] of [['table','At the table'],['room','In the room'],['out','Out of the room']]){
    const opt=node('option',label);opt.value=where;select.append(opt);
@@ -215,22 +217,145 @@ function displayContext(where,record){
   d.append(node('summary','Earlier exchange · '+p.provider+' · '+p.event_id),node('pre','SNUG: '+p.question+'\n'+p.provider+': '+p.answer));
   root.append(d);
  }
- root.append(node('p','Supplier: '+record.provider+' · prior exchanges: '+record.previous_exchanges.length+' · network calls: 0'),
+ root.append(node('p','Supplier: '+record.provider+' · prior exchanges: '+record.previous_exchanges.length+' · network calls after approval: '+(record.network_calls_if_approved??0)),
   node('p','Context SHA-256: '+record.context_sha256));
  where.append(root);
 }
 $('review').onclick=async()=>{
  if(!speaking)return;
- const request={question:$('question').value,memory_ids:[...chosen],previous_ids:previous.slice(-4),provider:people[speaking].provider};
+ const isLive=speaking==='gpt';
+ const question=$('question').value;
+ const request={question,memory_ids:[...chosen],previous_ids:previous.slice(-4),provider:people[speaking].provider};
  invalidate();const rev=revision;
  try{
-  const result=await api('preview',request);
+  const result=isLive?await api('live/preview',{question}):await api('preview',request);
   if(rev!==revision)return;
   reviewed=result;approval=result.approval_token;
-  $('preview').replaceChildren(node('p','The exact following context is frozen for a one-use OFFLINE exchange.'),node('p','SNUG: '+result.question));
+  $('preview').replaceChildren(node('p',isLive?'LIVE GPT — inspect everything below before the paid API call.':'Exact context for a one-use OFFLINE exchange.'),node('p','SNUG: '+result.question));
   displayContext($('preview'),result);
+  if(isLive){
+   $('preview').append(node('p','Bounded output: '+result.preflight.max_output_tokens+' tokens · estimated ceiling per call US
+};
+function line(name,message,note){
+ const dl=node('dl');dl.className='line';
+ const dt=node('dt',name.toUpperCase()),dd=node('dd',message);
+ if(note)dt.append(node('small',note));
+ dl.append(dt,dd);$('transcript').append(dl);
+}
+function showLiveTurn(turn){
+ line('Snug',turn.question,'Operator speaking as Chair');
+ if(turn.status==='completed'){
+  line('GPT',turn.answer,'Live API · '+turn.model);
+  const usage=turn.usage||{};
+  const meta=node('div','Saved '+turn.turn_id+' · '+(usage.input_tokens??'?')+' input / '+(usage.output_tokens??'?')+' output tokens · est. US
+})();
+</script></body></html>
++result.preflight.estimated_max_cost_usd+' (not a billing guarantee).'));
+   $('preview-note').textContent='Approve once to transmit this exact question and selected history to the OpenAI API. Store=false requested; vendor data handling still applies.';
+  }else $('preview-note').textContent='Offline fixture only, no network transmission.';
   $('send').disabled=false;$('preview-dialog').showModal();
-  notice('The exact prior exchanges and selected memories are ready for review.');
+  notice(isLive?'Ready for one reviewed GPT call.':'Offline fixture context ready for approval.');
+ }catch(e){if(rev===revision)notice(e.message,true)}
+};
+function line(name,message,note){
+ const dl=node('dl');dl.className='line';
+ const dt=node('dt',name.toUpperCase()),dd=node('dd',message);
+ if(note)dt.append(node('small',note));
+ dl.append(dt,dd);$('transcript').append(dl);
+}
+$('send').onclick=async()=>{
+ if(!approval||!reviewed)return;
+ const token=approval,snapshot=reviewed;
+ invalidate();$('preview-dialog').close();$('send').disabled=true;
+ try{
+  const ev=await api('exchange',{approval_token:token});
+  line('Snug',ev.question,'Operator speaking as Chair');
+  line(snapshot.provider==='fixture-amber'?'Claude':'Mistral',ev.answer,'Offline rehearsal');
+  const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind+' · '+ev.usage.network_calls+' external calls');
+  meta.className='event-meta';$('transcript').append(meta);
+  const d=node('details');d.className='context';d.append(node('summary','Show exact reviewed context for this exchange'));
+  displayContext(d,snapshot);$('transcript').append(d);
+  $('transcript').scrollTop=$('transcript').scrollHeight;
+  previous.push(ev.event_id);
+  notice('Reviewed exchange recorded locally. No supplier API was contacted.');
+ }catch(e){notice(e.message,true)}
+};
+chosenSpeaker();renderSeats();updateSelection();
+})();
+</script></body></html>
++(usage.estimated_provider_cost_usd??'?'));
+  meta.className='event-meta';$('transcript').append(meta);
+ }else{
+  $('transcript').append(node('p','['+turn.status+': '+turn.turn_id+' — no verified reply. Not automatically retried.]'));
+ }
+ const context=turn.context||{};
+ const d=node('details');d.className='context';
+ d.append(node('summary','Exact prior context and turn evidence'));
+ const pre=node('pre',JSON.stringify({prior_exchanges:context.previous_exchanges||[],
+  context_sha256:turn.context_sha256,status:turn.status},null,2));
+ d.append(pre);$('transcript').append(d);
+ $('transcript').scrollTop=$('transcript').scrollHeight;
+}
+async function loadSession(){
+ if(!liveEnabled)return;
+ try{
+  const r=await fetch('/api/live/session',{cache:'no-store'});
+  if(!r.ok)throw Error('Could not reload local session');
+  const s=await r.json();
+  for(const turn of s.turns)showLiveTurn(turn);
+  if(s.turns.length)notice('Recovered '+s.turns.length+' local GPT turn(s).');
+ }catch(e){notice(e.message,true)}
+}
+$('send').onclick=async()=>{
+ if(!approval||!reviewed)return;
+ const token=approval,snapshot=reviewed,isLive=snapshot.provider==='openai';
+ invalidate();$('preview-dialog').close();$('send').disabled=true;
+ notice(isLive?'GPT request in progress; your turn is being captured locally.':'Offline exchange in progress.');
+ try{
+  if(isLive){
+   const {turn}=await api('live/send',{approval_token:token});
+   showLiveTurn(turn);
+   $('question').value='';
+   notice('GPT response saved on McKay. Conversation survives browser restart.');
+  }else{
+   const ev=await api('exchange',{approval_token:token});
+   line('Snug',ev.question,'Operator speaking as Chair');
+   line(snapshot.provider==='fixture-amber'?'Claude':'Mistral',ev.answer,'Offline rehearsal');
+   const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind+' · '+ev.usage.network_calls+' external calls');
+   meta.className='event-meta';$('transcript').append(meta);
+   const d=node('details');d.className='context';d.append(node('summary','Show exact reviewed context for this exchange'));
+   displayContext(d,snapshot);$('transcript').append(d);
+   $('transcript').scrollTop=$('transcript').scrollHeight;
+   previous.push(ev.event_id);
+   notice('Reviewed offline exchange retained locally.');
+  }
+ }catch(e){
+  notice(e.message,true);
+  if(isLive){$('transcript').replaceChildren();await loadSession()}
+ }
+};
+async function initialize(){
+ try{
+  const r=await fetch('/api/health',{cache:'no-store'});
+  if(!r.ok)throw Error('Local service unavailable');
+  const health=await r.json();
+  if(health.live_gpt){
+   liveEnabled=true;people.gpt.connected=true;people.gpt.presence='table';speaking='gpt';
+   $('mode').textContent='Live GPT · reviewed disclosure';
+   $('question').value='';$('transcript').replaceChildren();
+   await loadSession();
+  }
+ }catch(e){notice(e.message,true)}
+ chosenSpeaker();renderSeats();updateSelection();
+}
+initialize();
+})();
+</script></body></html>
++result.preflight.estimated_max_cost_usd+' (not a billing guarantee).'));
+   $('preview-note').textContent='Approve once to transmit this exact question and selected history to the OpenAI API. Store=false requested; vendor data handling still applies.';
+  }else $('preview-note').textContent='Offline fixture only, no network transmission.';
+  $('send').disabled=false;$('preview-dialog').showModal();
+  notice(isLive?'Ready for one reviewed GPT call.':'Offline fixture context ready for approval.');
  }catch(e){if(rev===revision)notice(e.message,true)}
 };
 function line(name,message,note){
