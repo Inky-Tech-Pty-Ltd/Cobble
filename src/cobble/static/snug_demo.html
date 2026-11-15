@@ -105,85 +105,105 @@ const $=id=>document.getElementById(id);
 const people={
  amber:{name:'Claude',provider:'fixture-amber',presence:'table',symbol:'C',connected:true},
  indigo:{name:'Mistral',provider:'fixture-indigo',presence:'room',symbol:'M',connected:true},
- gpt:{name:'GPT',provider:null,presence:'out',symbol:'G',connected:false}
+ gpt:{name:'GPT',provider:'openai',presence:'out',symbol:'G',connected:false}
 };
 let speaking='amber',chosen=new Set(),previous=[],approval=null,reviewed=null,revision=0,staged=[],liveEnabled=false;
+const node=(tag,value)=>{const e=document.createElement(tag);if(value!==undefined)e.textContent=value;return e};
 async function api(path,data){
- const response=await fetch('/api/'+path,{method:'POST',
-  headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
+ const response=await fetch('/api/'+path,{method:'POST',headers:{
+  'Content-Type':'application/json','X-Snug-Client':'demo-local'
+ },body:JSON.stringify(data)});
  const result=await response.json();
- if(!response.ok)throw Error(result.error||'Local request failed');return result;
+ if(!response.ok)throw Error(result.error||'Local request failed');
+ return result;
 }
-function node(tag,content){const e=document.createElement(tag);if(content!==undefined)e.textContent=content;return e}
-function notice(value,bad=false){$('status').textContent=value;$('status').classList.toggle('error',bad)}
-function updateSelection(){$('selection').textContent=speaking==='gpt'?'GPT uses the saved local conversation; archive passages are not yet sent to GPT.':chosen.size+' archivist passage(s) chosen for offline review.'}
+function notice(message,error=false){
+ $('status').textContent=message;$('status').classList.toggle('error',error);
+}
+function updateSelection(){
+ $('selection').textContent=speaking==='gpt'
+  ?'GPT uses recorded conversation context, not archivist passages (yet).'
+  :chosen.size+' archive passage(s) selected for the next offline review.';
+}
 function invalidate(){
- revision++;approval=null;reviewed=null;$('send').disabled=true;$('preview').replaceChildren();updateSelection();
+ revision++;approval=null;reviewed=null;$('send').disabled=true;
+ $('preview').replaceChildren();updateSelection();
 }
 function chosenSpeaker(){
  if(!speaking||people[speaking].presence!=='table'||!people[speaking].connected){
-  speaking=Object.keys(people).find(k=>people[k].presence==='table'&&people[k].connected)||null;
+  speaking=Object.keys(people).find(k=>people[k].connected&&people[k].presence==='table')||null;
  }
- const canSpeak=!!speaking;
- $('review').disabled=!canSpeak;
- $('target').textContent=canSpeak?'Speaking to '+people[speaking].name+(speaking==='gpt'?' · live API':' · offline rehearsal'):'No connected intelligence at the table';
+ $('review').disabled=!speaking;
+ $('target').textContent=speaking
+  ?'Speaking to '+people[speaking].name+(speaking==='gpt'?' · LIVE':' · offline')
+  :'No connected speaker at the table';
  $('send').textContent=speaking==='gpt'?'Approve & send to GPT':'Approve & speak (offline)';
  updateSelection();
 }
 function relocate(id,where){
  if(!people[id]||!['table','room','out'].includes(where))return;
  people[id].presence=where;invalidate();chosenSpeaker();renderSeats();
- notice(people[id].name+' is '+(where==='table'?'at the table':where==='room'?'in the room':'out of the room')+'. These are rehearsal controls, not live-provider permissions.');
+ notice(people[id].name+' moved to '+where+'. The seating controls are a local UI rehearsal.');
 }
 function renderSeats(){
  for(const id of ['at-table','in-room','outside'])$(id).replaceChildren();
- const targets={table:$('at-table'),room:$('in-room'),out:$('outside')};
+ const zones={table:$('at-table'),room:$('in-room'),out:$('outside')};
  for(const [id,p] of Object.entries(people)){
-  const card=node('div');card.className='participant'+(speaking===id&&p.presence==='table'?' chosen':'')+(p.presence==='out'?' out':'');
-  card.draggable=true;card.dataset.participant=id;card.setAttribute('aria-label',p.name+' · '+p.presence);
+  const card=node('div');card.className='participant'+
+   (speaking===id&&p.presence==='table'?' chosen':'')+(p.presence==='out'?' out':'');
+  card.draggable=true;card.setAttribute('aria-label',p.name+' · '+p.presence);
   card.ondragstart=e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'};
   const avatar=node('div',p.symbol);avatar.className='symbol';
-  card.append(avatar,node('strong',p.name),node('small',p.connected?(id==='gpt'?'Live API':'Offline rehearsal'):'Not connected'));
-  const select=node('select');select.setAttribute('aria-label','Move '+p.name+' to');
+  card.append(avatar,node('strong',p.name),node('small',
+    !p.connected?'Not connected':id==='gpt'?'Live API':'Offline rehearsal'));
+  const select=node('select');select.setAttribute('aria-label','Move '+p.name);
   for(const [where,label] of [['table','At the table'],['room','In the room'],['out','Out of the room']]){
-   const opt=node('option',label);opt.value=where;select.append(opt);
+   const option=node('option',label);option.value=where;select.append(option);
   }
   select.value=p.presence;select.onchange=()=>relocate(id,select.value);card.append(select);
   if(p.presence==='table'){
-   const b=node('button',p.connected?(speaking===id?'Current speaker':'Address '+p.name):'Not connected');
+   const b=node('button',!p.connected?'Not connected':speaking===id?'Current speaker':'Address '+p.name);
    b.className='action secondary small';b.disabled=!p.connected||speaking===id;
-   b.onclick=()=>{speaking=id;invalidate();chosenSpeaker();renderSeats()};card.append(b);
+   b.onclick=()=>{speaking=id;invalidate();chosenSpeaker();renderSeats()};
+   card.append(b);
   }
-  targets[p.presence].append(card);
+  zones[p.presence].append(card);
  }
 }
 for(const id of ['at-table','in-room','outside']){
- const zone=$(id);zone.ondragover=e=>{if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();zone.classList.add('drop-target')}};
+ const zone=$(id);
+ zone.ondragover=e=>{if(e.dataTransfer.types.includes('text/plain')){
+  e.preventDefault();zone.classList.add('drop-target')}};
  zone.ondragleave=()=>zone.classList.remove('drop-target');
  zone.ondrop=e=>{e.preventDefault();zone.classList.remove('drop-target');
-  const id=e.dataTransfer.getData('text/plain');if(people[id])relocate(id,zone.dataset.presence)};
-}
-function stageFiles(files){
- for(const file of files){
-  if(staged.length>=8){notice('At most eight staged documents.',true);break}
-  if(!file||!file.name)continue;
-  staged.push({name:file.name,size:file.size});
- }
- renderFiles();notice('Documents are visually staged only. No bytes are read or shared with the supplier.');
+  const target=e.dataTransfer.getData('text/plain');
+  if(people[target])relocate(target,zone.dataset.presence);
+ };
 }
 function renderFiles(){
  $('table-docs').replaceChildren();
- staged.forEach((f,i)=>{const item=node('div');item.className='doc';
-  item.append(node('span','📄 '+f.name+' ('+Math.ceil(f.size/1024)+' KB)'));
-  const remove=node('button','×');remove.title='Remove '+f.name;
-  remove.onclick=()=>{staged.splice(i,1);renderFiles()};item.append(remove);$('table-docs').append(item);
+ staged.forEach((item,i)=>{
+  const label=node('div');label.className='doc';
+  label.append(node('span','📄 '+item.name+' ('+Math.ceil(item.size/1024)+' KB)'));
+  const remove=node('button','×');remove.title='Remove '+item.name;
+  remove.onclick=()=>{staged.splice(i,1);renderFiles()};label.append(remove);
+  $('table-docs').append(label);
  });
 }
+function stageFiles(files){
+ for(const file of files){
+  if(staged.length>=8){notice('Eight staged documents maximum.',true);break}
+  if(file&&file.name)staged.push({name:file.name,size:file.size});
+ }
+ renderFiles();notice('Staged locally. File contents have NOT been sent.');
+}
 $('table-files').onchange=e=>{stageFiles(e.target.files);e.target.value=''};
-const table=$('table-drop');
-table.ondragover=e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();table.classList.add('dragover')}};
-table.ondragleave=()=>table.classList.remove('dragover');
-table.ondrop=e=>{if(!e.dataTransfer.files.length)return;e.preventDefault();table.classList.remove('dragover');stageFiles(e.dataTransfer.files)};
+const tabletop=$('table-drop');
+tabletop.ondragover=e=>{if(e.dataTransfer.types.includes('Files')){
+ e.preventDefault();tabletop.classList.add('dragover')}};
+tabletop.ondragleave=()=>tabletop.classList.remove('dragover');
+tabletop.ondrop=e=>{if(e.dataTransfer.files.length){
+ e.preventDefault();tabletop.classList.remove('dragover');stageFiles(e.dataTransfer.files)}};
 $('archive-open').onclick=()=>$('archive').showModal();
 $('archive-close').onclick=()=>$('archive').close();
 $('preview-close').onclick=()=>$('preview-dialog').close();
@@ -191,143 +211,136 @@ $('question').oninput=invalidate;
 $('search').onclick=async()=>{
  try{
   chosen.clear();invalidate();$('results').replaceChildren();
-  const {results}=await api('search',{query:$('query').value});
-  if(!results.length){$('results').append(node('p','No GitHub results. Try fewer terms.'));return}
-  for(const item of results){
-   const d=node('details');d.className='result';d.append(node('summary',item.title+' · '+item.reference),node('p',item.excerpt));
+  const result=await api('search',{query:$('query').value});
+  if(!result.results.length){
+   $('results').append(node('p','No GitHub results. Try fewer words.'));return;
+  }
+  for(const item of result.results){
+   const d=node('details');d.className='result';
+   d.append(node('summary',item.title+' · '+item.reference),node('p',item.excerpt));
    const label=node('label'),cb=node('input');cb.type='checkbox';
-   label.append(cb,document.createTextNode(' Include this memory'));d.append(label);
-   cb.onchange=()=>{if(cb.checked&&chosen.size>=3){cb.checked=false;notice('At most three memories in one exchange.',true);return}
-    if(cb.checked)chosen.add(item.id);else chosen.delete(item.id);invalidate()};
-   d.ontoggle=async()=>{if(d.open&&!d.dataset.loaded){try{const doc=await api('inspect',{id:item.id});
-     d.append(node('pre',doc.text+(doc.truncated?'\n[Passage truncated]':'')));d.dataset.loaded='yes'
-    }catch(e){notice(e.message,true)}}};
+   label.append(cb,document.createTextNode(' Include passage'));d.append(label);
+   cb.onchange=()=>{
+    if(cb.checked&&chosen.size>=3){cb.checked=false;notice('Maximum three passages.',true);return}
+    if(cb.checked)chosen.add(item.id);else chosen.delete(item.id);invalidate();
+   };
+   d.ontoggle=async()=>{
+    if(d.open&&!d.dataset.loaded){
+     try{
+      const doc=await api('inspect',{id:item.id});
+      d.append(node('pre',doc.text+(doc.truncated?'\n[Truncated]':'')));
+      d.dataset.loaded='yes';
+     }catch(e){notice(e.message,true)}
+    }
+   };
    $('results').append(d);
   }
-  notice('Archive query stays local. Review selected source passages before speaking.');
+  notice('Archive search stays local.');
  }catch(e){notice(e.message,true)}
 };
-function displayContext(where,record){
- const root=node('div');
- for(const m of record.selected_memories){
-  const d=node('details');d.className='result';d.append(node('summary',m.title+' · '+m.reference),node('pre',m.text));root.append(d);
- }
- for(const p of record.previous_exchanges){
+function displayContext(place,record){
+ for(const m of record.selected_memories||[]){
   const d=node('details');d.className='result';
-  d.append(node('summary','Earlier exchange · '+p.provider+' · '+p.event_id),node('pre','SNUG: '+p.question+'\n'+p.provider+': '+p.answer));
-  root.append(d);
+  d.append(node('summary',m.title+' · '+m.reference),node('pre',m.text));place.append(d);
  }
- root.append(node('p','Supplier: '+record.provider+' · prior exchanges: '+record.previous_exchanges.length+' · network calls after approval: '+(record.network_calls_if_approved??0)),
+ for(const p of record.previous_exchanges||[]){
+  const d=node('details');d.className='result';
+  d.append(node('summary','Previous · '+p.provider+' · '+p.event_id),
+    node('pre','SNUG: '+p.question+'\n'+p.provider+': '+p.answer));place.append(d);
+ }
+ const count=record.network_calls_if_approved??0;
+ place.append(node('p','Provider: '+record.provider+' · network calls if approved: '+count),
   node('p','Context SHA-256: '+record.context_sha256));
- where.append(root);
 }
 $('review').onclick=async()=>{
  if(!speaking)return;
- const isLive=speaking==='gpt';
- const question=$('question').value;
- const request={question,memory_ids:[...chosen],previous_ids:previous.slice(-4),provider:people[speaking].provider};
+ const isLive=speaking==='gpt',question=$('question').value;
+ const request={question,memory_ids:[...chosen],previous_ids:previous.slice(-4),
+                provider:people[speaking].provider};
  invalidate();const rev=revision;
  try{
-  const result=isLive?await api('live/preview',{question}):await api('preview',request);
-  if(rev!==revision)return;
+  const result=isLive
+    ?await api('live/preview',{question})
+    :await api('preview',request);
+  if(revision!==rev)return;
   reviewed=result;approval=result.approval_token;
-  $('preview').replaceChildren(node('p',isLive?'LIVE GPT — inspect everything below before the paid API call.':'Exact context for a one-use OFFLINE exchange.'),node('p','SNUG: '+result.question));
+  $('preview').replaceChildren(
+   node('p',isLive?'LIVE GPT: this context will cross the membrane.':'OFFLINE rehearsal: nothing transmitted.'),
+   node('p','SNUG: '+result.question));
   displayContext($('preview'),result);
   if(isLive){
-   $('preview').append(node('p','Bounded output: '+result.preflight.max_output_tokens+' tokens · estimated ceiling per call US
+   $('preview').append(node('p','Max output: '+result.preflight.max_output_tokens+
+    ' tokens · preflight cost estimate: USD '+result.preflight.estimated_max_cost_usd+
+    ' (not a billing cap).'));
+   $('preview').append(node('p','Outgoing payload SHA-256: '+result.outbound_payload_sha256));
+   $('preview-note').textContent='One approval authorizes one paid GPT call with exactly the reviewed question and context.';
+  }else{
+   $('preview-note').textContent='Offline fixture only. Approval expires after five minutes.';
+  }
+  $('send').disabled=false;$('preview-dialog').showModal();
+  notice('Reviewed snapshot ready.');
+ }catch(e){if(revision===rev)notice(e.message,true)}
 };
 function line(name,message,note){
  const dl=node('dl');dl.className='line';
  const dt=node('dt',name.toUpperCase()),dd=node('dd',message);
- if(note)dt.append(node('small',note));
- dl.append(dt,dd);$('transcript').append(dl);
+ if(note)dt.append(node('small',note));dl.append(dt,dd);$('transcript').append(dl);
 }
 function showLiveTurn(turn){
- line('Snug',turn.question,'Operator speaking as Chair');
+ line('Snug',turn.question,'Human Chair');
  if(turn.status==='completed'){
-  line('GPT',turn.answer,'Live API · '+turn.model);
+  line('GPT',turn.answer,turn.model||'OpenAI API');
   const usage=turn.usage||{};
-  const meta=node('div','Saved '+turn.turn_id+' · '+(usage.input_tokens??'?')+' input / '+(usage.output_tokens??'?')+' output tokens · est. US
-})();
-</script></body></html>
-+result.preflight.estimated_max_cost_usd+' (not a billing guarantee).'));
-   $('preview-note').textContent='Approve once to transmit this exact question and selected history to the OpenAI API. Store=false requested; vendor data handling still applies.';
-  }else $('preview-note').textContent='Offline fixture only, no network transmission.';
-  $('send').disabled=false;$('preview-dialog').showModal();
-  notice(isLive?'Ready for one reviewed GPT call.':'Offline fixture context ready for approval.');
- }catch(e){if(rev===revision)notice(e.message,true)}
-};
-function line(name,message,note){
- const dl=node('dl');dl.className='line';
- const dt=node('dt',name.toUpperCase()),dd=node('dd',message);
- if(note)dt.append(node('small',note));
- dl.append(dt,dd);$('transcript').append(dl);
-}
-$('send').onclick=async()=>{
- if(!approval||!reviewed)return;
- const token=approval,snapshot=reviewed;
- invalidate();$('preview-dialog').close();$('send').disabled=true;
- try{
-  const ev=await api('exchange',{approval_token:token});
-  line('Snug',ev.question,'Operator speaking as Chair');
-  line(snapshot.provider==='fixture-amber'?'Claude':'Mistral',ev.answer,'Offline rehearsal');
-  const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind+' · '+ev.usage.network_calls+' external calls');
-  meta.className='event-meta';$('transcript').append(meta);
-  const d=node('details');d.className='context';d.append(node('summary','Show exact reviewed context for this exchange'));
-  displayContext(d,snapshot);$('transcript').append(d);
-  $('transcript').scrollTop=$('transcript').scrollHeight;
-  previous.push(ev.event_id);
-  notice('Reviewed exchange recorded locally. No supplier API was contacted.');
- }catch(e){notice(e.message,true)}
-};
-chosenSpeaker();renderSeats();updateSelection();
-})();
-</script></body></html>
-+(usage.estimated_provider_cost_usd??'?'));
+  const meta=node('div','Saved '+turn.turn_id+' · '+(usage.input_tokens??'?')+
+   ' in / '+(usage.output_tokens??'?')+' out · estimated USD '+
+   (usage.estimated_provider_cost_usd??'?'));
   meta.className='event-meta';$('transcript').append(meta);
  }else{
-  $('transcript').append(node('p','['+turn.status+': '+turn.turn_id+' — no verified reply. Not automatically retried.]'));
+  const stage=node('p','['+turn.status+' · '+turn.turn_id+
+   ' · no verified response; never automatically retried]');
+  stage.className='stage';$('transcript').append(stage);
  }
- const context=turn.context||{};
- const d=node('details');d.className='context';
- d.append(node('summary','Exact prior context and turn evidence'));
- const pre=node('pre',JSON.stringify({prior_exchanges:context.previous_exchanges||[],
-  context_sha256:turn.context_sha256,status:turn.status},null,2));
- d.append(pre);$('transcript').append(d);
+ const context=node('details');context.className='context';
+ context.append(node('summary','What GPT received / local evidence'));
+ context.append(node('pre',JSON.stringify({
+  prior_exchanges:(turn.context||{}).previous_exchanges||[],
+  context_sha256:turn.context_sha256,status:turn.status
+ },null,2)));
+ $('transcript').append(context);
  $('transcript').scrollTop=$('transcript').scrollHeight;
 }
 async function loadSession(){
  if(!liveEnabled)return;
  try{
-  const r=await fetch('/api/live/session',{cache:'no-store'});
-  if(!r.ok)throw Error('Could not reload local session');
-  const s=await r.json();
-  for(const turn of s.turns)showLiveTurn(turn);
-  if(s.turns.length)notice('Recovered '+s.turns.length+' local GPT turn(s).');
+  const response=await fetch('/api/live/session',{cache:'no-store'});
+  if(!response.ok)throw Error('Cannot reload local session');
+  const session=await response.json();
+  for(const turn of session.turns)showLiveTurn(turn);
+  if(session.turns.length)notice('Recovered '+session.turns.length+' local GPT turns.');
  }catch(e){notice(e.message,true)}
 }
 $('send').onclick=async()=>{
  if(!approval||!reviewed)return;
  const token=approval,snapshot=reviewed,isLive=snapshot.provider==='openai';
  invalidate();$('preview-dialog').close();$('send').disabled=true;
- notice(isLive?'GPT request in progress; your turn is being captured locally.':'Offline exchange in progress.');
+ notice(isLive?'Contacting GPT; your message is saved on McKay first.':'Running offline rehearsal.');
  try{
   if(isLive){
-   const {turn}=await api('live/send',{approval_token:token});
-   showLiveTurn(turn);
-   $('question').value='';
-   notice('GPT response saved on McKay. Conversation survives browser restart.');
+   const result=await api('live/send',{approval_token:token});
+   showLiveTurn(result.turn);$('question').value='';
+   notice('GPT reply retained locally.');
   }else{
    const ev=await api('exchange',{approval_token:token});
-   line('Snug',ev.question,'Operator speaking as Chair');
+   line('Snug',ev.question,'Human Chair');
    line(snapshot.provider==='fixture-amber'?'Claude':'Mistral',ev.answer,'Offline rehearsal');
-   const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind+' · '+ev.usage.network_calls+' external calls');
+   const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind);
    meta.className='event-meta';$('transcript').append(meta);
-   const d=node('details');d.className='context';d.append(node('summary','Show exact reviewed context for this exchange'));
-   displayContext(d,snapshot);$('transcript').append(d);
+   const ctx=node('details');ctx.className='context';
+   ctx.append(node('summary','Exact reviewed offline context'));
+   displayContext(ctx,snapshot);$('transcript').append(ctx);
    $('transcript').scrollTop=$('transcript').scrollHeight;
    previous.push(ev.event_id);
-   notice('Reviewed offline exchange retained locally.');
+   notice('Offline exchange saved locally.');
   }
  }catch(e){
   notice(e.message,true);
@@ -336,9 +349,9 @@ $('send').onclick=async()=>{
 };
 async function initialize(){
  try{
-  const r=await fetch('/api/health',{cache:'no-store'});
-  if(!r.ok)throw Error('Local service unavailable');
-  const health=await r.json();
+  const response=await fetch('/api/health',{cache:'no-store'});
+  if(!response.ok)throw Error('Local server unreachable');
+  const health=await response.json();
   if(health.live_gpt){
    liveEnabled=true;people.gpt.connected=true;people.gpt.presence='table';speaking='gpt';
    $('mode').textContent='Live GPT · reviewed disclosure';
@@ -349,38 +362,5 @@ async function initialize(){
  chosenSpeaker();renderSeats();updateSelection();
 }
 initialize();
-})();
-</script></body></html>
-+result.preflight.estimated_max_cost_usd+' (not a billing guarantee).'));
-   $('preview-note').textContent='Approve once to transmit this exact question and selected history to the OpenAI API. Store=false requested; vendor data handling still applies.';
-  }else $('preview-note').textContent='Offline fixture only, no network transmission.';
-  $('send').disabled=false;$('preview-dialog').showModal();
-  notice(isLive?'Ready for one reviewed GPT call.':'Offline fixture context ready for approval.');
- }catch(e){if(rev===revision)notice(e.message,true)}
-};
-function line(name,message,note){
- const dl=node('dl');dl.className='line';
- const dt=node('dt',name.toUpperCase()),dd=node('dd',message);
- if(note)dt.append(node('small',note));
- dl.append(dt,dd);$('transcript').append(dl);
-}
-$('send').onclick=async()=>{
- if(!approval||!reviewed)return;
- const token=approval,snapshot=reviewed;
- invalidate();$('preview-dialog').close();$('send').disabled=true;
- try{
-  const ev=await api('exchange',{approval_token:token});
-  line('Snug',ev.question,'Operator speaking as Chair');
-  line(snapshot.provider==='fixture-amber'?'Claude':'Mistral',ev.answer,'Offline rehearsal');
-  const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind+' · '+ev.usage.network_calls+' external calls');
-  meta.className='event-meta';$('transcript').append(meta);
-  const d=node('details');d.className='context';d.append(node('summary','Show exact reviewed context for this exchange'));
-  displayContext(d,snapshot);$('transcript').append(d);
-  $('transcript').scrollTop=$('transcript').scrollHeight;
-  previous.push(ev.event_id);
-  notice('Reviewed exchange recorded locally. No supplier API was contacted.');
- }catch(e){notice(e.message,true)}
-};
-chosenSpeaker();renderSeats();updateSelection();
 })();
 </script></body></html>
