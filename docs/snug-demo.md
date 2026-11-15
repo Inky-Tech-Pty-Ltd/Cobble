@@ -54,18 +54,29 @@ port 8765 remains separate.
 **This is a paid API feature, separate from ChatGPT web conversations.** It
 does not inherit ChatGPT Projects, account chat history, memory or tools.
 
-1. Put the existing OpenAI API key in McKay's **local WSL process environment**
-   as \`OPENAI_API_KEY\`. Do not paste it into ChatGPT, the browser, a shell
-   history command or GitHub. Use your existing private credential manager or
-   a permission-restricted local secret loader.
-2. Stop the currently running demo with **Ctrl+C**. Start the same server with
-   the explicit switch:
+1. Use the existing OpenAI API credential securely. The server accepts
+   `OPENAI_API_KEY` in the local WSL process environment **or** the safer
+   `--key-stdin` switch, which reads a one-time pipe from 1Password CLI.
+   Never paste a key into ChatGPT, a browser, shell history or GitHub.
+2. Stop the currently running demo with **Ctrl+C**. Update the checkout
+   and start the same server with an explicit live switch:
 
-   \`\`\`sh
+   ```sh
    cd ~/Cobble
    git pull --ff-only
    PYTHONPATH=src python3 scripts/snug_demo_web.py --live-gpt
-   \`\`\`
+   ```
+
+
+   From Windows PowerShell, the earlier 1Password CLI flow also works, with
+   the existing private 1Password item reference substituted for the placeholder:
+
+   ```powershell
+   op read "op://YOUR_VAULT/YOUR_ITEM/credential" | wsl.exe -d Ubuntu -u cobbler -- bash -lc 'cd ~/Cobble && PYTHONPATH=src python3 scripts/snug_demo_web.py --live-gpt --key-stdin'
+   ```
+
+   The key crosses stdin only and is retained in server memory while it runs.
+   The shell pipe must stay open as long as the server is running.
 
 3. Open **http://127.0.0.1:8766/**. GPT takes a seat. Speak through Snug's
    input, choose **Review exact context**, read the full current question and
@@ -73,24 +84,24 @@ does not inherit ChatGPT Projects, account chat history, memory or tools.
 4. The browser displays the response with provider token usage and **estimated**
    USD cost. Restarting the browser/server restores up to the most recent
    100 locally saved GPT turns. Snug passes up to four **completed** earlier
-   GPT exchanges as explicit context; this is limited by the 16 KB input
-   preflight ceiling. Rejected or unknown-outcome turns are not replayed as
+   GPT exchanges as explicit context. If needed for the 16 KB preflight bound,
+   the oldest are omitted transparently in the review. Rejected or unknown-outcome turns are not replayed as
    supplier statements.
 
 GPT output allowance is **2,048 tokens**, rather than the adapter's existing
 256-token standalone test default. This is a per-call allowance, *not* a model
 billing cap. The upstream OpenAI API and project/vendor billing settings remain
-authoritative. All requests are text only with \`store=false\`, no tool calls,
+authoritative. All requests are text only with `store=false`, no tool calls,
 no automatic retries, and no automatic corpus/archivist disclosure.
 
 Durable record layout (outside Git):
-\`~/cobble-data/snug/live/default/{turns,attempts,outcomes}/<turn-id>.json\`
+`~/cobble-data/snug/live/default/{turns,attempts,outcomes}/<turn-id>.json`
 
-- \`turns\`: exact user text and context snapshot, written and fsynced before
+- `turns`: exact user text and context snapshot, written and fsynced before
   any outbound call;
-- \`attempts\`: immutable outbound attempt marker, written and fsynced before
+- `attempts`: immutable outbound attempt marker, written and fsynced before
   a network call may start;
-- \`outcomes\`: response and usage, or \`outcome_unknown\` on an ambiguous
+- `outcomes`: response and usage, or `outcome_unknown` on an ambiguous
   failure.
 
 A missing outcome after a crash is reported as **outcome unknown**. It is not
@@ -100,7 +111,7 @@ events. Current browser search still only covers existing indexed GitHub
 material. The same UI's Claude/Mistral chairs remain **offline fixtures**.
 
 Tests are keyless/synthetic. Before calling live, verify McKay's existing
-project-level budget and local API key. Without \`--live-gpt\` the server
+project-level budget and local API key. Without `--live-gpt` the server
 remains fully offline, just as before.
 
 ## Trust boundary
