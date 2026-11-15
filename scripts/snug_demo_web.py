@@ -7,16 +7,21 @@ It cannot invoke a live external provider or leak credentials.
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
 
 from cobble.snug_demo import DemoService
+from cobble.snug_live import LiveChatService, OutcomeUnknown
 
 HTML = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static" / "snug_demo.html"
 MAX_BYTES = 8192
 
 
-def create_server(store, index, port=8766):
+def create_server(store, index, port=8766, *, live_gpt=False, live_adapter=None):
     service = DemoService(store, index)
+    if live_adapter is not None and not live_gpt:
+        raise ValueError("Injected adapter requires an explicitly live test server")
+    live = LiveChatService(store, adapter=live_adapter) if live_gpt else None
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
@@ -57,14 +62,18 @@ def create_server(store, index, port=8766):
             if self.path == "/":
                 self.reply(200, HTML.read_bytes(), "text/html; charset=utf-8")
             elif self.path == "/api/health":
-                self.reply(200, {"ok": True, "live_suppliers": False, "source": "github"})
+                self.reply(200, {"ok": True, "live_suppliers": bool(live),
+                                 "live_gpt": bool(live), "source": "github"})
+            elif self.path == "/api/live/session" and live is not None:
+                self.reply(200, live.session())
             else:
                 self.reply(404, {"error": "Not found"})
 
         def do_POST(self):
             if not self.trusted():
                 return
-            if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange"):
+            if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange",
+                                 "/api/live/preview", "/api/live/send"):
                 self.reply(404, {"error": "Not found"})
                 return
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
@@ -91,12 +100,27 @@ def create_server(store, index, port=8766):
                         document_ids=data.get("memory_ids"),
                         previous_ids=data.get("previous_ids", []),
                         fixture=data.get("provider", "fixture-amber"))
-                else:
+                elif self.path == "/api/exchange":
                     if set(data) != {"approval_token"}:
                         raise PermissionError("Execute only a reviewed one-shot approval")
                     result = service.reviewed_exchange(
                         approval_token=data["approval_token"])
+                elif self.path == "/api/live/preview":
+                    if live is None:
+                        raise PermissionError("Live GPT is disabled")
+                    if set(data) != {"question"}:
+                        raise PermissionError("Only a question is accepted for live review")
+                    result = live.preview(question=data["question"])
+                else:
+                    if live is None:
+                        raise PermissionError("Live GPT is disabled")
+                    if set(data) != {"approval_token"}:
+                        raise PermissionError("Only the exact one-time live approval is accepted")
+                    result = live.send(approval_token=data["approval_token"])
                 self.reply(200, result)
+            except OutcomeUnknown as error:
+                self.reply(502, {"error": str(error), "turn_id": error.turn_id,
+                                 "outcome_unknown": True})
             except (ValueError, TypeError, KeyError, PermissionError) as error:
                 self.reply(400, {"error": str(error)})
             except (OSError, RuntimeError):
@@ -110,11 +134,17 @@ def main():
     parser.add_argument("--store", type=Path, default=Path.home() / "cobble-data")
     parser.add_argument("--index", type=Path)
     parser.add_argument("--port", type=int, default=8766)
+    parser.add_argument("--live-gpt", action="store_true",
+                        help="Explicitly enable billable GPT calls (requires OPENAI_API_KEY)")
     args = parser.parse_args()
+    if args.live_gpt and not os.environ.get("OPENAI_API_KEY"):
+        parser.error("--live-gpt requires OPENAI_API_KEY in the local WSL environment")
     index = args.index or args.store / "index" / "search.sqlite3"
-    with create_server(args.store, index, args.port) as server:
-        print(f"Snug demo (offline): http://127.0.0.1:{server.server_port}/", flush=True)
-        print("No external supplier calls; only approved fixture exchanges.", flush=True)
+    with create_server(args.store, index, args.port, live_gpt=args.live_gpt) as server:
+        mode = "live GPT enabled" if args.live_gpt else "offline"
+        print(f"Snug demo ({mode}): http://127.0.0.1:{server.server_port}/", flush=True)
+        print("Live GPT calls require one-time exact context review." if args.live_gpt
+              else "No external supplier calls; only approved fixture exchanges.", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
