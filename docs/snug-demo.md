@@ -20,14 +20,30 @@ forwarding enabled). Never change the listener to `0.0.0.0`.
 
 The boardroom lets you:
 
-1. Search the *indexed GitHub conversation* corpus on McKay.
-2. Expand each result and see its exact bounded passage.
-3. Select up to three memory IDs and preview the full bounded source passages,
-   question, and any earlier exchange questions and answers supplied as context.
-4. Execute the **one-time reviewed snapshot** through an offline fixture. The
-   event is persisted in `~/cobble-data/snug/events` with source references.
-5. Move between Amber and Indigo rehearsal chairs and explicitly re-review
-   the next snapshot, including whichever earlier exchanges are included.
+1. **Speak as Snug** from the Chair. The interface treats the human operator
+   as Snug's mouthpiece, not as someone asking a separate Snug chatbot.
+2. Move participant chairs by dragging or selecting their state: **at the table**
+   (may speak/listen), **in the room** (listen-only), or **out** (neither). Only
+   active connected rehearsal fixtures at the table can be addressed.
+3. Read the scrollable, play-style transcript and expand the precise reviewed
+   source and earlier-conversation context used for each new exchange.
+4. Visit the **Archivist's room** to query indexed GitHub memories, inspect a
+   bounded passage and select up to three passages for the next exchange.
+5. Drag a local document onto the tabletop, or choose one with the file picker.
+   **This is currently visual filename-only staging:** the browser does not
+   read file content or send/store it in an exchange. Do not assume a tabling
+   action has actually shared the document.
+6. Preview the full immutable disclosure and consume a single-use approval
+   for an offline exchange. Exchange events are stored in
+   `~/cobble-data/snug/events` but are **not yet reloaded into the page**
+   after restart.
+
+Presence is currently enforced only in the local UI, not as separate supplier
+memory or server-side participant access control. The API remains an offline
+fixture executor. A **human guest**, human-owned corpus sharing, scoped
+cross-membrane queries, private side-consultations and per-attendee meeting
+histories are future changes requiring authentication and server-side
+permissions, not shortcuts through the local browser.
 
 **The fixtures do not provide AI answers.** The labels are rehearsals rather
 than real provider identities. Costs are zero. The existing legacy console at
@@ -69,7 +85,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_snug_exchange.py' 
 ```
 
 **Future:** replace the fixture control with genuine approved, audited calls
-to Helen/Claude, Mistral and GPT; show token usage and estimated USD cost,
-then make the chairs draggable rather than merely selectable. The ultimate
+to Claude, Mistral and GPT; show token usage and estimated USD cost,
+then enforce presence, tabled-document sharing and participant-specific history on the server. The ultimate
 `demo.cobble.link` location should use a separately permitted public
 or synthetic corpus and appropriate authentication, not expose McKay.
