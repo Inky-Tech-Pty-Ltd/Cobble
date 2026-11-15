@@ -76,7 +76,7 @@ does not inherit ChatGPT Projects, account chat history, memory or tools.
    ```
 
    The key crosses stdin only and is retained in server memory while it runs.
-   The shell pipe must stay open as long as the server is running.
+   Standard input closes after delivery; the server keeps running with the key in memory.
 
 3. Open **http://127.0.0.1:8766/**. GPT takes a seat. Speak through Snug's
    input, choose **Review exact context**, read the full current question and
