@@ -217,7 +217,7 @@ function drawPeople(){
   const cost=el('div',money(p.cost));cost.className='person-cost';
   const actions=el('div');actions.className='person-actions';
   const lock=el('button');lock.className='icon-only';
-  lock.title='Private information for '+p.name;lock.setAttribute('aria-label',lock.title);lock.textContent='♙';
+  lock.title='Private information for '+p.name;lock.setAttribute('aria-label',lock.title);lock.textContent='🔒';
   lock.onclick=()=>showPrivate(p.provider);
   const door=el('button');door.className='icon-only';
   door.textContent=p.active?'↗':'↙';
