@@ -82,7 +82,7 @@ class DemoTests(unittest.TestCase):
             self.assertIn(required, page)
         # Avoid a subtle failure where event handlers bind to the wrong
         # duplicate id, especially the moved Send and textarea controls.
-        ids = re.findall(r'\\bid="([^"]+)"', page)
+        ids = re.findall(' id="([^"]+)"', page)
         self.assertEqual(len(ids), len(set(ids)))
         # Public room remains text-light; the guardrails are in a separate
         # accessibility-labelled meeting information dialog.
