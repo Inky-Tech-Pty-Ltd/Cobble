@@ -206,7 +206,7 @@ def main():
             parser.error("Credential keys must exactly match selected live suppliers")
         if any(not isinstance(value, str) or
                not 1 <= len(value.strip()) <= 512 or
-               "\\n" in value or "\\r" in value
+               "\n" in value or "\r" in value
                for value in supplied.values()):
             parser.error("Invalid local credential data")
         credentials = {name: value.strip() for name, value in supplied.items()}
