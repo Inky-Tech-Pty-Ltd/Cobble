@@ -161,8 +161,8 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
 .person-out .person-name{font-size:.87rem}
 .person-out .person-cost{font-size:.68rem}
 .person-out .person-actions button{width:26px;height:26px}
-.table-wood{position:absolute;z-index:4;left:16%;width:72%;bottom:-1.5%;height:180%;min-height:0;top:auto;filter:none;pointer-events:none}
-.table-plane{position:absolute;inset:0;transform:perspective(1300px) rotateX(49deg);transform-origin:center bottom;
+.table-wood{position:absolute;z-index:4;left:16%;width:72%;bottom:-1.5%;height:400%;min-height:0;top:auto;filter:none;pointer-events:none}
+.table-plane{position:absolute;inset:0;transform:perspective(94.5vh) rotateX(54deg);transform-origin:center bottom;
   border:10px solid #765036;border-radius:17px;background:
   repeating-linear-gradient(88deg,transparent 0 74px,#62351b15 75px 80px,transparent 81px 141px),
   linear-gradient(90deg,#966e46,#c69b6a 12%,#c6a075 52%,#a87e55 91%,#775036);
@@ -216,7 +216,7 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
  .participant .avatar{width:60px;height:82px}
  .person-name{font-size:.73rem}
  .person-cost{font-size:.58rem}
- .table-wood{left:12%;width:79%;height:170%}
+ .table-wood{left:12%;width:79%;height:400%}
  .table-record{inset:4% 12% 15%;padding:6px}
  .line .speech-text,.line.narrow .speech-text{font-size:1.1rem}
  .folder-object{width:105px;height:72px}
@@ -258,14 +258,14 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
     <g stroke="#b6c6c8" stroke-width="5" opacity=".66" fill="none">
       <path d="M0 0 L800 284 L1600 0 M0 900 L800 284 L1600 900"/>
     </g>
-    <path d="M0 0 L380 135 L380 665 L0 900Z" fill="#647984" opacity=".48"/>
-    <path d="M0 0 L380 135 L380 665 L0 900" stroke="#405861" stroke-width="8" fill="none"/>
-    <path d="M0 310 L380 344 M0 610 L380 567" stroke="#b4c7c8" stroke-width="5" opacity=".65"/>
+    <path d="M0 0 L380 135 L380 607 L0 900Z" fill="#647984" opacity=".48"/>
+    <path d="M0 0 L380 135 L380 607 L0 900" stroke="#405861" stroke-width="8" fill="none"/>
+    <path d="M0 310 L380 298 M0 610 L380 455" stroke="#b4c7c8" stroke-width="5" opacity=".65"/>
     <g opacity=".54">
-      <path d="M54 142 L307 208 L307 694 L54 816Z" fill="url(#glass)" stroke="#374f58" stroke-width="8"/>
-      <path d="M68 180 L288 232 L288 667 L68 771Z" fill="none" stroke="#cad8d5" stroke-width="2"/>
-      <path d="M288 232 V667" stroke="#5d7580" stroke-width="6"/>
-      <path d="M54 142 L307 208" stroke="#405960" stroke-width="8"/>
+      <path d="M54 142 L307 190 L307 636 L54 816Z" fill="url(#glass)" stroke="#374f58" stroke-width="8"/>
+      <path d="M68 180 L288 211 L288 625 L68 771Z" fill="none" stroke="#cad8d5" stroke-width="2"/>
+      <path d="M288 211 V625" stroke="#5d7580" stroke-width="6"/>
+      <path d="M54 142 L307 190" stroke="#405960" stroke-width="8"/>
       <circle cx="275" cy="510" r="6" fill="#ebd5a2"/>
     </g>
   </svg>
@@ -558,6 +558,7 @@ async function speak(){
   notify(error.message,true);
   try{await reload()}catch(e){notify(e.message,true)}
   // Keep the original utterance for explicit operator choice; never retry.
+  pending=false;
   beginComposing();
  }finally{
   pending=false;
