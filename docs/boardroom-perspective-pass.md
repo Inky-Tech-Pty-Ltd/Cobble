@@ -69,3 +69,31 @@ bytes are inspected or disclosed to an intelligence.
 **Do not infer** that entering the corridor prevents a supplier from
 receiving older persisted context; that requires a separate security
 change. The meaningful advance here is a clearer spatial meeting UI.
+
+
+## Pass 3 composition correction — 16 November 2026
+
+Follow-up from the operator's latest pencil sketch and the fictitious boardroom
+committee's reluctant vote to give Puck another attempt:
+
+- The table is deliberately **nearly rectangular**. The displayed tabletop
+  and transcript now use a shallow `perspective(1600px) rotateX(18deg)`
+  projection rather than the previous dramatic steep plane. This prioritises
+  usable conversation width while still letting older lines recede.
+- The backdrop depicts a **windowless interior room**, with subdued wall
+  panels and flooring. The distracting skyline has been removed.
+- The glazed corridor remains on the **left**, but now occupies only about
+  13.5% of the width. Waiting suppliers are drawn smaller.
+- GPT, Claude and Mistral are **larger and anchored along the table edges**.
+  The illustrated half-body characters now have chair backs, arms and small
+  forward hands to communicate seating, not floating portraits.
+- Snug remains at the head; the current speaker box is still upper-right,
+  with the same owner-switching, scrollable text, and moving tail.
+- The manila folder, tabletop wheel-mouse, meeting ledger, API supplier
+  calls, private padlock view and local append-only records are **unchanged**.
+
+This is an illustrated static scene, not a photorealistic render or a
+physically simulated camera. The HTML view must still be evaluated visually
+on McKay at its actual browser size; green CI alone cannot validate
+foreshortening and character placement. No server permissions or autonomy
+have been added in this visual correction.
