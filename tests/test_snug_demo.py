@@ -35,17 +35,23 @@ class DemoTests(unittest.TestCase):
         self.private_id = search(self.index, "SECRET")[0]["id"]
 
     def test_boardroom_roles_and_inline_script_syntax(self):
-        """The offline page must distinguish the Chair, archive and presence."""
+        """The visual first pass is a room, with no obsolete approval step."""
         page = (Path(__file__).resolve().parents[1] / "src" / "cobble" /
                 "static" / "snug_demo.html").read_text(encoding="utf-8")
-        for label in ("Speak as Snug", "Archivist's room",
-                      "At the table", "In the room", "Out of the room",
-                      "data-presence=\"table\"", "data-presence=\"room\"",
-                      "data-presence=\"out\"", "table-files",
-                      "Show exact reviewed context", "Offline rehearsal"):
+        for label in (
+            "Speak to the table as Snug", "corridor-people", "Meeting information",
+            'id="send"', "live/preview", "live/send",
+            "What Claude heard", 'id="heard-toggle"',
+            'class="pair collapsed"', "context-content", "heard-content",
+            'id="transcript"', 'id="outside"', 'id="table-drop"',
+            "table-files", "folder-open", "private-view",
+            "consult-prev", "consult-next", "display", "role=\"log\"",
+        ):
             self.assertIn(label, page)
-        self.assertNotIn("Helen's rehearsal", page)
-        self.assertNotIn("Ask Snug", page)
+        self.assertNotIn("Review exact context", page)
+        self.assertNotIn("Approve & send", page)
+        self.assertNotIn("At the table · speak and listen", page)
+        self.assertNotIn("Helen", page)
         script = re.search(r"<script>(.*?)</script>", page, re.DOTALL)
         self.assertIsNotNone(script)
         if shutil.which("node"):

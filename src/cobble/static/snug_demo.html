@@ -1,379 +1,424 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Snug's Boardroom · Cobble</title>
 <style>
-:root{font-family:system-ui,sans-serif;color:#283a32;background:#f5f1e9}*{box-sizing:border-box}
-body{margin:0}button,select,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
-button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #ac8558;outline-offset:3px}
-.wrap{max-width:1060px;margin:auto;padding:22px}header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
-h1{font:normal 2.1rem Georgia,serif;margin:0}.eyebrow{color:#67786b;text-transform:uppercase;letter-spacing:.15em;font-size:.75rem}
-.pill{border:1px solid #b1c0b0;border-radius:30px;padding:8px 12px;font-size:.76rem}.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.action{border:0;border-radius:10px;background:#315f50;color:white;padding:10px 14px;font-weight:650}.action.secondary{border:1px solid #a9b9a8;background:#e7eee4;color:#254b3a}.action.small{font-size:.82rem;padding:8px 11px}
-.boardroom{background:linear-gradient(#eaf0e4,#dfe8d8);border:1px solid #c1d0bf;border-radius:25px;padding:24px 18px;margin-bottom:16px}
-.chair{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:17px}
-.face{width:50px;height:56px;flex-shrink:0;border-radius:47%;background:#f0cc9d;border:3px solid #816c57;position:relative;box-shadow:0 6px 0 #345c4c}
-.face:before{content:"•   •";position:absolute;top:12px;left:10px;white-space:pre;color:#594232;letter-spacing:6px}
-.face:after{content:"";position:absolute;top:31px;left:15px;width:15px;height:6px;border-bottom:2px solid #624632;border-radius:50%}
-.chair strong{font:normal 1.4rem Georgia,serif;display:block}.chair small,.muted{color:#64766a;font-size:.79rem}
-.speech{max-width:610px;margin:0 auto;background:#fffefa;border:1px solid #aebcad;border-radius:17px;padding:16px;box-shadow:0 5px 0 #c5d1c0;position:relative}
-.speech:before{content:"";position:absolute;top:-10px;left:50%;width:17px;height:17px;transform:translateX(-50%) rotate(45deg);border-top:1px solid #aebcad;border-left:1px solid #aebcad;background:#fffefa}
-.speech label{display:block;font-weight:750;margin-bottom:7px;font-size:.84rem}
-textarea{width:100%;min-height:84px;border:1px solid #b5c4b6;border-radius:9px;padding:10px;resize:vertical;color:#263b30}
-.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.hint{font-size:.77rem;color:#64776c;margin:7px 0 2px}
-#target{font-size:.79rem;font-weight:700;color:#35624c;margin-top:9px}#status{font-size:.81rem;min-height:1.1em;margin-top:8px;color:#37674b}.error{color:#a33e38!important}
-.table{background:radial-gradient(ellipse,#b28a64,#956e4e);border:11px solid #bb9570;box-shadow:0 13px 0 #79583e,0 16px 25px #33433433;color:#fff8ed;max-width:570px;min-height:155px;width:90%;border-radius:49%/45%;margin:26px auto 26px;display:grid;place-items:center;text-align:center;padding:13px 30px}
-.table.dragover{outline:4px dashed #315f50;outline-offset:5px}.table strong{font:italic 1.55rem Georgia,serif}
-.table p{font-size:.77rem;margin:5px 0}.table label{display:inline-block;margin:5px;cursor:pointer;background:#fff4e4;color:#604327;padding:5px 10px;border-radius:15px;font-size:.77rem}
-#table-files{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.docs{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:7px}
-.doc{background:#fff4e5;color:#543b25;border-radius:8px;padding:6px 9px;font-size:.76rem;max-width:220px;overflow-wrap:anywhere}
-.doc button{background:none;border:0;color:#6d4731;font-weight:800}
-.zone-label{text-align:center;font-size:.79rem;color:#4c6a59;text-transform:uppercase;letter-spacing:.07em;font-weight:750;margin:16px 0 8px}
-.seat-zone{min-height:72px;display:flex;justify-content:center;align-items:stretch;gap:12px;flex-wrap:wrap;padding:7px;border-radius:14px}
-.seat-zone.drop-target{background:#c7decc;outline:2px dashed #4f7962}
-.participant{width:178px;max-width:100%;border:2px solid #a4b4a6;border-radius:15px;background:#fffdf7;padding:11px;text-align:center;cursor:grab;box-shadow:0 4px 0 #c9d4c8}
-.participant.chosen{border-color:#315f50;box-shadow:0 4px 0 #315f50}.participant .symbol{background:#e2eae0;border-radius:50%;width:28px;height:28px;margin:0 auto 5px;display:grid;place-items:center;font-weight:750}
-.participant strong{font-size:.9rem}.participant small{font-size:.71rem;color:#66756a;display:block;margin-top:3px}
-.participant select{width:100%;font-size:.77rem;margin-top:8px;border:1px solid #a9baae;border-radius:7px;padding:5px;background:#fff}
-.participant button{width:100%;margin-top:7px}.participant.out{opacity:.75;background:#f3f2ed}
-.quiet-zone{margin-top:10px;padding:9px;border:1px dashed #c1d0c1;border-radius:13px;background:#f3f6ed}
-.outside{padding:12px 13px;border:1px dashed #cac7be;border-radius:14px;margin-bottom:16px}
-.conversation{background:#fffdf8;border:1px solid #dbd9d0;border-radius:18px;padding:19px}
-.heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-h2{font:normal 1.45rem Georgia,serif;margin:0}.transcript{max-height:440px;min-height:130px;overflow-y:auto;padding:8px 3px;margin-top:9px}
-.line{display:grid;grid-template-columns:142px minmax(0,1fr);gap:13px;border-bottom:1px solid #ece9e2;padding:13px 4px}
-.line dt{font-size:.8rem;font-weight:800;letter-spacing:.04em;color:#335a48}.line dd{margin:0;font-size:.94rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
-.line small{display:block;color:#728073;font-size:.7rem;font-weight:400;letter-spacing:0}
-.event-meta{font-size:.74rem;color:#748174;margin:6px 0 6px 156px}.stage{color:#748174;font:italic .87rem Georgia,serif;margin:12px 0}
-details>summary{cursor:pointer;color:#3a6350;font-weight:700}
-.context{margin:7px 4px 12px 156px}.context pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:160px;overflow:auto}
-.context .result,dialog .result{border:1px solid #dce2d9;border-radius:9px;padding:9px;margin:7px 0;font-size:.8rem}
-dialog{border:1px solid #91ad9b;border-radius:18px;padding:22px;width:min(92vw,730px);max-height:85vh;overflow:auto;background:#fffdf8;box-shadow:0 25px 65px #14281f66}
-dialog::backdrop{background:#13271eb0}.dialogtop{display:flex;justify-content:space-between;gap:12px;align-items:center}
-dialog input[type=text]{width:100%;padding:10px;border-radius:9px;border:1px solid #abbeb1}
-dialog label{font-size:.85rem;display:block;margin:10px 0 5px;font-weight:700}.result label{display:flex;align-items:center;gap:7px}
-.result pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:175px;overflow:auto;font:inherit}
-footer{font-size:.77rem;color:#69796d;line-height:1.55;margin-top:17px}
-@media(max-width:670px){.wrap{padding:12px}.boardroom{padding:17px 9px}.table{width:97%;min-height:125px;padding:13px}.participant{width:140px;padding:8px}.line{grid-template-columns:1fr;gap:4px}.context,.event-meta{margin-left:4px}}
-</style>
-</head>
-
-<body><main class="wrap">
-<header>
- <div><div class="eyebrow">Cobble · local laboratory</div><h1>Snug's Boardroom</h1></div>
- <div class="tools"><span class="pill" id="mode">Offline rehearsal · no live suppliers</span><button class="action secondary small" id="archive-open">Archivist's room</button></div>
-</header>
-<section class="boardroom" aria-label="Boardroom">
- <div class="chair"><div class="face" aria-hidden="true"></div><div><strong>Snug · Chair</strong><small class="muted">You provide Snug's voice at the table</small></div></div>
- <div class="speech">
-  <label for="question">Speak as Snug</label>
-  <textarea id="question" maxlength="2000" placeholder="Address the table…">What do the selected GitHub memories tell us about the G1 experiment?</textarea>
-  <div id="target">Speaking to Claude's offline rehearsal</div>
-  <p class="hint" id="selection">No memories selected from the archivist.</p>
-  <div class="actions"><button class="action secondary" id="review">Review exact context</button><button class="action" id="send" disabled>Approve &amp; speak (offline)</button></div>
-  <div id="status" aria-live="polite"></div>
- </div>
- <div class="table" id="table-drop" aria-label="Tabled documents">
-   <div><strong>On the table</strong><div class="docs" id="table-docs"></div>
-    <p>Drag a document here, or select a file.</p>
-    <label for="table-files">Choose document</label><input id="table-files" type="file" multiple>
-    <p>Staging only: contents are not yet shared or retained.</p>
-   </div>
- </div>
- <div class="zone-label">At the table · speak and listen</div><div class="seat-zone" id="at-table" data-presence="table"></div>
- <div class="quiet-zone"><div class="zone-label">In the room · listen only</div><div class="seat-zone" id="in-room" data-presence="room"></div></div>
-</section>
-<div class="outside"><div class="zone-label">Out of the room · neither speak nor listen</div><div class="seat-zone" id="outside" data-presence="out"></div></div>
-<section class="conversation"><div class="heading"><h2>Conversation</h2><span class="muted">The play so far · scroll to read</span></div>
- <div class="transcript" id="transcript" role="log" aria-live="polite"><p class="stage">The Chair calls the meeting to order. Offline suppliers await their cues.</p></div>
-</section>
-<dialog id="archive"><div class="dialogtop"><h2>Archivist's room</h2><button class="action secondary small" id="archive-close">Return to boardroom</button></div>
- <p class="muted">Local GitHub-memory search. Select up to three passages to bring into the next reviewed exchange. Searching does not disclose anything externally.</p>
- <label for="query">Find memories</label><input type="text" id="query" maxlength="240" value="Sankarshan G1">
- <button class="action" id="search">Search the archive</button><div id="results" aria-live="polite"></div>
-</dialog>
-<dialog id="preview-dialog"><div class="dialogtop"><h2>Review the exact context</h2><button class="action secondary small" id="preview-close">Close</button></div>
- <div id="preview"></div><p class="muted" id="preview-note">One-use approval, valid for five minutes.</p>
-</dialog>
-<footer id="footnote">Presence controls are a local UI rehearsal, not yet server-enforced permissions. Remote humans, private tool consultations and scoped corpus sharing are not implemented. Tabled document contents are never sent. In live mode, the question and up to four recent GPT exchanges are transmitted only after exact review; new conversation events are saved on McKay, not in ChatGPT.</footer>
+:root{font-family:system-ui,Segoe UI,sans-serif;color:#f2e9db;background:#141c25}
+*{box-sizing:border-box}
+body{margin:0;overflow-x:hidden}
+button,textarea,input{font:inherit}
+button{cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #ffe1a0;outline-offset:3px}
+button:disabled{opacity:.48;cursor:not-allowed}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.room{position:relative;width:100%;height:100vh;min-height:670px;max-height:1300px;overflow:hidden;isolation:isolate;
+ background:linear-gradient(180deg,#9db6c8 0%,#d5d8cb 38%,#adbaa9 57%,#8e9f96 66%,#323b42 67%,#3f3d36 100%)}
+.room:before{content:"";position:absolute;inset:0 17% 36% 0;
+ background:linear-gradient(90deg,transparent 0 17%,#8598a2 17.5% 18%,transparent 18.5% 48%,#8a9b9f 48.5% 49%,transparent 49.5% 78%,#8599a1 78.5% 79%,transparent 79.5%),
+ linear-gradient(180deg,transparent 0 72%,#758d93 72.4% 73%,transparent 73.5%);pointer-events:none}
+.skyline{position:absolute;inset:15% 18% 31% 0;pointer-events:none;opacity:.25;
+ background:linear-gradient(0deg,#718596 0 28%,transparent 28%),repeating-linear-gradient(90deg,transparent 0 31px,#8194a4 32px 35px,transparent 36px 63px)}
+.skyline:before{content:"";position:absolute;bottom:15%;left:7%;width:9%;height:55%;background:#627c90;box-shadow:125px 44px 0 12px #7b8993, 294px -10px 0 -8px #667c91,450px 61px 0 20px #7d909f,650px 30px 0 4px #6f8795}
+.skyline:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,#d3d5cc 78%)}
+.corridor{position:absolute;right:0;top:0;bottom:0;width:18%;background:linear-gradient(125deg,#718b9a75,#a9b9bd93 58%,#6e848c99);border-left:5px solid #59656a;box-shadow:inset 9px 0 18px #2c364344}
+.corridor:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 44%,#64778190 44.5% 46%,transparent 47% 100%);pointer-events:none}
+.corridor:after{content:"";position:absolute;bottom:0;width:100%;height:25%;background:linear-gradient(0deg,#3c4549ad,transparent);pointer-events:none}
+.corridor-door{position:absolute;top:34%;left:2%;height:54%;width:57%;border:3px solid #465c64;border-radius:4px;background:#9bb2ba30;box-shadow:inset 0 0 20px #dce5e224}
+.corridor-door:after{content:"";position:absolute;top:55%;right:7px;width:5px;height:27px;background:#d8bf8e;border-radius:8px}
+.corridor-people{position:absolute;right:2%;top:12%;width:94%;height:75%;display:flex;align-items:center;justify-content:flex-start;flex-direction:column;gap:12px;padding:4px;z-index:5;overflow:auto}
+.icon-only{border:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:#243744c9;color:#f3e5ca;width:40px;height:40px;font-size:1.2rem;box-shadow:0 1px 7px #202a3355}
+.icon-only:hover,.icon-only:focus-visible{background:#395566}
+.icon-only svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.top-tools{position:absolute;left:13px;top:14px;display:flex;gap:9px;z-index:10}
+.top-tools button{backdrop-filter:blur(8px)}
+.snug{position:absolute;z-index:4;top:3%;left:27%;width:44%;display:flex;flex-direction:column;align-items:center;gap:9px}
+.snug-portrait{position:relative;width:67px;height:77px;border-radius:48% 48% 34% 34%;background:linear-gradient(140deg,#edc7a0,#b58a6b);border:3px solid #5a4743;box-shadow:0 8px 0 #263d4b,0 10px 18px #182a3785}
+.snug-portrait:before{content:"";position:absolute;left:14px;top:25px;width:7px;height:5px;background:#534137;border-radius:50%;box-shadow:24px 0 #534137}
+.snug-portrait:after{content:"";position:absolute;left:24px;top:46px;width:15px;height:7px;border-bottom:2px solid #604338;border-radius:40%}
+.snug-name{font:600 1.03rem Georgia,serif;text-shadow:0 2px 5px #3549529c}
+.compose{position:relative;display:flex;align-items:flex-end;width:100%;gap:8px;padding:10px;background:#f9f4e7ee;border:1px solid #f2e6d0;border-radius:18px;color:#253b3e;box-shadow:0 12px 28px #2630397a}
+.compose:before{content:"";position:absolute;top:-10px;left:calc(50% - 8px);width:18px;height:18px;background:#f9f4e7;transform:rotate(45deg)}
+.compose textarea{width:100%;border:0;resize:vertical;min-height:56px;max-height:145px;outline:0;background:transparent;color:#24383c;line-height:1.38}
+.compose textarea::placeholder{color:#6d7a78}
+.compose button{border:0;border-radius:12px;background:#254c46;color:#fff;width:44px;height:44px;font-size:1.55rem;flex-shrink:0}
+.compose button:hover{background:#3d7063}
+.compose button:disabled{background:#8b9d92}
+#notification{position:absolute;left:50%;bottom:2.8%;transform:translateX(-50%);max-width:min(680px,85vw);z-index:12;padding:8px 16px;border-radius:10px;background:#142c35e8;color:#fff;font-size:.83rem;box-shadow:0 3px 16px #182a329c}
+#notification:empty{display:none}
+.participant{position:absolute;z-index:5;display:flex;align-items:center;gap:10px;max-width:24vw}
+.participant.left{left:2%;top:31%}
+.participant.right-top{right:19.5%;top:30%;flex-direction:row-reverse}
+.participant.right-bottom{right:19.5%;top:63%;flex-direction:row-reverse}
+.person-panel{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.avatar{width:70px;height:72px;border-radius:45% 45% 40% 40%;display:grid;place-items:center;font:bold 1.4rem Georgia,serif;border:3px solid #354b51;box-shadow:0 7px 0 #334b53,0 9px 15px #0004;color:#233b47;user-select:none}
+.avatar.gpt{background:linear-gradient(135deg,#c0e0d0,#8eb7b7)}
+.avatar.claude{background:linear-gradient(135deg,#f4c1a0,#c18467)}
+.avatar.mistral{background:linear-gradient(135deg,#ecdba2,#c6a865)}
+.person-name{font:bold 1rem Georgia,serif;text-shadow:0 2px 4px #18313f}
+.person-cost{font:600 .7rem ui-monospace,Consolas,monospace;text-shadow:0 2px 4px #132835}
+.person-actions{display:flex;gap:4px}
+.person-actions button{width:26px;height:26px;background:#20343ac4;box-shadow:none}
+.person-actions svg{width:16px;height:16px}
+.speech-bubble{min-width:95px;max-width:min(250px,15vw);max-height:125px;overflow:hidden;padding:11px 13px;background:#fffaf1e8;color:#33434a;border-radius:13px;box-shadow:0 4px 16px #132a354d;font-size:.78rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;cursor:pointer}
+.speech-bubble:empty{display:none}
+.person-out{position:static;display:flex;flex-direction:column;max-width:100%;opacity:.8;gap:4px}
+.person-out .avatar{width:48px;height:48px;font-size:1.05rem}
+.person-out .speech-bubble{display:none}
+.person-out .person-name{font-size:.82rem}
+.person-out .person-cost{font-size:.63rem}
+.person-out .person-actions button{width:24px;height:24px}
+.table-wood{position:absolute;top:26%;height:68%;left:22%;width:60%;filter:drop-shadow(0 15px 4px #23272b77);z-index:2}
+.table-shape{position:absolute;inset:0;background:linear-gradient(86deg,#61432f,#987453 8%,#9a744e 49%,#825a3a 90%,#523522);
+ clip-path:polygon(24% 0%,76% 0%,100% 100%,0% 100%);border-radius:18px}
+.table-shape:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(88deg,transparent 0 16px,#4d2e1819 17px 18px,transparent 19px 42px),linear-gradient(90deg,#fff2bf25,transparent 35%,#3f261a33 95%);clip-path:polygon(24% 0%,76% 0%,100% 100%,0% 100%)}
+.table-shape:after{content:"";position:absolute;inset:8px;background:linear-gradient(90deg,#c7a57f55,transparent 20%,transparent 80%,#c7a57f55);clip-path:polygon(24% 0%,76% 0%,100% 100%,0% 100%);border:3px solid #a9815b}
+.table-record{position:absolute;inset:5% 17% 13% 17%;overflow-y:auto;overflow-x:hidden;padding:10px 12px 36px;scrollbar-width:thin;scrollbar-color:#dfc5a47a transparent;
+ color:#fff4e3;mask-image:linear-gradient(transparent 0%,#000 11%,#000 100%);}
+.table-record .line{margin:10px auto 16px;border-bottom:1px solid #fce5c93d;padding:0 2px 12px;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.42;transform-origin:top center}
+.line .speaker{display:block;font:bold .78rem Georgia,serif;color:#fff4dc;letter-spacing:.055em;margin-bottom:5px}
+.line .speech-text{font-size:.85rem;color:#fff5e5}
+.line.narrow{max-width:76%;font-size:.8rem;opacity:.67}
+.line.narrow .speech-text{font-size:.8rem}
+.line.medium{max-width:88%;opacity:.85}
+.table-record:focus-visible{outline:3px solid #fee0a2}
+.table-end{position:absolute;z-index:3;bottom:3%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px}
+.table-end button{width:40px;height:38px;border-radius:8px;background:#f0d3a1;color:#59442c}
+.doc-count{font-size:.68rem;text-shadow:0 2px 3px #0006}
+.table-wood.dragover .table-shape{outline:3px dashed #fff}
+#table-files{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.private-view,.archive-view,.documents-view{border:1px solid #829ba1;border-radius:17px;background:#f4f3ec;color:#243b40;width:min(980px,94vw);max-height:87vh;padding:23px;box-shadow:0 30px 75px #12212bd6}
+dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
+.dialog-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+.dialog-head strong{font:600 1.45rem Georgia,serif}
+.close{border:0;background:#dfebe6;color:#1a4849;border-radius:50%;width:38px;height:38px;font-size:1.35rem}
+.pair{display:flex;align-items:stretch;gap:9px;min-height:280px}
+.pane{flex:1;min-width:0;background:#fff;border:1px solid #becdcb;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.pane header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #dce4e0;font-weight:700}
+.pane-content{padding:15px;max-height:55vh;overflow:auto;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}
+.pane-content pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+#heard-pane{flex:.85}
+.pair.collapsed #heard-pane{flex:0 0 43px}
+.pair.collapsed #heard-pane header{writing-mode:vertical-rl;height:100%;gap:9px;justify-content:flex-start}
+.pair.collapsed #heard-pane .pane-content{display:none}
+.pane-toggle{border:0;background:#e5ebe7;border-radius:7px;padding:5px 8px}
+.consultations{display:flex;justify-content:center;gap:12px;align-items:center;margin-top:12px;font-size:.82rem}
+.consultations button{background:#e3e9e3;border:0;border-radius:7px;padding:6px 11px}
+.archive-view input{width:100%;border:1px solid #b5c8c3;border-radius:8px;padding:10px;margin:8px 0}
+.archive-view button.search{background:#27544c;color:white;border:0;padding:9px 13px;border-radius:9px}
+.result{padding:9px;border-bottom:1px solid #d1dbd7;font-size:.86rem}
+.result summary{cursor:pointer}
+.result pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:160px;overflow:auto}
+.doc-list{display:flex;gap:8px;flex-wrap:wrap}
+.doc-chip{border:1px solid #c3b69e;border-radius:8px;padding:8px;font-size:.83rem}
+.doc-chip button{background:none;border:0;color:#6a4d35;font-size:1.1rem}
+.info{font-size:.78rem;color:#667a79;line-height:1.6}
+@media(max-width:900px){.room{min-height:720px}.participant .avatar{width:52px;height:52px}.person-name{font-size:.82rem}.speech-bubble{max-width:140px;font-size:.73rem}.table-wood{left:16%;width:72%}.snug{left:23%;width:50%}.corridor{width:15%}.participant.right-top,.participant.right-bottom{right:16%}}
+@media(max-width:630px){.room{height:auto;min-height:920px}.snug{left:15%;width:65%;top:6%}.corridor{width:21%;}.participant.left{left:1%;top:28%;flex-direction:column}.participant.right-top{right:21%;top:28%;flex-direction:column}.participant.right-bottom{right:21%;top:54%;flex-direction:column}.speech-bubble{max-width:100px;max-height:95px}.table-wood{top:38%;height:52%;left:9%;width:82%}.table-record{inset:7% 14% 15%}.person-cost{font-size:.61rem}.pair{flex-direction:column}.pair.collapsed #heard-pane{flex:0 0 45px}.pair.collapsed #heard-pane header{writing-mode:horizontal-tb;height:45px}.top-tools{top:9px;left:9px}.person-out .avatar{width:38px;height:38px}}
+</style></head>
+<body>
+<main class="room" aria-label="Snug's boardroom">
+  <div class="skyline" aria-hidden="true"></div>
+  <aside class="corridor" aria-label="Outside boardroom">
+    <div class="corridor-door" aria-hidden="true"></div>
+    <div class="corridor-people" id="outside"></div>
+  </aside>
+  <nav class="top-tools" aria-label="Other rooms">
+    <button class="icon-only" id="archive-open" title="Archivist" aria-label="Open archivist">▤</button>
+    <button class="icon-only" id="meeting-info" title="Meeting information" aria-label="Meeting information">ⓘ</button>
+  </nav>
+  <section class="snug" aria-label="Snug, the Chair">
+    <div class="snug-portrait" aria-hidden="true"></div>
+    <div class="snug-name">Snug</div>
+    <div class="compose">
+      <label class="sr" for="question">Speak to the table as Snug</label>
+      <textarea id="question" maxlength="2000" placeholder="…" aria-label="Speak to the table as Snug"></textarea>
+      <button id="send" aria-label="Speak to the table" title="Send" disabled>➤</button>
+    </div>
+  </section>
+  <div id="participants"></div>
+  <section class="table-wood" id="table-drop" aria-label="Meeting table and scrollable conversation">
+    <div class="table-shape" aria-hidden="true"></div>
+    <div id="transcript" class="table-record" role="log" aria-label="Meeting utterances" tabindex="0"></div>
+    <div class="table-end">
+      <button class="icon-only" id="folder-open" title="Tabled documents" aria-label="Tabled documents">📁</button>
+      <span class="doc-count" id="doc-count"></span>
+    </div>
+    <input type="file" id="table-files" multiple aria-label="Select document for tabletop">
+  </section>
+  <div id="notification" role="status" aria-live="polite"></div>
 </main>
-
+<dialog class="private-view" id="private-view" aria-label="Private supplier evidence">
+  <div class="dialog-head"><strong id="private-title">Claude</strong><button class="close" id="private-close" aria-label="Back to room">×</button></div>
+  <div id="pair" class="pair collapsed">
+    <section class="pane" id="context-pane"><header id="context-title">Context passed</header><div class="pane-content" id="context-content"></div></section>
+    <section class="pane" id="heard-pane"><header><span id="heard-title">What Claude heard</span><button class="pane-toggle" id="heard-toggle" aria-label="Expand what this participant heard" aria-expanded="false">‹</button></header><div class="pane-content" id="heard-content"></div></section>
+  </div>
+  <div class="consultations"><button id="consult-prev" aria-label="Previous consultation">‹</button><span id="consult-no"></span><button id="consult-next" aria-label="Next consultation">›</button></div>
+</dialog>
+<dialog class="archive-view" id="archive" aria-label="Archivist">
+  <div class="dialog-head"><strong>Archivist</strong><button class="close" id="archive-close" aria-label="Back to room">×</button></div>
+  <label class="sr" for="query">Find memories</label><input id="query" type="search" maxlength="240" placeholder="Find memories…">
+  <button class="search" id="search" aria-label="Search indexed memories">⌕</button>
+  <div id="results"></div>
+  <p class="info">The archivist's search stays local. Live suppliers do not automatically receive these passages.</p>
+</dialog>
+<dialog class="documents-view" id="documents" aria-label="Tabled documents">
+  <div class="dialog-head"><strong>Documents</strong><button class="close" id="documents-close" aria-label="Back to room">×</button></div>
+  <div id="table-docs" class="doc-list"></div>
+  <p><button id="add-doc" class="pane-toggle">＋</button></p>
+  <p class="info">First pass: document filenames are staged locally; contents are not read or shared.</p>
+</dialog>
+<dialog class="documents-view" id="information" aria-label="Meeting information">
+  <div class="dialog-head"><strong>Meeting</strong><button class="close" id="information-close" aria-label="Back to room">×</button></div>
+  <p class="info">This first pass visualises the existing, persistent local boardroom conversation as one meeting. Formal start/end and separate meeting records are not implemented yet.</p>
+  <p class="info">Send immediately asks one available intelligence to respond. A leading address such as “Hey Mistral” gives that participant the first turn; otherwise the most recent active supplier responds. Spontaneous interruptions are not implemented yet. Public utterances are stored in Snug's record and the selected previous exchanges are provided when a supplier is called.</p>
+  <p class="info">Moving a participant outside currently affects which model can be called in this browser, not server-enforced access to previous meeting history. That limitation must be resolved before guest access or confidential table discussions.</p>
+</dialog>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-const people={
- amber:{name:'Claude',provider:'fixture-amber',presence:'table',symbol:'C',connected:true},
- indigo:{name:'Mistral',provider:'fixture-indigo',presence:'room',symbol:'M',connected:true},
- gpt:{name:'GPT',provider:'openai',presence:'out',symbol:'G',connected:false}
-};
-let speaking='amber',chosen=new Set(),previous=[],approval=null,reviewed=null,revision=0,staged=[],liveEnabled=false;
-const LIVE=new Set(['openai','claude','mistral']);
-const liveNow=()=>!!(speaking&&LIVE.has(people[speaking].provider));
-const node=(tag,value)=>{const e=document.createElement(tag);if(value!==undefined)e.textContent=value;return e};
-async function api(path,data){
- const response=await fetch('/api/'+path,{method:'POST',headers:{
+const ALL=[{id:'gpt',name:'GPT',provider:'openai',position:'left'},
+           {id:'claude',name:'Claude',provider:'claude',position:'right-top'},
+           {id:'mistral',name:'Mistral',provider:'mistral',position:'right-bottom'}];
+const people=Object.fromEntries(ALL.map(p=>[p.provider,{...p,active:false,live:false,cost:0,bubble:''}]));
+let turns=[],pending=false,staged=[],lastProvider='openai',selectedPrivate='openai',consultIndex=0;
+const el=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n};
+const ask=(id)=>$(id).showModal(),close=(id)=>$(id).close();
+function notify(msg,error=false){
+ const area=$('notification');area.textContent=msg;area.style.background=error?'#703e3de8':'#142c35e8';
+}
+function money(v){return 'US$'+Number(v||0).toFixed(5)}
+function nameOf(provider){return people[provider]?.name||provider}
+function livePeople(){return ALL.map(p=>people[p.provider]).filter(p=>p.active&&p.live)}
+function chooseResponder(question){
+ const candidates=livePeople();
+ const address=question.trim().match(/^(?:(?:hey|hello|hi|dear|mr\.?)\s+)?(GPT|Claude|Mistral)\b[\s,.:!?-]*/i);
+ if(address){
+  const want=address[1].toLowerCase();
+  const match=candidates.find(p=>p.name.toLowerCase()===want);
+  if(match)return match;
+  throw Error(nameOf(want==='gpt'?'openai':want)+' is outside or not connected.');
+ }
+ const previous=candidates.find(p=>p.provider===lastProvider);
+ if(previous)return previous;
+ if(candidates.length)return candidates[0];
+ throw Error('No live intelligence is at the table.');
+}
+function drawPeople(){
+ const target=$('participants');target.replaceChildren();$('outside').replaceChildren();
+ for(const original of ALL){
+  const p=people[original.provider];
+  const wrap=el('div');wrap.className='participant '+(p.active?'':'person-out ')+(p.position||'');
+  if(!p.active)wrap.className='participant person-out';
+  const meta=el('div');meta.className='person-panel';
+  const avatar=el('div',p.name[0]);avatar.className='avatar '+p.id;avatar.setAttribute('aria-hidden','true');
+  const name=el('div',p.name);name.className='person-name';
+  const cost=el('div',money(p.cost));cost.className='person-cost';
+  const actions=el('div');actions.className='person-actions';
+  const lock=el('button');lock.className='icon-only';
+  lock.title='Private information for '+p.name;lock.setAttribute('aria-label',lock.title);lock.textContent='🔒';
+  lock.onclick=()=>showPrivate(p.provider);
+  const door=el('button');door.className='icon-only';
+  door.textContent=p.active?'↗':'↙';
+  door.title=(p.active?'Move ':'Invite ')+p.name+(p.active?' outside':' to table');
+  door.setAttribute('aria-label',door.title);
+  door.disabled=!p.live;
+  if(!p.live){door.title=p.name+' is not connected';door.setAttribute('aria-label',door.title)}
+  door.onclick=()=>{if(!p.live)return;p.active=!p.active;drawPeople();notify('')};
+  actions.append(lock,door);
+  meta.append(avatar,name,cost,actions);
+  wrap.append(meta);
+  const bubble=el('div',p.bubble);bubble.className='speech-bubble';
+  bubble.title='See utterance on the table';bubble.setAttribute('role','button');bubble.tabIndex=0;
+  bubble.onclick=()=>{$('transcript').scrollTop=$('transcript').scrollHeight};
+  bubble.onkeydown=e=>{if(e.key==='Enter')bubble.click()};
+  wrap.append(bubble);
+  if(p.active)target.append(wrap);else $('outside').append(wrap);
+ }
+}
+function appendLine(name,text,depth,detail){
+ const line=el('div');line.className='line'+(depth>5?' narrow':depth>2?' medium':'');
+ const title=el('span',name.toUpperCase());title.className='speaker';
+ const message=el('div',text);message.className='speech-text';
+ line.append(title,message);if(detail)line.title=detail;
+ $('transcript').append(line);
+}
+function drawConversation(){
+ $('transcript').replaceChildren();
+ for(let i=0;i<turns.length;i++){
+  const turn=turns[i],distance=turns.length-i-1;
+  appendLine('Snug',turn.question,distance,turn.turn_id);
+  if(turn.status==='completed'){
+   appendLine(nameOf(turn.provider),turn.answer,distance,turn.model||'');
+  }else{
+   appendLine(nameOf(turn.provider),'…',distance,turn.status);
+  }
+ }
+ $('transcript').scrollTop=$('transcript').scrollHeight;
+ for(const p of Object.values(people)){p.cost=0;p.bubble=''}
+ for(const t of turns){
+  const p=people[t.provider];
+  if(!p)continue;
+  const estimate=Number(t.usage?.estimated_provider_cost_usd||0);
+  if(Number.isFinite(estimate))p.cost+=estimate;
+  if(t.status==='completed')p.bubble=t.answer;
+ }
+ drawPeople();
+}
+async function api(route,data){
+ const response=await fetch('/api/'+route,{method:'POST',headers:{
   'Content-Type':'application/json','X-Snug-Client':'demo-local'
  },body:JSON.stringify(data)});
  const result=await response.json();
- if(!response.ok)throw Error(result.error||'Local request failed');
+ if(!response.ok)throw Error(result.error||'Local operation failed');
  return result;
 }
-function notice(message,error=false){
- $('status').textContent=message;$('status').classList.toggle('error',error);
+async function reload(){
+ const response=await fetch('/api/live/session',{cache:'no-store'});
+ if(!response.ok)throw Error('Local session unavailable');
+ const state=await response.json();
+ turns=state.turns||[];
+ const last=turns.filter(t=>t.status==='completed').at(-1);
+ if(last)lastProvider=last.provider;
+ drawConversation();
 }
-function updateSelection(){
- $('selection').textContent=liveNow()
-  ?'Uses the saved conversation; archivist passages are not shared yet.'
-  :chosen.size+' archive passage(s) selected for the next offline review.';
+async function speak(){
+ if(pending)return;
+ const question=$('question').value.trim();
+ if(!question)return;
+ let p;
+ try{p=chooseResponder(question)}catch(e){notify(e.message,true);return}
+ pending=true;$('send').disabled=true;notify('');
+ try{
+  // One visible Send: the one-use exact-context snapshot is constructed on
+  // McKay and immediately consumed; no corpus selections are auto-disclosed.
+  const preview=await api('live/preview',{question,provider:p.provider});
+  const result=await api('live/send',{approval_token:preview.approval_token});
+  if(result.turn.status!=='completed')throw Error('No verified supplier reply');
+  lastProvider=p.provider;
+  $('question').value='';await reload();
+ }catch(error){
+  // A call can complete at the vendor while its result is unknown locally.
+  // Re-read the ledger and never retry automatically.
+  notify(error.message,true);
+  try{await reload()}catch(e){notify(e.message,true)}
+ }finally{pending=false;$('send').disabled=!$('question').value.trim()}
 }
-function invalidate(){
- revision++;approval=null;reviewed=null;$('send').disabled=true;
- $('preview').replaceChildren();updateSelection();
-}
-function chosenSpeaker(){
- if(!speaking||people[speaking].presence!=='table'||!people[speaking].connected){
-  speaking=Object.keys(people).find(k=>people[k].connected&&people[k].presence==='table')||null;
+$('send').onclick=speak;
+$('question').oninput=()=>{$('send').disabled=pending||!$('question').value.trim()};
+$('question').onkeydown=e=>{
+ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){
+  e.preventDefault();speak();
  }
- $('review').disabled=!speaking;
- $('target').textContent=speaking
-  ?'Speaking to '+people[speaking].name+(liveNow()?' · LIVE':' · offline')
-  :'No connected speaker at the table';
- $('send').textContent=liveNow()
-  ?'Approve & send to '+people[speaking].name
-  :'Approve & speak (offline)';
- updateSelection();
+};
+function showPrivate(provider){
+ selectedPrivate=provider;consultIndex=0;
+ $('private-title').textContent=nameOf(provider);
+ $('heard-title').textContent='What '+nameOf(provider)+' heard';
+ renderPrivate();ask('private-view');
 }
-function relocate(id,where){
- if(!people[id]||!['table','room','out'].includes(where))return;
- people[id].presence=where;invalidate();chosenSpeaker();renderSeats();
- notice(people[id].name+' moved to '+where+'. The seating controls are a local UI rehearsal.');
-}
-function renderSeats(){
- for(const id of ['at-table','in-room','outside'])$(id).replaceChildren();
- const zones={table:$('at-table'),room:$('in-room'),out:$('outside')};
- for(const [id,p] of Object.entries(people)){
-  const card=node('div');card.className='participant'+
-   (speaking===id&&p.presence==='table'?' chosen':'')+(p.presence==='out'?' out':'');
-  card.draggable=true;card.setAttribute('aria-label',p.name+' · '+p.presence);
-  card.ondragstart=e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'};
-  const avatar=node('div',p.symbol);avatar.className='symbol';
-  card.append(avatar,node('strong',p.name),node('small',
-    !p.connected?'Not connected':LIVE.has(p.provider)?'Live API':'Offline rehearsal'));
-  const select=node('select');select.setAttribute('aria-label','Move '+p.name);
-  for(const [where,label] of [['table','At the table'],['room','In the room'],['out','Out of the room']]){
-   const option=node('option',label);option.value=where;select.append(option);
-  }
-  select.value=p.presence;select.onchange=()=>relocate(id,select.value);card.append(select);
-  if(p.presence==='table'){
-   const b=node('button',!p.connected?'Not connected':speaking===id?'Current speaker':'Address '+p.name);
-   b.className='action secondary small';b.disabled=!p.connected||speaking===id;
-   b.onclick=()=>{speaking=id;invalidate();chosenSpeaker();renderSeats()};
-   card.append(b);
-  }
-  zones[p.presence].append(card);
+function renderPrivate(){
+ const entries=turns.filter(t=>t.provider===selectedPrivate);
+ $('context-content').replaceChildren();$('heard-content').replaceChildren();
+ const current=entries[consultIndex];
+ $('consult-no').textContent=entries.length?(consultIndex+1)+' / '+entries.length:'0';
+ $('consult-prev').disabled=consultIndex===0;
+ $('consult-next').disabled=!entries.length||consultIndex===entries.length-1;
+ if(!current){
+  $('context-content').append(el('p','No consultations recorded yet.'));
+  return;
+ }
+ const instructions=current.payload?.system || current.payload?.messages?.find(m=>m.role==='system')?.content || '';
+ const selected=current.context?.selected_memories||[];
+ const left=el('div');
+ left.append(el('strong','Snug: '+current.question));
+ if(instructions)left.append(el('p','Instructions: '+instructions));
+ if(selected.length)left.append(el('pre',JSON.stringify(selected,null,2)));
+ else left.append(el('p','No private corpus passages supplied.'));
+ left.append(el('p','Request: '+current.turn_id));
+ left.append(el('p','SHA-256: '+current.context_sha256));
+ const exact=el('details'),caption=el('summary','Exact outgoing API payload');
+ exact.append(el('pre',JSON.stringify(current.payload||{},null,2)));left.append(exact);
+ $('context-content').append(left);
+ const heard=current.context?.previous_exchanges||[];
+ $('heard-content').append(el('p','Snug: '+current.question));
+ if(!heard.length)$('heard-content').append(el('p','No previous meeting exchanges supplied.'));
+ for(const h of heard){
+  $('heard-content').append(el('p','SNUG: '+h.question+'\n'+nameOf(h.provider)+': '+h.answer));
  }
 }
-for(const id of ['at-table','in-room','outside']){
- const zone=$(id);
- zone.ondragover=e=>{if(e.dataTransfer.types.includes('text/plain')){
-  e.preventDefault();zone.classList.add('drop-target')}};
- zone.ondragleave=()=>zone.classList.remove('drop-target');
- zone.ondrop=e=>{e.preventDefault();zone.classList.remove('drop-target');
-  const target=e.dataTransfer.getData('text/plain');
-  if(people[target])relocate(target,zone.dataset.presence);
- };
-}
-function renderFiles(){
+$('consult-prev').onclick=()=>{consultIndex=Math.max(0,consultIndex-1);renderPrivate()};
+$('consult-next').onclick=()=>{consultIndex++;renderPrivate()};
+$('heard-toggle').onclick=()=>{
+ const expanded=$('pair').classList.toggle('collapsed')===false;
+ $('heard-toggle').textContent=expanded?'›':'‹';
+ $('heard-toggle').setAttribute('aria-expanded',String(expanded));
+ $('heard-toggle').setAttribute('aria-label',expanded?'Compress what participant heard':'Expand what participant heard');
+};
+$('private-close').onclick=()=>close('private-view');
+$('archive-open').onclick=()=>ask('archive');
+$('archive-close').onclick=()=>close('archive');
+$('meeting-info').onclick=()=>ask('information');
+$('information-close').onclick=()=>close('information');
+$('folder-open').onclick=()=>ask('documents');
+$('documents-close').onclick=()=>close('documents');
+$('add-doc').onclick=()=>{$('table-files').click()};
+function drawDocs(){
  $('table-docs').replaceChildren();
- staged.forEach((item,i)=>{
-  const label=node('div');label.className='doc';
-  label.append(node('span','📄 '+item.name+' ('+Math.ceil(item.size/1024)+' KB)'));
-  const remove=node('button','×');remove.title='Remove '+item.name;
-  remove.onclick=()=>{staged.splice(i,1);renderFiles()};label.append(remove);
-  $('table-docs').append(label);
- });
+ for(let i=0;i<staged.length;i++){
+  const item=el('div');item.className='doc-chip';
+  item.append(el('span',staged[i].name));
+  const remove=el('button','×');remove.setAttribute('aria-label','Remove '+staged[i].name);
+  remove.onclick=()=>{staged.splice(i,1);drawDocs()};
+  item.append(remove);$('table-docs').append(item);
+ }
+ $('doc-count').textContent=staged.length||'';
 }
 function stageFiles(files){
  for(const file of files){
-  if(staged.length>=8){notice('Eight staged documents maximum.',true);break}
-  if(file&&file.name)staged.push({name:file.name,size:file.size});
+  if(staged.length===8)break;
+  if(file?.name)staged.push({name:file.name,size:file.size});
  }
- renderFiles();notice('Staged locally. File contents have NOT been sent.');
+ drawDocs();notify('');
 }
 $('table-files').onchange=e=>{stageFiles(e.target.files);e.target.value=''};
-const tabletop=$('table-drop');
-tabletop.ondragover=e=>{if(e.dataTransfer.types.includes('Files')){
- e.preventDefault();tabletop.classList.add('dragover')}};
-tabletop.ondragleave=()=>tabletop.classList.remove('dragover');
-tabletop.ondrop=e=>{if(e.dataTransfer.files.length){
- e.preventDefault();tabletop.classList.remove('dragover');stageFiles(e.dataTransfer.files)}};
-$('archive-open').onclick=()=>$('archive').showModal();
-$('archive-close').onclick=()=>$('archive').close();
-$('preview-close').onclick=()=>$('preview-dialog').close();
-$('question').oninput=invalidate;
+const table=$('table-drop');
+table.ondragover=e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();table.classList.add('dragover')}};
+table.ondragleave=()=>table.classList.remove('dragover');
+table.ondrop=e=>{if(e.dataTransfer.files.length){
+ e.preventDefault();table.classList.remove('dragover');stageFiles(e.dataTransfer.files);
+}};
 $('search').onclick=async()=>{
  try{
-  chosen.clear();invalidate();$('results').replaceChildren();
+  $('results').replaceChildren();
   const result=await api('search',{query:$('query').value});
-  if(!result.results.length){
-   $('results').append(node('p','No GitHub results. Try fewer words.'));return;
-  }
-  for(const item of result.results){
-   const d=node('details');d.className='result';
-   d.append(node('summary',item.title+' · '+item.reference),node('p',item.excerpt));
-   const label=node('label'),cb=node('input');cb.type='checkbox';
-   label.append(cb,document.createTextNode(' Include passage'));d.append(label);
-   cb.onchange=()=>{
-    if(cb.checked&&chosen.size>=3){cb.checked=false;notice('Maximum three passages.',true);return}
-    if(cb.checked)chosen.add(item.id);else chosen.delete(item.id);invalidate();
-   };
-   d.ontoggle=async()=>{
-    if(d.open&&!d.dataset.loaded){
-     try{
-      const doc=await api('inspect',{id:item.id});
-      d.append(node('pre',doc.text+(doc.truncated?'\n[Truncated]':'')));
-      d.dataset.loaded='yes';
-     }catch(e){notice(e.message,true)}
-    }
-   };
+  for(const item of result.results||[]){
+   const d=el('details');d.className='result';
+   d.append(el('summary',item.title+' · '+item.reference),el('p',item.excerpt));
+   d.ontoggle=async()=>{if(d.open&&!d.dataset.loaded){
+    try{const doc=await api('inspect',{id:item.id});d.append(el('pre',doc.text));d.dataset.loaded='yes'}
+    catch(e){notify(e.message,true)}
+   }};
    $('results').append(d);
   }
-  notice('Archive search stays local.');
- }catch(e){notice(e.message,true)}
+ }catch(error){notify(error.message,true)}
 };
-function displayContext(place,record){
- for(const m of record.selected_memories||[]){
-  const d=node('details');d.className='result';
-  d.append(node('summary',m.title+' · '+m.reference),node('pre',m.text));place.append(d);
- }
- for(const p of record.previous_exchanges||[]){
-  const d=node('details');d.className='result';
-  d.append(node('summary','Previous · '+p.provider+' · '+p.event_id),
-    node('pre','SNUG: '+p.question+'\n'+p.provider+': '+p.answer));place.append(d);
- }
- const count=record.network_calls_if_approved??0;
- place.append(node('p','Provider: '+record.provider+' · network calls if approved: '+count),
-  node('p','Context SHA-256: '+record.context_sha256));
-}
-$('review').onclick=async()=>{
- if(!speaking)return;
- const isLive=liveNow(),question=$('question').value;
- const request={question,memory_ids:[...chosen],previous_ids:previous.slice(-4),
-                provider:people[speaking].provider};
- invalidate();const rev=revision;
- try{
-  const result=isLive
-    ?await api('live/preview',{question,provider:people[speaking].provider})
-    :await api('preview',request);
-  if(revision!==rev)return;
-  reviewed=result;approval=result.approval_token;
-  $('preview').replaceChildren(
-   node('p',isLive?'LIVE '+people[speaking].name+': this context will cross the membrane.':'OFFLINE rehearsal: nothing transmitted.'),
-   node('p','SNUG: '+result.question));
-  displayContext($('preview'),result);
-  if(isLive){
-   if(result.older_exchanges_omitted){$('preview').append(node('p',result.older_exchanges_omitted+' older exchanges omitted to fit the bounded context.'));}
-   $('preview').append(node('p','Max output: '+result.preflight.max_output_tokens+
-    ' tokens · preflight cost estimate: USD '+result.preflight.estimated_max_cost_usd+
-    ' (not a billing cap).'));
-   $('preview').append(node('p','Outgoing payload SHA-256: '+result.outbound_payload_sha256));
-   $('preview-note').textContent='One approval authorizes one paid call to '+people[speaking].name+' with exactly the reviewed question and context.';
-  }else{
-   $('preview-note').textContent='Offline fixture only. Approval expires after five minutes.';
-  }
-  $('send').disabled=false;$('preview-dialog').showModal();
-  notice('Reviewed snapshot ready.');
- }catch(e){if(revision===rev)notice(e.message,true)}
-};
-function line(name,message,note){
- const dl=node('dl');dl.className='line';
- const dt=node('dt',name.toUpperCase()),dd=node('dd',message);
- if(note)dt.append(node('small',note));dl.append(dt,dd);$('transcript').append(dl);
-}
-function showLiveTurn(turn){
- line('Snug',turn.question,'Human Chair');
- if(turn.status==='completed'){
-  const who={openai:'GPT',claude:'Claude',mistral:'Mistral'}[turn.provider]||turn.provider;
-  line(who,turn.answer,turn.model||'Provider API');
-  const usage=turn.usage||{};
-  const meta=node('div','Saved '+turn.turn_id+' · '+(usage.input_tokens??'?')+
-   ' in / '+(usage.output_tokens??'?')+' out · estimated USD '+
-   (usage.estimated_provider_cost_usd??'?'));
-  meta.className='event-meta';$('transcript').append(meta);
- }else{
-  const stage=node('p','['+turn.status+' · '+turn.turn_id+
-   ' · no verified response; never automatically retried]');
-  stage.className='stage';$('transcript').append(stage);
- }
- const context=node('details');context.className='context';
- context.append(node('summary','What '+({openai:'GPT',claude:'Claude',mistral:'Mistral'}[turn.provider]||turn.provider)+' received / local evidence'));
- context.append(node('pre',JSON.stringify({
-  prior_exchanges:(turn.context||{}).previous_exchanges||[],
-  context_sha256:turn.context_sha256,status:turn.status
- },null,2)));
- $('transcript').append(context);
- $('transcript').scrollTop=$('transcript').scrollHeight;
-}
-async function loadSession(){
- if(!liveEnabled)return;
- try{
-  const response=await fetch('/api/live/session',{cache:'no-store'});
-  if(!response.ok)throw Error('Cannot reload local session');
-  const session=await response.json();
-  for(const turn of session.turns)showLiveTurn(turn);
-  if(session.turns.length)notice('Recovered '+session.turns.length+' local boardroom turns.');
- }catch(e){notice(e.message,true)}
-}
-$('send').onclick=async()=>{
- if(!approval||!reviewed)return;
- const token=approval,snapshot=reviewed,isLive=LIVE.has(snapshot.provider);
- invalidate();$('preview-dialog').close();$('send').disabled=true;
- notice(isLive?'Contacting '+snapshot.provider+'; your message is saved on McKay first.':'Running offline rehearsal.');
- try{
-  if(isLive){
-   const result=await api('live/send',{approval_token:token});
-   showLiveTurn(result.turn);$('question').value='';
-   notice('Supplier reply retained locally.');
-  }else{
-   const ev=await api('exchange',{approval_token:token});
-   line('Snug',ev.question,'Human Chair');
-   line(snapshot.provider==='fixture-amber'?'Claude':'Mistral',ev.answer,'Offline rehearsal');
-   const meta=node('div','Event '+ev.event_id+' · '+ev.usage.kind);
-   meta.className='event-meta';$('transcript').append(meta);
-   const ctx=node('details');ctx.className='context';
-   ctx.append(node('summary','Show exact reviewed context for this exchange'));
-   displayContext(ctx,snapshot);$('transcript').append(ctx);
-   $('transcript').scrollTop=$('transcript').scrollHeight;
-   previous.push(ev.event_id);
-   notice('Offline exchange saved locally.');
-  }
- }catch(e){
-  notice(e.message,true);
-  if(isLive){$('transcript').replaceChildren();await loadSession()}
- }
-};
-async function initialize(){
+(async()=>{
  try{
   const response=await fetch('/api/health',{cache:'no-store'});
-  if(!response.ok)throw Error('Local server unreachable');
+  if(!response.ok)throw Error('Boardroom server unavailable');
   const health=await response.json();
-  const available=new Set(health.live_providers|| (health.live_gpt?['openai']:[]));
-  if(available.size){
-   liveEnabled=true;
-   for(const [id,provider] of [['gpt','openai'],['amber','claude'],['indigo','mistral']]){
-    if(available.has(provider)){
-     people[id].connected=true;people[id].provider=provider;people[id].presence='table';
-    }
-   }
-   speaking=available.has('openai')?'gpt':available.has('claude')?'amber':'indigo';
-   $('mode').textContent=[...available].map(x=>({openai:'GPT',claude:'Claude',mistral:'Mistral'}[x]||x)).join(' · ')+' LIVE';
-   $('question').value='';$('transcript').replaceChildren();
-   await loadSession();
+  const providers=new Set(health.live_providers||[]);
+  for(const p of Object.values(people)){
+   p.live=providers.has(p.provider);p.active=p.live;
   }
- }catch(e){notice(e.message,true)}
- chosenSpeaker();renderSeats();updateSelection();
-}
-initialize();
+  drawPeople();
+  if(providers.size)await reload();
+  else notify('Start the boardroom with a live supplier to speak.',true);
+ }catch(error){notify(error.message,true)}
 })();
-</script></body></html>
+})();
+</script>
+</body>
+</html>
