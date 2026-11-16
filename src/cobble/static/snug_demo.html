@@ -722,8 +722,10 @@ $('search').onclick=async()=>{
   drawSnug();
   drawPeople();
   if(providers.size)await reload();
-  else showSpeaker('snug','');
-  else notify('Start the boardroom with a live supplier to speak.',true);
+  else {
+   showSpeaker('snug','');
+   notify('Start the boardroom with a live supplier to speak.',true);
+  }
  }catch(error){notify(error.message,true)}
 })();
 })();
