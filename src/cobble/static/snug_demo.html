@@ -226,48 +226,149 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
  .person-out .avatar{width:54px;height:69px}
 }
 
+
+/* Pass 3: composition rather than new machinery. A shallow, long-lens
+   perspective makes the tabletop nearly rectangular and keeps the
+   participants physically attached to its edges. */
+.room{--vp-x:50%;--vp-y:32.22%;background:#aab3ad}
+.world-perspective{filter:saturate(.77)}
+.corridor{left:0;width:13.5%}
+.corridor-people{left:1%;right:auto;top:27%;width:94%;height:65%;gap:23px;overflow:auto}
+.top-tools{left:14%;top:15px}
+.snug{top:12%;left:44%;width:15%;z-index:7}
+.snug-avatar{width:128px;height:158px}
+.snug-name{font-size:1.15rem}
+.speaker-window{right:1.8%;top:2.6%;width:30%;height:28%;min-height:180px}
+.participant{max-width:190px;z-index:6}
+.participant.left{left:12.5%;top:35%}
+.participant.right-top{right:9%;top:34%}
+.participant.right-bottom{right:9%;top:61%}
+.participant .person-panel{position:relative;padding:4px 0 0;isolation:isolate}
+.participant .person-panel:before{content:"";position:absolute;z-index:-1;left:10%;top:30%;height:62%;width:80%;
+ border-radius:39% 39% 16% 16%;background:linear-gradient(95deg,#293e4a,#566c6b 46%,#2d4048);
+ border:4px solid #30434a;box-shadow:0 7px 13px #1b292c84}
+.participant .avatar{width:154px;height:193px}
+.participant .person-name{font-size:1.08rem}
+.participant .person-cost{font-size:.82rem}
+.participant .person-actions{margin-top:6px}
+.participant .person-actions button{width:31px;height:31px}
+.person-out{opacity:.91;max-width:100%;z-index:5}
+.person-out .avatar{width:76px;height:93px}
+.person-out .person-panel:before{border-width:2px}
+.person-out .person-name{font-size:.82rem}
+.person-out .person-cost{font-size:.63rem}
+.person-out .person-actions{gap:5px}
+.person-out .person-actions button{width:25px;height:25px}
+.table-wood{left:20%;top:34%;width:61%;height:63%;bottom:auto;min-height:0;filter:none}
+.table-plane{transform:perspective(1600px) rotateX(18deg);transform-origin:center bottom;
+ border-radius:11px;border:12px solid #67482d;background:
+ repeating-linear-gradient(88deg,transparent 0 87px,#68432316 88px 90px,transparent 91px 164px),
+ linear-gradient(90deg,#966c44,#c9a77d 13%,#d3b489 53%,#b48b5c 92%,#795333);
+ box-shadow:0 18px 7px #18232a95,inset 0 0 0 5px #eed6a395,inset 0 0 35px #3c27144d}
+.table-record{inset:5% 8% 21% 8%;mask-image:linear-gradient(transparent 0%,black 6%,black 100%);
+ color:#263c3c}
+.table-record .line{margin:0 0 12px;padding:8px 0 13px}
+.table-record .line.narrow{opacity:.75;font-size:.88rem}
+.table-record .line.narrow .speech-text{font-size:1.1rem}
+.table-record .line.medium{opacity:.86}
+.table-record .line.medium .speech-text{font-size:1.23rem}
+.table-record .line .speech-text{font-size:1.3rem}
+.table-record .line .speaker{font-size:.95rem}
+.table-end{left:21%;bottom:3%}
+.folder-object{width:175px;height:115px;transform:rotate(-5deg)}
+.folder-object:hover{transform:rotate(-5deg) translateY(-4px)}
+.table-mouse{right:19%;bottom:4%;width:66px;height:99px;transform:rotate(7deg)}
+.table-wood.dragover .table-plane{outline:7px dashed #f9ecc2}
+@media(max-width:1080px){
+ .corridor{width:13%}
+ .corridor-people{top:28%;left:1%;width:97%}
+ .top-tools{left:14%}
+ .snug{left:43%;top:11%}
+ .snug-avatar{width:106px;height:130px}
+ .participant.left{left:11%;top:36%}
+ .participant.right-top{right:6%;top:36%}
+ .participant.right-bottom{right:6%;top:63%}
+ .participant .avatar{width:123px;height:155px}
+ .table-wood{left:19%;width:64%;top:34%;height:63%}
+ .table-record{inset:5% 7% 20% 7%}
+}
+@media(max-width:650px){
+ .room{height:100svh;min-height:760px}
+ .top-tools{left:13%;top:8px}
+ .corridor{width:14%}
+ .corridor-people{left:0;width:100%;top:32%;gap:16px}
+ .person-out .avatar{width:45px;height:58px}
+ .snug{top:12%;left:38%;width:19%}
+ .snug-avatar{width:66px;height:84px}
+ .snug-name{font-size:.8rem}
+ .speaker-window{width:48%;top:1%;right:1%;height:25%}
+ .participant.left{left:11%;top:37%}
+ .participant.right-top{right:1%;top:37%}
+ .participant.right-bottom{right:1%;top:66%}
+ .participant .avatar{width:70px;height:88px}
+ .participant .person-name{font-size:.69rem}
+ .participant .person-cost{font-size:.58rem}
+ .participant .person-actions button{width:24px;height:24px}
+ .table-wood{left:17%;width:73%;top:35%;height:60%}
+ .table-record{inset:5% 5% 18%;padding:5px}
+ .table-record .line .speech-text{font-size:.99rem}
+ .table-record .line.narrow .speech-text{font-size:.88rem}
+ .table-end{left:15%;bottom:2%}
+ .folder-object{width:106px;height:73px}
+ .table-mouse{right:14%;bottom:3%;width:45px;height:68px}
+}
+
 </style></head>
 <body>
 <main class="room" aria-label="Snug's boardroom">
   <svg class="world-perspective" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
     <defs>
-      <linearGradient id="window-sky" x2="0" y2="1"><stop stop-color="#91b2c7"/><stop offset=".75" stop-color="#d8ded8"/><stop offset="1" stop-color="#c8c9b8"/></linearGradient>
-      <linearGradient id="carpet" x2="0" y2="1"><stop stop-color="#5a6465"/><stop offset="1" stop-color="#252f35"/></linearGradient>
-      <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#a2c1cf" stop-opacity=".48"/><stop offset="1" stop-color="#d7dfdd" stop-opacity=".16"/></linearGradient>
+      <linearGradient id="boardroom-wall" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#d7d7ce"/><stop offset=".68" stop-color="#c5c9c0"/>
+        <stop offset="1" stop-color="#9eaaa5"/>
+      </linearGradient>
+      <linearGradient id="boardroom-floor" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#656662"/><stop offset="1" stop-color="#343c40"/>
+      </linearGradient>
+      <linearGradient id="boardroom-side" x1="0" y1="0" x2="1" y2=".7">
+        <stop stop-color="#61737b"/><stop offset="1" stop-color="#a0aaa6"/>
+      </linearGradient>
+      <linearGradient id="boardroom-glass" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#bccdca" stop-opacity=".51"/>
+        <stop offset=".65" stop-color="#a0b9b5" stop-opacity=".22"/>
+        <stop offset="1" stop-color="#e6e7d7" stop-opacity=".34"/>
+      </linearGradient>
+      <radialGradient id="boardroom-light"><stop stop-color="#f7f1d8" stop-opacity=".48"/><stop offset="1" stop-color="#f7f1d8" stop-opacity="0"/></radialGradient>
     </defs>
-    <rect width="1600" height="900" fill="url(#window-sky)"/>
-    <g fill="#8195a0" opacity=".37">
-      <path d="M380 425 V303 H454 V345 H480 V425Z"/>
-      <path d="M480 425 V330 H533 V365 H556 V425Z"/>
-      <path d="M570 425 V255 H622 V275 H648 V425Z"/>
-      <path d="M680 425 V335 H750 V425Z"/>
-      <path d="M954 425 V285 H998 V302 H1065 V425Z"/>
-      <path d="M1078 425 V342 H1122 V320 H1157 V425Z"/>
-      <path d="M1215 425 V256 H1245 V281 H1304 V425Z"/>
-      <path d="M1350 425 V314 H1433 V425Z"/>
+    <!-- A single architectural stage. There is no exterior skyline. -->
+    <rect width="1600" height="900" fill="#a8b2af"/>
+    <path d="M0 0H1600L1330 144H272Z" fill="#d0d1c8"/>
+    <path d="M0 0L272 144V568L0 900Z" fill="url(#boardroom-side)"/>
+    <path d="M1600 0L1330 144V568L1600 900Z" fill="#b0b7b0"/>
+    <path d="M272 144H1330V568H272Z" fill="url(#boardroom-wall)"/>
+    <rect x="280" y="160" width="1042" height="388" fill="url(#boardroom-light)"/>
+    <path d="M0 900L272 568H1330L1600 900Z" fill="url(#boardroom-floor)"/>
+    <!-- Parallel architectural edges and convergent floor joints. -->
+    <g stroke="#eff0e5" fill="none" opacity=".23">
+      <path d="M800 290L-400 900 M800 290L0 900 M800 290L340 900 M800 290L1260 900 M800 290L1600 900 M800 290L2000 900" stroke-width="2"/>
+      <path d="M0 792H1600 M0 675H1600" stroke-width="2"/>
     </g>
-    <g fill="none" stroke="#6a8390" stroke-width="8" opacity=".65">
-      <path d="M376 0 V468 M576 0 V468 M795 0 V468 M1018 0 V468 M1235 0 V468 M1460 0 V468"/>
-      <path d="M372 465 H1600 M374 110 H1600" stroke-width="6"/>
+    <g fill="none" stroke="#798983" stroke-width="4" opacity=".42">
+      <path d="M280 145V568 M1329 145V568"/>
+      <path d="M455 145V568 M650 145V568 M850 145V568 M1050 145V568 M1210 145V568"/>
+      <path d="M280 540H1329"/>
     </g>
-    <rect y="469" width="1600" height="431" fill="url(#carpet)"/>
-    <g stroke="#849295" stroke-width="1.5" opacity=".35">
-      <path d="M800 284 L-320 900 M800 284 L35 900 M800 284 L380 900 M800 284 L1220 900 M800 284 L1570 900 M800 284 L1920 900"/>
-      <path d="M0 600 H1600 M0 755 H1600"/>
+    <g fill="none" stroke="#f3eee1" stroke-width="5" opacity=".45">
+      <path d="M0 0L272 144 M1600 0L1330 144"/>
+      <path d="M0 900L272 568 M1600 900L1330 568"/>
     </g>
-    <g stroke="#b6c6c8" stroke-width="5" opacity=".66" fill="none">
-      <path d="M0 0 L800 284 L1600 0 M0 900 L800 284 L1600 900"/>
-    </g>
-    <path d="M0 0 L380 135 L380 607 L0 900Z" fill="#647984" opacity=".48"/>
-    <path d="M0 0 L380 135 L380 607 L0 900" stroke="#405861" stroke-width="8" fill="none"/>
-    <path d="M0 310 L380 298 M0 610 L380 455" stroke="#b4c7c8" stroke-width="5" opacity=".65"/>
-    <g opacity=".54">
-      <path d="M54 142 L307 190 L307 636 L54 816Z" fill="url(#glass)" stroke="#374f58" stroke-width="8"/>
-      <path d="M68 180 L288 211 L288 625 L68 771Z" fill="none" stroke="#cad8d5" stroke-width="2"/>
-      <path d="M288 211 V625" stroke="#5d7580" stroke-width="6"/>
-      <path d="M54 142 L307 190" stroke="#405960" stroke-width="8"/>
-      <circle cx="275" cy="510" r="6" fill="#ebd5a2"/>
-    </g>
+    <!-- Small glazed waiting corridor, stage left; no exterior view. -->
+    <path d="M6 90L214 156L214 690L6 865Z" fill="url(#boardroom-glass)" stroke="#3d575b" stroke-width="8"/>
+    <path d="M6 300L214 333 M6 590L214 560 M214 156V690" stroke="#667d7d" stroke-width="5" fill="none" opacity=".88"/>
+    <path d="M23 128L183 176L183 692L23 822Z" stroke="#dae5de" stroke-width="2" fill="none" opacity=".75"/>
+    <path d="M187 356L187 561" stroke="#3d575b" stroke-width="8" opacity=".5"/>
+    <circle cx="198" cy="492" r="7" fill="#e6cea3" stroke="#907550" stroke-width="2"/>
+    <path d="M216 153L270 144 M216 691L272 568" stroke="#4b6769" stroke-width="5" fill="none" opacity=".55"/>
   </svg>
 
   <aside class="corridor" aria-label="Outside boardroom">
