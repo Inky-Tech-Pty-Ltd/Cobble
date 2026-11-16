@@ -115,10 +115,161 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
 .info{font-size:.78rem;color:#667a79;line-height:1.6}
 @media(max-width:900px){.room{min-height:720px}.participant .avatar{width:52px;height:52px}.person-name{font-size:.82rem}.speech-bubble{max-width:140px;font-size:.73rem}.table-wood{left:16%;width:72%}.snug{left:23%;width:50%}.corridor{width:15%}.participant.right-top,.participant.right-bottom{right:16%}}
 @media(max-width:630px){.room{height:auto;min-height:920px}.snug{left:15%;width:65%;top:6%}.corridor{width:21%;}.participant.left{left:1%;top:28%;flex-direction:column}.participant.right-top{right:21%;top:28%;flex-direction:column}.participant.right-bottom{right:21%;top:54%;flex-direction:column}.speech-bubble{max-width:100px;max-height:95px}.table-wood{top:38%;height:52%;left:9%;width:82%}.table-record{inset:7% 14% 15%}.person-cost{font-size:.61rem}.pair{flex-direction:column}.pair.collapsed #heard-pane{flex:0 0 45px}.pair.collapsed #heard-pane header{writing-mode:horizontal-tb;height:45px}.top-tools{top:9px;left:9px}.person-out .avatar{width:38px;height:38px}}
+
+/* Spatial pass 2: a shared projection model.
+   Stage geometry and architectural convergences share (800,284) in a
+   1600x900 virtual camera. The horizontal table surface AND its text
+   use one perspective transform rather than independent trapezoids. */
+.room{--vp-x:50%;--vp-y:31.555%;background:#91b3c3;min-height:700px;height:100vh;max-height:none}
+.room:before,.skyline{display:none}
+.world-perspective{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.corridor{left:0;right:auto;top:0;width:21%;bottom:0;z-index:2;background:transparent;border:0;box-shadow:none}
+.corridor:before,.corridor:after,.corridor-door{display:none}
+.corridor-people{top:22%;height:70%;left:8%;right:auto;width:76%;justify-content:flex-start;gap:24px;overflow:auto}
+.top-tools{z-index:11;left:22%;top:16px}
+.snug{z-index:7;top:5%;left:44%;width:13%;gap:3px}
+.snug-avatar{width:110px;height:135px;filter:drop-shadow(0 9px 6px #22303a6b)}
+.snug-avatar svg{width:100%;height:100%}
+.snug-name{font-size:1.05rem;color:#fffaf0;text-shadow:0 2px 5px #263845}
+.speaker-window{position:absolute;top:3%;right:2%;width:30%;height:29%;min-height:185px;z-index:9;background:#fffaf0ee;
+  border:2px solid #e4d7bc;border-radius:19px;color:#24353e;box-shadow:0 10px 26px #2335436e;
+  display:flex;flex-direction:column;overflow:hidden}
+.speaker-window-top{padding:10px 16px 5px;display:flex;justify-content:space-between;align-items:center;min-height:48px}
+.speaker-window-top strong{font:600 1.18rem Georgia,serif}
+.speaker-window #send{border:0;border-radius:10px;background:#315951;color:white;font-size:1.26rem;width:39px;height:34px;flex-shrink:0}
+.speaker-window #send:disabled{opacity:.35}
+.spoken-text,.speaker-window #question{flex:1;min-height:0;margin:0 11px 11px;padding:8px 10px;white-space:pre-wrap;overflow:auto;
+ font-size:.93rem;line-height:1.5;overflow-wrap:anywhere;scrollbar-width:thin;scrollbar-color:#adac9d transparent}
+.speaker-window #question{display:none;background:#fffefa;border:1px solid #cbbfa8;border-radius:9px;resize:none;color:#233c3d}
+.speaker-window.composing #question{display:block}
+.speaker-window.composing .spoken-text{display:none}
+.speech-tail{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6;filter:drop-shadow(0 2px 2px #283a4759)}
+.participant{z-index:6;max-width:180px;flex-direction:column!important;align-items:center;gap:0}
+.participant.left{left:23%;top:38%}
+.participant.right-top{right:2%;top:39%}
+.participant.right-bottom{right:2%;top:68%}
+.participant .person-panel{gap:1px;align-items:center;background:transparent}
+.avatar{display:block;width:106px;height:134px;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0}
+.avatar svg{height:100%;width:100%;filter:drop-shadow(0 5px 4px #23323a66)}
+.person-name{font:700 1rem Georgia,serif;color:#fff2d5;text-shadow:0 2px 3px #1b2b35,0 0 9px #213b488c}
+.person-cost{font:650 .77rem ui-monospace,monospace;color:#fff2d4;text-shadow:0 1px 5px #213747}
+.person-actions{display:flex;gap:9px;margin-top:3px}
+.person-actions button{width:27px;height:27px;font-size:1rem;border:1px solid #c0cdc4;background:#293f48c9;box-shadow:0 2px 4px #20334079}
+.speech-bubble{display:none!important}
+.person-out{position:static;max-width:100%;opacity:.88;flex-direction:column!important;align-items:center}
+.person-out .avatar{width:82px;height:105px}
+.person-out .person-name{font-size:.87rem}
+.person-out .person-cost{font-size:.68rem}
+.person-out .person-actions button{width:26px;height:26px}
+.table-wood{position:absolute;z-index:4;left:14%;width:72%;bottom:-1.5%;height:400%;min-height:0;top:auto;filter:none;pointer-events:none}
+.table-plane{position:absolute;inset:0;transform:perspective(94.5vh) rotateX(54deg);transform-origin:center bottom;
+  border:10px solid #765036;border-radius:17px;background:
+  repeating-linear-gradient(88deg,transparent 0 74px,#62351b15 75px 80px,transparent 81px 141px),
+  linear-gradient(90deg,#966e46,#c69b6a 12%,#c6a075 52%,#a87e55 91%,#775036);
+  box-shadow:0 23px 4px #18232a6b,inset 0 0 0 5px #dfb8859c, inset 0 0 45px #3520104f;
+  pointer-events:auto;backface-visibility:hidden}
+.table-grain{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 34px,#eed1a410 35px 36px,transparent 37px 78px);
+  opacity:.8;pointer-events:none}
+.table-record{position:absolute;inset:4% 13% 14%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;
+  padding:12px 20px 8px;mask-image:linear-gradient(transparent 0%,black 7%,black 100%);color:#253d3e;text-align:left;display:block}
+.table-record::-webkit-scrollbar{display:none}
+.ledger-content{min-height:100%;display:flex;flex-direction:column;gap:0;justify-content:flex-end}
+.ledger-content:before{content:"";flex:1 1 auto}
+.table-record .line{max-width:none;transform:none;opacity:1;border-bottom:1px solid #3f4a3a36;margin:0 0 12px;padding:8px 0 16px}
+.table-record .line.narrow,.table-record .line.medium{max-width:none;opacity:1;font-size:inherit}
+.line .speaker{font:700 1rem Georgia,serif;color:#294449;margin-bottom:4px}
+.line .speech-text,.line.narrow .speech-text{font-size:1.34rem;line-height:1.43;color:#2e3833;text-shadow:0 1px #fff6e133}
+.table-end{position:absolute;left:32%;bottom:2.5%;transform:none;display:flex;align-items:flex-end;gap:16px;z-index:7}
+.folder-object{position:relative;width:170px;height:111px;border:0;background:transparent;padding:0;filter:drop-shadow(3px 6px 3px #3c301d78);transform:rotate(-7deg)}
+.folder-object .folder-tab{position:absolute;left:7px;top:5px;width:75px;height:24px;background:#c7a15e;border:2px solid #ab8449;border-radius:7px 9px 0 0}
+.folder-object .folder-cover{position:absolute;inset:19px 3px 4px;background:linear-gradient(140deg,#f5db9b,#d6ad6c 68%,#bc914f);border:3px solid #c29554;border-radius:4px 10px 10px 10px;
+ box-shadow:inset 0 2px #ffedba,inset 0 -8px 16px #a9763947}
+.folder-object:hover{transform:rotate(-7deg) translateY(-4px)}
+.doc-count{background:#e6c582;color:#5d472b;font:700 .8rem ui-monospace,monospace;border-radius:50%;padding:3px 7px}
+.doc-count:empty{display:none}
+.table-mouse{position:absolute;right:16%;bottom:3%;z-index:8;width:65px;height:98px;border:2px solid #455259;
+ border-radius:49% 49% 45% 45%;background:linear-gradient(110deg,#f5f3e9,#c0c8c3 65%,#768a8d);box-shadow:5px 8px 4px #382a1c8c,inset 2px 0 5px #ffffff95;
+ transform:rotate(8deg);padding:0}
+.table-mouse .mouse-seam{position:absolute;left:50%;top:0;height:45%;border-left:2px solid #748385}
+.table-mouse .mouse-wheel{position:absolute;left:calc(50% - 5px);top:18%;width:10px;height:19px;border-radius:5px;background:#66787b;border:2px solid #88979a}
+.table-mouse[aria-pressed="true"]{outline:6px solid #a5ead0;outline-offset:5px}
+.table-mouse:hover{filter:brightness(1.05)}
+.table-wood.dragover .table-plane{outline:7px dashed #f9ecc2;outline-offset:0}
+#table-files{position:absolute;width:1px;height:1px;pointer-events:none;opacity:0}
+@media(max-width:1050px){
+ .speaker-window{right:1%;width:32%;height:28%}
+ .participant.left{left:22%}.participant.right-top,.participant.right-bottom{right:1%}
+ .avatar{width:80px;height:105px}
+ .table-wood{left:11%;width:78%}
+ .table-mouse{right:13%}
+ .snug{left:42%}
+}
+@media(max-width:650px){
+ .room{min-height:800px;height:100svh}
+ .top-tools{left:22%;top:8px}
+ .speaker-window{top:1%;right:1%;width:48%;height:25%;min-height:160px}
+ .snug{left:32%;width:18%;top:3%}
+ .snug-avatar{width:62px;height:85px}
+ .participant.left{left:20%;top:35%}
+ .participant.right-top{right:0;top:35%}
+ .participant.right-bottom{right:0;top:65%}
+ .participant .avatar{width:60px;height:82px}
+ .person-name{font-size:.73rem}
+ .person-cost{font-size:.58rem}
+ .table-wood{left:10.5%;width:79%;height:400%}
+ .table-record{inset:4% 12% 15%;padding:6px}
+ .line .speech-text,.line.narrow .speech-text{font-size:1.1rem}
+ .folder-object{width:105px;height:72px}
+ .table-mouse{width:46px;height:70px}
+ .table-end{left:28%}
+ .corridor-people{left:1%;width:90%}
+ .person-out .avatar{width:54px;height:69px}
+}
+
 </style></head>
 <body>
 <main class="room" aria-label="Snug's boardroom">
-  <div class="skyline" aria-hidden="true"></div>
+  <svg class="world-perspective" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="window-sky" x2="0" y2="1"><stop stop-color="#91b2c7"/><stop offset=".75" stop-color="#d8ded8"/><stop offset="1" stop-color="#c8c9b8"/></linearGradient>
+      <linearGradient id="carpet" x2="0" y2="1"><stop stop-color="#5a6465"/><stop offset="1" stop-color="#252f35"/></linearGradient>
+      <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#a2c1cf" stop-opacity=".48"/><stop offset="1" stop-color="#d7dfdd" stop-opacity=".16"/></linearGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#window-sky)"/>
+    <g fill="#8195a0" opacity=".37">
+      <path d="M380 425 V303 H454 V345 H480 V425Z"/>
+      <path d="M480 425 V330 H533 V365 H556 V425Z"/>
+      <path d="M570 425 V255 H622 V275 H648 V425Z"/>
+      <path d="M680 425 V335 H750 V425Z"/>
+      <path d="M954 425 V285 H998 V302 H1065 V425Z"/>
+      <path d="M1078 425 V342 H1122 V320 H1157 V425Z"/>
+      <path d="M1215 425 V256 H1245 V281 H1304 V425Z"/>
+      <path d="M1350 425 V314 H1433 V425Z"/>
+    </g>
+    <g fill="none" stroke="#6a8390" stroke-width="8" opacity=".65">
+      <path d="M376 0 V468 M576 0 V468 M795 0 V468 M1018 0 V468 M1235 0 V468 M1460 0 V468"/>
+      <path d="M372 465 H1600 M374 110 H1600" stroke-width="6"/>
+    </g>
+    <rect y="469" width="1600" height="431" fill="url(#carpet)"/>
+    <g stroke="#849295" stroke-width="1.5" opacity=".35">
+      <path d="M800 284 L-320 900 M800 284 L35 900 M800 284 L380 900 M800 284 L1220 900 M800 284 L1570 900 M800 284 L1920 900"/>
+      <path d="M0 600 H1600 M0 755 H1600"/>
+    </g>
+    <g stroke="#b6c6c8" stroke-width="5" opacity=".66" fill="none">
+      <path d="M0 0 L800 284 L1600 0 M0 900 L800 284 L1600 900"/>
+    </g>
+    <path d="M0 0 L380 135 L380 607 L0 900Z" fill="#647984" opacity=".48"/>
+    <path d="M0 0 L380 135 L380 607 L0 900" stroke="#405861" stroke-width="8" fill="none"/>
+    <path d="M0 310 L380 298 M0 610 L380 455" stroke="#b4c7c8" stroke-width="5" opacity=".65"/>
+    <g opacity=".54">
+      <path d="M54 142 L307 190 L307 636 L54 816Z" fill="url(#glass)" stroke="#374f58" stroke-width="8"/>
+      <path d="M68 180 L288 211 L288 625 L68 771Z" fill="none" stroke="#cad8d5" stroke-width="2"/>
+      <path d="M288 211 V625" stroke="#5d7580" stroke-width="6"/>
+      <path d="M54 142 L307 190" stroke="#405960" stroke-width="8"/>
+      <circle cx="275" cy="510" r="6" fill="#ebd5a2"/>
+    </g>
+  </svg>
+
   <aside class="corridor" aria-label="Outside boardroom">
     <div class="corridor-door" aria-hidden="true"></div>
     <div class="corridor-people" id="outside"></div>
@@ -128,21 +279,38 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
     <button class="icon-only" id="meeting-info" title="Meeting information" aria-label="Meeting information">ⓘ</button>
   </nav>
   <section class="snug" aria-label="Snug, the Chair">
-    <div class="snug-portrait" aria-hidden="true"></div>
+    <div class="snug-avatar" id="snug-avatar" aria-hidden="true"></div>
     <div class="snug-name">Snug</div>
-    <div class="compose">
-      <label class="sr" for="question">Speak to the table as Snug</label>
-      <textarea id="question" maxlength="2000" placeholder="…" aria-label="Speak to the table as Snug"></textarea>
+  </section>
+  <svg class="speech-tail" id="speech-tail" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
+    <path id="tail-path" d="" fill="none" stroke="#fff6e5" stroke-width="6" stroke-linecap="round"/>
+    <circle id="tail-tip" cx="-10" cy="-10" r="7" fill="#fff6e5"/>
+  </svg>
+  <section class="speaker-window" id="speaker-window" aria-label="Current speaker">
+    <div class="speaker-window-top">
+      <strong id="speaking-name">Snug</strong>
       <button id="send" aria-label="Speak to the table" title="Send" disabled>➤</button>
     </div>
+    <div id="spoken-text" class="spoken-text" role="status" aria-live="polite"></div>
+    <label class="sr" for="question">Speak to the table as Snug</label>
+    <textarea id="question" maxlength="2000" placeholder="…" aria-label="Speak to the table as Snug"></textarea>
   </section>
   <div id="participants"></div>
-  <section class="table-wood" id="table-drop" aria-label="Meeting table and scrollable conversation">
-    <div class="table-shape" aria-hidden="true"></div>
-    <div id="transcript" class="table-record" role="log" aria-label="Meeting utterances" tabindex="0"></div>
-    <div class="table-end">
-      <button class="icon-only" id="folder-open" title="Tabled documents" aria-label="Tabled documents">📁</button>
-      <span class="doc-count" id="doc-count"></span>
+  <section class="table-wood" id="table-drop" aria-label="Meeting table with perspective conversation">
+    <div class="table-plane" id="table-plane">
+      <div class="table-grain" aria-hidden="true"></div>
+      <div id="transcript" class="table-record" role="log" aria-label="Meeting utterances" tabindex="0">
+        <div id="ledger-content" class="ledger-content"></div>
+      </div>
+      <div class="table-end">
+        <button class="folder-object" id="folder-open" title="Tabled documents" aria-label="Open tabled document folder">
+          <span class="folder-tab"></span><span class="folder-cover"></span>
+        </button>
+        <span class="doc-count" id="doc-count"></span>
+      </div>
+      <button class="table-mouse" id="table-mouse" title="Click mouse, then use wheel to scroll conversation" aria-label="Activate tabletop history scrolling" aria-pressed="false">
+        <span class="mouse-seam"></span><span class="mouse-wheel"></span>
+      </button>
     </div>
     <input type="file" id="table-files" multiple aria-label="Select document for tabletop">
   </section>
@@ -183,6 +351,7 @@ const ALL=[{id:'gpt',name:'GPT',provider:'openai',position:'left'},
            {id:'mistral',name:'Mistral',provider:'mistral',position:'right-bottom'}];
 const people=Object.fromEntries(ALL.map(p=>[p.provider,{...p,active:false,live:false,cost:0,bubble:''}]));
 let turns=[],pending=false,staged=[],lastProvider='openai',selectedPrivate='openai',consultIndex=0;
+let composing=false,wheelArmed=false,currentSpeaker='snug';
 const el=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n};
 const ask=(id)=>$(id).showModal(),close=(id)=>$(id).close();
 function notify(msg,error=false){
@@ -190,6 +359,87 @@ function notify(msg,error=false){
 }
 function money(v){return 'US$'+Number(v||0).toFixed(5)}
 function nameOf(provider){return people[provider]?.name||provider}
+
+// Provisional self-contained 2D character illustrations; deliberately
+// gender/skin varied. No external service, image URLs or personality claims.
+function portraitSVG(kind){
+ const palettes={
+  snug:{skin:'#dfad83',dark:'#a87758',hair:'#514d4e',coat:'#49616d',shirt:'#e7e5dc',eyes:'#433b38'},
+  gpt:{skin:'#976345',dark:'#62412f',hair:'#282a30',coat:'#476973',shirt:'#c0d6c8',eyes:'#211f21'},
+  claude:{skin:'#d19a74',dark:'#966a55',hair:'#593d32',coat:'#7d667e',shirt:'#f0d0c4',eyes:'#3d2927'},
+  mistral:{skin:'#734c3c',dark:'#493126',hair:'#22242b',coat:'#4b8580',shirt:'#e2ba85',eyes:'#231d20'}
+ };
+ const a=palettes[kind]||palettes.snug;
+ const hair={
+  snug:'<path d="M27 49 Q18 13 61 14 Q103 11 102 48 L98 38 Q85 20 61 22 Q43 20 28 39Z" fill="#514d4e"/><path d="M31 37 Q46 17 69 21" fill="none" stroke="#a5a2a1" stroke-width="4"/>',
+  gpt:'<path d="M20 55 Q14 15 38 16 Q42 6 55 12 Q68 3 81 13 Q99 10 109 31 L102 54 Q94 35 91 32 Q55 24 27 47Z" fill="#25252c"/><g fill="#34343b"><circle cx="28" cy="30" r="13"/><circle cx="48" cy="19" r="13"/><circle cx="69" cy="19" r="14"/><circle cx="90" cy="29" r="13"/></g>',
+  claude:'<path d="M22 51 Q13 9 63 12 Q110 7 105 56 L107 109 Q99 122 87 109 L84 42 Q61 29 35 46 L34 110 Q20 120 16 106Z" fill="#593d32"/><path d="M23 40 Q35 14 66 18 Q84 18 97 35 Q76 28 62 32 Q41 29 23 46" fill="#89624c"/>',
+  mistral:'<path d="M23 56 Q13 18 44 14 Q48 2 70 12 Q88 7 101 35 L101 73 Q92 94 87 92 L87 44 Q66 29 35 49 L34 92 Q24 96 19 73Z" fill="#22242b"/><g stroke="#4c505b" stroke-width="4" fill="none"><path d="M27 44 Q43 14 69 23 M37 39 Q61 22 88 38 M31 51 Q39 34 59 31"/></g>'
+ };
+ const smallDetail=kind==='gpt'
+  ?'<path d="M43 86 Q63 102 80 84 Q73 113 51 110Z" fill="#382b28" opacity=".85"/>'
+  :kind==='claude'
+  ?'<circle cx="30" cy="89" r="4" fill="#e3bb62"/><circle cx="95" cy="89" r="4" fill="#e3bb62"/>'
+  :kind==='mistral'
+  ?'<circle cx="26" cy="89" r="4" fill="#d6b975"/><circle cx="101" cy="89" r="4" fill="#d6b975"/>'
+  :'';
+ return '<svg viewBox="0 0 126 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+ '<defs><linearGradient id="'+kind+'-skin" x1="0" x2=".9" y2="1"><stop stop-color="'+a.skin+'"/><stop offset="1" stop-color="'+a.dark+'"/></linearGradient>'+
+ '<linearGradient id="'+kind+'-coat" x2="1" y2="1"><stop stop-color="'+a.coat+'"/><stop offset="1" stop-color="#25373d"/></linearGradient></defs>'+
+ '<path d="M13 158 Q6 124 25 114 Q40 106 45 107 L79 107 Q103 108 113 124 L122 158Z" fill="url(#'+kind+'-coat)" stroke="#34494d" stroke-width="2"/>'+
+ '<path d="M42 106 L60 136 L82 108 L75 104 L49 104Z" fill="'+a.shirt+'"/>'+
+ '<path d="M48 90 V117 Q61 130 76 117 V89" fill="url(#'+kind+'-skin)"/>'+
+ '<path d="M19 53 Q17 29 32 21 Q49 12 77 17 Q105 19 108 53 L105 76 Q102 106 82 116 Q62 123 42 112 Q22 103 20 74Z" fill="url(#'+kind+'-skin)" stroke="'+a.dark+'" stroke-width="1.5"/>'+
+ '<ellipse cx="23" cy="74" rx="8" ry="14" fill="'+a.skin+'"/><ellipse cx="101" cy="74" rx="8" ry="14" fill="'+a.dark+'"/>'+
+ hair[kind]+
+ '<path d="M40 65 Q49 59 58 65 M70 65 Q81 59 90 65" fill="none" stroke="'+a.hair+'" stroke-width="3" stroke-linecap="round"/>'+
+ '<ellipse cx="49" cy="71" rx="3.5" ry="4" fill="'+a.eyes+'"/><ellipse cx="81" cy="71" rx="3.5" ry="4" fill="'+a.eyes+'"/>'+
+ '<circle cx="50" cy="70" r="1" fill="#fff" opacity=".8"/><circle cx="82" cy="70" r="1" fill="#fff" opacity=".8"/>'+
+ '<path d="M65 74 L62 90 Q65 93 70 90" fill="none" stroke="'+a.dark+'" stroke-width="2" stroke-linecap="round"/>'+
+ '<path d="M49 101 Q63 109 78 100" fill="none" stroke="#824c42" stroke-width="2.8" stroke-linecap="round"/>'+
+ smallDetail+
+ '<path d="M16 157 Q18 136 31 129 M111 157 Q107 136 98 128" stroke="#dce4df" stroke-width="2" opacity=".22" fill="none"/>'+
+ '</svg>';
+}
+function drawSnug(){ $('snug-avatar').innerHTML=portraitSVG('snug'); }
+function placeTail(){
+ const room=document.querySelector('.room').getBoundingClientRect();
+ const box=$('speaker-window').getBoundingClientRect();
+ const avatar=currentSpeaker==='snug' ? $('snug-avatar') : $('avatar-'+currentSpeaker);
+ if(!avatar)return;
+ const dest=avatar.getBoundingClientRect();
+ const x=v=>(v-room.left)*1600/room.width, y=v=>(v-room.top)*900/room.height;
+ const x0=x(box.left+22),y0=y(box.bottom-12);
+ const x1=x(dest.left+dest.width*.50),y1=y(dest.top+dest.height*.50);
+ const bendX=(x0+x1)/2-26,bendY=Math.min(y0,y1)-28;
+ $('tail-path').setAttribute('d','M'+x0+' '+y0+' Q'+bendX+' '+bendY+' '+x1+' '+y1);
+ $('tail-tip').setAttribute('cx',String(x1));$('tail-tip').setAttribute('cy',String(y1));
+}
+function showSpeaker(provider,text){
+ if(composing)return;
+ currentSpeaker=provider;
+ $('speaking-name').textContent=provider==='snug'?'Snug':nameOf(provider);
+ $('spoken-text').textContent=text||'';
+ $('speaker-window').classList.remove('composing');
+ requestAnimationFrame(placeTail);
+}
+function beginComposing(firstKey=''){
+ if(pending||document.querySelector('dialog[open]'))return;
+ composing=true;currentSpeaker='snug';
+ $('speaking-name').textContent='Snug';
+ $('speaker-window').classList.add('composing');
+ if(firstKey)$('question').value+=firstKey;
+ $('send').disabled=pending||!$('question').value.trim();
+ $('question').focus();
+ $('question').setSelectionRange($('question').value.length,$('question').value.length);
+ requestAnimationFrame(placeTail);
+}
+function finishComposing(){
+ composing=false;
+ $('speaker-window').classList.remove('composing');
+ const last=turns.filter(t=>t.status==='completed').at(-1);
+ showSpeaker(last?.provider||'snug',last?.answer||'');
+}
 function livePeople(){return ALL.map(p=>people[p.provider]).filter(p=>p.active&&p.live)}
 function chooseResponder(question){
  const candidates=livePeople();
@@ -212,7 +462,8 @@ function drawPeople(){
   const wrap=el('div');wrap.className='participant '+(p.active?'':'person-out ')+(p.position||'');
   if(!p.active)wrap.className='participant person-out';
   const meta=el('div');meta.className='person-panel';
-  const avatar=el('div',p.name[0]);avatar.className='avatar '+p.id;avatar.setAttribute('aria-hidden','true');
+  const avatar=el('div');avatar.className='avatar '+p.id;avatar.setAttribute('aria-hidden','true');
+  avatar.id='avatar-'+p.provider;avatar.innerHTML=portraitSVG(p.id);
   const name=el('div',p.name);name.className='person-name';
   const cost=el('div',money(p.cost));cost.className='person-cost';
   const actions=el('div');actions.className='person-actions';
@@ -229,23 +480,19 @@ function drawPeople(){
   actions.append(lock,door);
   meta.append(avatar,name,cost,actions);
   wrap.append(meta);
-  const bubble=el('div',p.bubble);bubble.className='speech-bubble';
-  bubble.title='See utterance on the table';bubble.setAttribute('role','button');bubble.tabIndex=0;
-  bubble.onclick=()=>{$('transcript').scrollTop=$('transcript').scrollHeight};
-  bubble.onkeydown=e=>{if(e.key==='Enter')bubble.click()};
-  wrap.append(bubble);
   if(p.active)target.append(wrap);else $('outside').append(wrap);
  }
+ requestAnimationFrame(placeTail);
 }
 function appendLine(name,text,depth,detail){
  const line=el('div');line.className='line'+(depth>5?' narrow':depth>2?' medium':'');
  const title=el('span',name.toUpperCase());title.className='speaker';
  const message=el('div',text);message.className='speech-text';
  line.append(title,message);if(detail)line.title=detail;
- $('transcript').append(line);
+ $('ledger-content').append(line);
 }
 function drawConversation(){
- $('transcript').replaceChildren();
+ $('ledger-content').replaceChildren();
  for(let i=0;i<turns.length;i++){
   const turn=turns[i],distance=turns.length-i-1;
   appendLine('Snug',turn.question,distance,turn.turn_id);
@@ -265,6 +512,10 @@ function drawConversation(){
   if(t.status==='completed')p.bubble=t.answer;
  }
  drawPeople();
+ if(!composing){
+  const last=turns.filter(t=>t.status==='completed').at(-1);
+  showSpeaker(last?.provider||'snug',last?.answer||'');
+ }
 }
 async function api(route,data){
  const response=await fetch('/api/'+route,{method:'POST',headers:{
@@ -290,6 +541,9 @@ async function speak(){
  let p;
  try{p=chooseResponder(question)}catch(e){notify(e.message,true);return}
  pending=true;$('send').disabled=true;notify('');
+ // Snug's utterance occupies the current speaker window during the call.
+ composing=false;$('speaker-window').classList.remove('composing');
+ showSpeaker('snug',question);
  try{
   // One visible Send: the one-use exact-context snapshot is constructed on
   // McKay and immediately consumed; no corpus selections are auto-disclosed.
@@ -303,10 +557,36 @@ async function speak(){
   // Re-read the ledger and never retry automatically.
   notify(error.message,true);
   try{await reload()}catch(e){notify(e.message,true)}
- }finally{pending=false;$('send').disabled=!$('question').value.trim()}
+  // Keep the original utterance for explicit operator choice; never retry.
+  pending=false;
+  beginComposing();
+ }finally{
+  pending=false;
+  $('send').disabled=!composing||!$('question').value.trim();
+ }
 }
 $('send').onclick=speak;
-$('question').oninput=()=>{$('send').disabled=pending||!$('question').value.trim()};
+$('question').oninput=()=>{
+ composing=true;currentSpeaker='snug';
+ $('speaker-window').classList.add('composing');
+ $('speaking-name').textContent='Snug';
+ $('send').disabled=pending||!$('question').value.trim();
+ requestAnimationFrame(placeTail);
+};
+$('spoken-text').onclick=()=>beginComposing();
+$('speaker-window').addEventListener('click',e=>{
+ if(e.target===$('speaker-window')||e.target===$('speaking-name'))beginComposing();
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&wheelArmed){wheelArmed=false;updateMouseState();return}
+ const target=e.target;
+ if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||
+    target?.closest('input,textarea,[contenteditable],button,dialog')||
+    document.querySelector('dialog[open]')||e.key.length!==1)return;
+ e.preventDefault();beginComposing(e.key);
+});
+window.addEventListener('resize',()=>requestAnimationFrame(placeTail));
+
 $('question').onkeydown=e=>{
  if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){
   e.preventDefault();speak();
@@ -364,6 +644,32 @@ $('information-close').onclick=()=>close('information');
 $('folder-open').onclick=()=>ask('documents');
 $('documents-close').onclick=()=>close('documents');
 $('add-doc').onclick=()=>{$('table-files').click()};
+
+function updateMouseState(){
+ const b=$('table-mouse');
+ b.setAttribute('aria-pressed',String(wheelArmed));
+ b.title=wheelArmed?'Wheel scrolls table history; click again to release':
+  'Click mouse, then use wheel to scroll conversation';
+ b.setAttribute('aria-label',wheelArmed?'Release tabletop history scrolling':'Activate tabletop history scrolling');
+}
+$('table-mouse').onclick=()=>{
+ wheelArmed=!wheelArmed;updateMouseState();
+ if(wheelArmed)$('table-mouse').focus();
+};
+document.addEventListener('wheel',e=>{
+ if(!wheelArmed||document.querySelector('dialog[open]')||
+    e.target.closest('.speaker-window,input,textarea'))return;
+ e.preventDefault();
+ $('transcript').scrollTop+=e.deltaY*1.25;
+},{passive:false});
+$('transcript').addEventListener('keydown',e=>{
+ if(e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='PageUp'||e.key==='PageDown'){
+  e.preventDefault();
+  $('transcript').scrollTop+=e.key==='ArrowUp'?-75:e.key==='ArrowDown'?75:
+    e.key==='PageUp'?-350:350;
+ }
+});
+
 function drawDocs(){
  $('table-docs').replaceChildren();
  for(let i=0;i<staged.length;i++){
@@ -413,9 +719,13 @@ $('search').onclick=async()=>{
   for(const p of Object.values(people)){
    p.live=providers.has(p.provider);p.active=p.live;
   }
+  drawSnug();
   drawPeople();
   if(providers.size)await reload();
-  else notify('Start the boardroom with a live supplier to speak.',true);
+  else {
+   showSpeaker('snug','');
+   notify('Start the boardroom with a live supplier to speak.',true);
+  }
  }catch(error){notify(error.message,true)}
 })();
 })();
