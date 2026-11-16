@@ -223,7 +223,9 @@ function drawPeople(){
   door.textContent=p.active?'↗':'↙';
   door.title=(p.active?'Move ':'Invite ')+p.name+(p.active?' outside':' to table');
   door.setAttribute('aria-label',door.title);
-  door.onclick=()=>{p.active=!p.active;drawPeople();notify('')};
+  door.disabled=!p.live;
+  if(!p.live){door.title=p.name+' is not connected';door.setAttribute('aria-label',door.title)}
+  door.onclick=()=>{if(!p.live)return;p.active=!p.active;drawPeople();notify('')};
   actions.append(lock,door);
   meta.append(avatar,name,cost,actions);
   wrap.append(meta);
