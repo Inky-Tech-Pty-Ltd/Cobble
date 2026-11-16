@@ -41,7 +41,9 @@ class ProviderReply:
     usage: dict
 
 
-def prepare_message(request):
+def prepare_message(request, *, output_tokens=MAX_OUTPUT_TOKENS):
+    if type(output_tokens) is not int or not 1 <= output_tokens <= 4096:
+        raise ValueError("Claude output token budget must be 1–4096")
     """Build an exact, single user message with no ambient or implicit context."""
     content = {
         "question": request.question,
@@ -51,7 +53,7 @@ def prepare_message(request):
     }
     return {
         "model": MODEL,
-        "max_tokens": MAX_OUTPUT_TOKENS,
+        "max_tokens": output_tokens,
         "thinking": {"type": "disabled"},  # Haiku 5.5 supports at default effort
         "system": SYSTEM,
         "messages": [{"role": "user", "content": json.dumps(content, ensure_ascii=False)}],
@@ -163,19 +165,23 @@ def _parse_reply(result, *, synthetic=False):
 class ClaudeAdapter:
     name = "claude"
 
-    def __init__(self, *, allow_network=False, key=None, transport=None):
+    def __init__(self, *, allow_network=False, key=None, transport=None,
+                 output_tokens=MAX_OUTPUT_TOKENS):
         """Transport injection is for synthetic tests only.
 
         allow_network=False always blocks answer(), even with a key.
         A real call needs allow_network=True, and must use the fixed HTTPS
         transport (no arbitrary URLs or endpoint configuration).
         """
+        if type(output_tokens) is not int or not 1 <= output_tokens <= 4096:
+            raise ValueError("Claude output token budget must be 1–4096")
+        self.output_tokens = output_tokens
         self.allow_network = allow_network
         self.key = key
         self.transport = transport
 
     def preview(self, request):
-        payload = prepare_message(request)
+        payload = prepare_message(request, output_tokens=self.output_tokens)
         plan = check_preflight(payload)
         return {
             **plan,
@@ -191,7 +197,7 @@ class ClaudeAdapter:
         }
 
     def answer(self, request):
-        payload = prepare_message(request)
+        payload = prepare_message(request, output_tokens=self.output_tokens)
         check_preflight(payload)
         if not self.allow_network:
             raise PermissionError("Claude network call not enabled")
