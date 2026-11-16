@@ -499,6 +499,12 @@ function portraitSVG(kind){
  '<path d="M65 74 L62 90 Q65 93 70 90" fill="none" stroke="'+a.dark+'" stroke-width="2" stroke-linecap="round"/>'+
  '<path d="M49 101 Q63 109 78 100" fill="none" stroke="#824c42" stroke-width="2.8" stroke-linecap="round"/>'+
  smallDetail+
+ // Folded upper arms and hands reach towards the near tabletop. They are
+ // small, intentionally foreshortened marks rather than disembodied busts.
+ '<path d="M11 157 Q10 137 27 126 Q39 124 48 142 L54 153 L42 156 Q34 146 29 143 L25 159Z" fill="url(#'+kind+'-coat)" stroke="#34494d" stroke-width="1.4"/>'+
+ '<path d="M115 157 Q116 137 99 126 Q88 124 77 142 L71 153 L84 156 Q93 145 97 143 L101 159Z" fill="url(#'+kind+'-coat)" stroke="#34494d" stroke-width="1.4"/>'+
+ '<ellipse cx="56" cy="151" rx="10" ry="5" transform="rotate(9 56 151)" fill="'+a.skin+'" stroke="'+a.dark+'" stroke-width=".9"/>'+
+ '<ellipse cx="70" cy="152" rx="10" ry="5" transform="rotate(-8 70 152)" fill="'+a.skin+'" stroke="'+a.dark+'" stroke-width=".9"/>'+
  '<path d="M16 157 Q18 136 31 129 M111 157 Q107 136 98 128" stroke="#dce4df" stroke-width="2" opacity=".22" fill="none"/>'+
  '</svg>';
 }
