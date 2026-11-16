@@ -64,6 +64,8 @@ class LiveTests(unittest.TestCase):
         self.assertEqual(saved["turns"][0]["question"], "Hello")
         self.assertEqual(saved["turns"][0]["answer"], "Response 1")
         self.assertEqual(saved["turns"][0]["usage"]["input_tokens"], 50)
+        self.assertEqual(saved["turns"][0]["payload"]["model"], MODEL)
+        self.assertIn("input", saved["turns"][0]["payload"])
         p = self.store / "snug" / "live" / "default" / "turns" / (first["turn_id"] + ".json")
         self.assertEqual(p.stat().st_mode & 0o777, 0o600)
         evidence = json.loads(p.read_text())
