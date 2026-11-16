@@ -286,5 +286,101 @@ class LiveTests(unittest.TestCase):
                 thread.join(timeout=5)
 
 
+    def test_http_routes_live_supplier_selection_and_history(self):
+        """Server routes only the specifically reviewed supplier into one ledger."""
+        class Named(Supplier):
+            def __init__(self, store, name):
+                super().__init__(store)
+                self.name = name
+
+            def answer(self, request):
+                self.calls.append(request)
+                return ProviderReply(
+                    text="Hello from " + self.name,
+                    model="synthetic-" + self.name,
+                    request_id="fixture-" + self.name,
+                    usage={
+                        "kind": "mock-" + self.name + "-api" if self.name != "claude"
+                        else "mock-claude-api",
+                        "network_calls": 0, "input_tokens": 30,
+                        "output_tokens": 10,
+                        "estimated_provider_cost_usd": "0.00001",
+                        "cost_is_estimate": True,
+                    },
+                )
+
+        claude = Named(self.store, "claude")
+        mistral = Named(self.store, "mistral")
+        note = self.store / "hosting" / "inkytech" / "harmless.txt"
+        note.parent.mkdir(parents=True)
+        note.write_text("harmless")
+        index = self.store / "index" / "search.sqlite3"
+        build(self.store, index)
+        entry = Path(__file__).resolve().parents[1] / "scripts" / "snug_demo_web.py"
+        spec = importlib.util.spec_from_file_location("snug_demo_web", entry)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with module.create_server(
+            self.store, index, port=0, live_gpt=True, live_claude=True,
+            live_mistral=True,
+            live_adapters={"openai": self.supplier,
+                           "claude": claude, "mistral": mistral}
+        ) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            port = server.server_port
+            def call(route, payload=None):
+                conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+                headers = {"Content-Type": "application/json",
+                           "Origin": f"http://127.0.0.1:{port}",
+                           "X-Snug-Client": "demo-local"}
+                conn.request("POST" if payload is not None else "GET",
+                             route, json.dumps(payload) if payload is not None else None,
+                             headers=headers)
+                response = conn.getresponse()
+                result = response.status, json.loads(response.read())
+                conn.close()
+                return result
+            try:
+                status, health = call("/api/health")
+                self.assertEqual(status, 200)
+                self.assertEqual(health["live_providers"],
+                                 ["openai", "claude", "mistral"])
+                status, _ = call("/api/live/preview", {
+                    "question": "No ambient memory", "provider": "claude",
+                    "memory_ids": ["private"]})
+                self.assertEqual(status, 400)
+                status, p = call("/api/live/preview", {
+                    "question": "Hello Claude", "provider": "claude"})
+                self.assertEqual(status, 200)
+                self.assertEqual(p["provider"], "claude")
+                status, _ = call("/api/live/send", {
+                    "approval_token": p["approval_token"], "provider": "mistral"})
+                self.assertEqual(status, 400)
+                status, reply = call("/api/live/send", {
+                    "approval_token": p["approval_token"]})
+                self.assertEqual(status, 200)
+                self.assertEqual(reply["turn"]["answer"], "Hello from claude")
+                status, _ = call("/api/live/send", {
+                    "approval_token": p["approval_token"]})
+                self.assertEqual(status, 400)
+                status, p = call("/api/live/preview", {
+                    "question": "Continue, Mistral", "provider": "mistral"})
+                self.assertEqual(status, 200)
+                self.assertEqual(p["previous_exchanges"][0]["provider"], "claude")
+                status, reply = call("/api/live/send", {
+                    "approval_token": p["approval_token"]})
+                self.assertEqual(status, 200)
+                self.assertEqual(reply["turn"]["provider"], "mistral")
+                status, saved = call("/api/live/session")
+                self.assertEqual(status, 200)
+                self.assertEqual([t["provider"] for t in saved["turns"]],
+                                 ["claude", "mistral"])
+                self.assertEqual(len(mistral.calls[0].previous_exchanges), 1)
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+
+
 if __name__ == "__main__":
     unittest.main()
