@@ -150,6 +150,9 @@ class LiveChatService:
                 "question": start["question"],
                 "context_sha256": start["context_sha256"],
                 "context": start["context"],
+                # Retained exact outgoing API payload, for paired supplier audit.
+                # Only loopback operator session endpoint exposes this private field.
+                "payload": start.get("payload", {}),
                 "status": status,
                 "answer": outcome.get("answer") if outcome else None,
                 "usage": outcome.get("usage") if outcome else None,
