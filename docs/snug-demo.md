@@ -1,7 +1,8 @@
 # Snug's first working browser slice
 
-This is an **offline** but corpus-backed implementation of the boardroom,
-built for issue #29. It intentionally does not yet call paid suppliers.
+Snug's local boardroom starts **offline** by default. With explicit flags
+and locally supplied API credentials, GPT, Claude and Mistral can join the
+same durable conversation. No model keys are committed to GitHub.
 
 ## Start on McKay
 
@@ -24,7 +25,7 @@ The boardroom lets you:
    as Snug's mouthpiece, not as someone asking a separate Snug chatbot.
 2. Move participant chairs by dragging or selecting their state: **at the table**
    (may speak/listen), **in the room** (listen-only), or **out** (neither). Only
-   active connected rehearsal fixtures at the table can be addressed.
+   configured live suppliers (or offline rehearsals) at the table can be addressed.
 3. Read the scrollable, play-style transcript and expand the precise reviewed
    source and earlier-conversation context used for each new exchange.
 4. Visit the **Archivist's room** to query indexed GitHub memories, inspect a
@@ -39,8 +40,8 @@ The boardroom lets you:
    after restart.
 
 Presence is currently enforced only in the local UI, not as separate supplier
-memory or server-side participant access control. The offline fixture API remains separate; real GPT is explicitly gated by
-`--live-gpt` and one-use approval. A **human guest**, human-owned corpus sharing, scoped
+memory or server-side participant access control. The offline fixture API remains separate; real suppliers are explicitly gated by
+individual `--live-*` flags and one-use approval. A **human guest**, human-owned corpus sharing, scoped
 cross-membrane queries, private side-consultations and per-attendee meeting
 histories are future changes requiring authentication and server-side
 permissions, not shortcuts through the local browser.
@@ -49,10 +50,11 @@ permissions, not shortcuts through the local browser.
 than real provider identities. Costs are zero. The existing legacy console at
 port 8765 remains separate.
 
-## Live GPT: locally recorded conversation (opt-in)
+## Live GPT, Claude and Mistral: one locally recorded conversation (opt-in)
 
-**This is a paid API feature, separate from ChatGPT web conversations.** It
-does not inherit ChatGPT Projects, account chat history, memory or tools.
+**This is a paid API feature.** The three supplier adapters are independent
+of their consumer-chat products and subscriptions. They do not inherit
+ChatGPT Projects, account conversation histories, account memory or tools.
 
 1. Use the existing OpenAI API credential securely. The server accepts
    `OPENAI_API_KEY` in the local WSL process environment **or** the safer
@@ -83,16 +85,18 @@ does not inherit ChatGPT Projects, account chat history, memory or tools.
    prior exchanges plus estimated preflight cost, then approve one call.
 4. The browser displays the response with provider token usage and **estimated**
    USD cost. Restarting the browser/server restores up to the most recent
-   100 locally saved GPT turns. Snug passes up to four **completed** earlier
-   GPT exchanges as explicit context. If needed for the 16 KB preflight bound,
+   100 locally saved boardroom turns. Snug passes up to four **completed**
+   earlier exchanges, *regardless of which supplier answered*, as explicit
+   context. If needed for the 16 KB preflight bound,
    the oldest are omitted transparently in the review. Rejected or unknown-outcome turns are not replayed as
    supplier statements.
 
-GPT output allowance is **2,048 tokens**, rather than the adapter's existing
-256-token standalone test default. This is a per-call allowance, *not* a model
+The boardroom output allowance is **2,048 tokens per supplier call**, rather
+than the adapters' existing 256-token standalone defaults. This is a per-call allowance, *not* a model
 billing cap. The upstream OpenAI API and project/vendor billing settings remain
-authoritative. All requests are text only with `store=false`, no tool calls,
-no automatic retries, and no automatic corpus/archivist disclosure.
+authoritative. All requests are text only with no tool calls, no automatic
+retries, and no automatic corpus/archivist disclosure. The OpenAI adapter
+requests `store=false`; provider-side data handling varies by supplier.
 
 Durable record layout (outside Git):
 `~/cobble-data/snug/live/default/{turns,attempts,outcomes}/<turn-id>.json`
@@ -108,11 +112,69 @@ A missing outcome after a crash is reported as **outcome unknown**. It is not
 silently retried, since the provider may already have processed and billed it.
 The session is authoritative; search indexes can later be derived from these
 events. Current browser search still only covers existing indexed GitHub
-material. The same UI's Claude/Mistral chairs remain **offline fixtures**.
+material. Suppliers not enabled when starting the server remain offline
+rehearsals (or disconnected, for GPT); their labels reveal that difference.
 
 Tests are keyless/synthetic. Before calling live, verify McKay's existing
 project-level budget and local API key. Without `--live-gpt` the server
 remains fully offline, just as before.
+
+### Start all three through the existing Windows 1Password CLI
+
+The original GPT-only command (\`--live-gpt --key-stdin\`) still works. To
+start **all three** participants, stop the running boardroom with Ctrl+C,
+then in WSL update \`main\`:
+
+\`\`\`bash
+cd ~/Cobble
+git pull --ff-only
+PYTHONPATH=src python3 scripts/snug_demo_web.py --help
+\`\`\`
+
+Identify the **item IDs** of the three existing keys from 1Password. In
+Windows PowerShell, list *metadata only* (no secret values):
+
+\`\`\`powershell
+$items = op item list --vault Employee --format json | ConvertFrom-Json
+$items | ForEach-Object { $_ } |
+  Where-Object { $_.title -match '(?i)openai|claude|mistral' } |
+  Select-Object title, id
+\`\`\`
+
+Using those item IDs (not item titles containing punctuation), securely
+pipe a **JSON object** directly from PowerShell to the new boardroom process.
+Substitute the three placeholders below with the IDs shown above:
+
+\`\`\`powershell
+$gptId = 'REPLACE_WITH_OPENAI_ITEM_ID'
+$claudeId = 'REPLACE_WITH_CLAUDE_ITEM_ID'
+$mistralId = 'REPLACE_WITH_MISTRAL_ITEM_ID'
+
+@{
+  openai  = (op read "op://Employee/$gptId/credential")
+  claude  = (op read "op://Employee/$claudeId/credential")
+  mistral = (op read "op://Employee/$mistralId/credential")
+} | ConvertTo-Json -Compress | wsl.exe -d Ubuntu -u cobbler -- bash -lc 'cd ~/Cobble && PYTHONPATH=src python3 scripts/snug_demo_web.py --live-gpt --live-claude --live-mistral --keys-json-stdin'
+\`\`\`
+
+**Do not display or paste the resulting JSON**, which contains the private
+keys. Adjust the last URI segment if the vault item stores its API key under a
+different field name than \`credential\`. The browser never receives the keys.
+If any key is unavailable, the server rejects startup rather than silently
+pretending that provider is live. No billable calls occur until a specific
+outbound context is reviewed and submitted.
+
+With three configured suppliers, address any participant at the table.
+The **same** \`~/cobble-data/snug/live/default\` conversation record now
+contains replies from all suppliers. A switch to a different supplier
+sends up to four completed prior exchanges selected in the exact disclosure
+preview, including their original attribution; it does not automatically grant
+access to private corpus files. Usage and estimated costs remain per supplier.
+
+For a smaller trial, choose only the desired \`--live-claude\` or
+\`--live-mistral\` flags, and supply a JSON object with exactly those
+provider names. GPT remains available when included. Other chairs show
+offline rehearsals, not real model connectivity.
 
 ## Trust boundary
 
@@ -149,6 +211,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_snug_demo.py' -v
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_snug_exchange.py' -v
 ```
 
-**Future:** connect Claude and Mistral to the same durable session ledger; add incremental search over new turns and per-participant permitted context; then enforce presence, tabled-document sharing and participant-specific histories on the server. The ultimate
+**Future:** add incremental search over newly recorded turns, a clearer Send
+interaction and per-participant permitted context; then enforce presence,
+tabled-document sharing and recipient-specific histories on the server. The ultimate
 `demo.cobble.link` location should use a separately permitted public
 or synthetic corpus and appropriate authentication, not expose McKay.

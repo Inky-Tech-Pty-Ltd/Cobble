@@ -1,4 +1,4 @@
-"""Durable, local, single-operator GPT boardroom session.
+"""Durable, local, single-operator multi-supplier boardroom session.
 
 The accepted human turn and an immutable attempt record are fsynced *before*
 the provider call. No automatic retries. Missing outcomes after a crash are
@@ -16,8 +16,18 @@ import tempfile
 import threading
 import time
 
-from cobble.claude_adapter import ProviderReply
-from cobble.openai_adapter import OpenAIAdapter, check_preflight, prepare_message
+from cobble.claude_adapter import (
+    ProviderReply, ClaudeAdapter,
+    check_preflight as check_claude, prepare_message as make_claude,
+)
+from cobble.mistral_adapter import (
+    MistralAdapter, check_preflight as check_mistral,
+    prepare_message as make_mistral,
+)
+from cobble.openai_adapter import (
+    OpenAIAdapter, check_preflight as check_openai,
+    prepare_message as make_openai,
+)
 from cobble.snug_exchange import ExchangeRequest, request_context_digest
 
 TURN_ID = re.compile(r"[0-9]{20}-[0-9a-f]{12}\Z")
@@ -26,6 +36,19 @@ MAX_PENDING = 16
 MAX_QUESTION = 2000
 MAX_PRIOR = 4
 OUTPUT_TOKENS = 2048
+PROVIDERS = ("openai", "claude", "mistral")
+PREFLIGHTS = {"openai": check_openai, "claude": check_claude, "mistral": check_mistral}
+BUILD_PAYLOAD = {"openai": make_openai, "claude": make_claude, "mistral": make_mistral}
+ACCOUNTING = {
+    "openai": ("openai-api", "mock-openai-api"),
+    "claude": ("anthropic-api", "mock-claude-api"),
+    "mistral": ("mistral-api", "mock-mistral-api"),
+}
+KEY_ENV = {"openai": "OPENAI_API_KEY",
+           "claude": "ANTHROPIC_API_KEY",
+           "mistral": "MISTRAL_API_KEY"}
+ADAPTER_TYPES = {"openai": OpenAIAdapter, "claude": ClaudeAdapter,
+                 "mistral": MistralAdapter}
 
 
 class OutcomeUnknown(RuntimeError):
@@ -36,7 +59,7 @@ class OutcomeUnknown(RuntimeError):
 
 
 class LiveChatService:
-    def __init__(self, store, *, adapter=None):
+    def __init__(self, store, *, adapter=None, adapters=None):
         self.store = Path(store).expanduser().resolve()
         if any((p / ".git").exists() for p in (self.store, *self.store.parents)):
             raise ValueError("Private conversations must stay outside Git")
@@ -48,8 +71,17 @@ class LiveChatService:
         self._lock = threading.Lock()
         self._pending = {}
         self._inflight = False
-        self._adapter = adapter if adapter is not None else OpenAIAdapter(
-            allow_network=True, output_tokens=OUTPUT_TOKENS)
+        if adapter is not None and adapters is not None:
+            raise ValueError("Use adapter or adapters, not both")
+        self._adapters = dict(adapters) if adapters is not None else {
+            "openai": adapter if adapter is not None else OpenAIAdapter(
+                allow_network=True, output_tokens=OUTPUT_TOKENS)
+        }
+        if not self._adapters or any(
+            p not in PROVIDERS or getattr(a, "name", None) != p
+            for p, a in self._adapters.items()
+        ):
+            raise ValueError("Unexpected live supplier identity")
 
     def _path(self, kind, turn_id):
         if kind not in ("turns", "attempts", "outcomes") or not TURN_ID.fullmatch(turn_id):
@@ -129,7 +161,9 @@ class LiveChatService:
     def session(self):
         with self._lock:
             return {"turns": self._turns()[-100:],
-                    "live_provider": "openai", "inflight": self._inflight}
+                    "live_provider": "openai" if "openai" in self._adapters else None,
+                    "live_providers": [p for p in PROVIDERS if p in self._adapters],
+                    "inflight": self._inflight}
 
     def _history(self, turns):
         return tuple({
@@ -140,9 +174,11 @@ class LiveChatService:
             "answer": turn["answer"],
         } for turn in turns if turn["status"] == "completed")[-MAX_PRIOR:]
 
-    def preview(self, *, question):
+    def preview(self, *, question, provider="openai"):
         if not isinstance(question, str) or not 0 < len(question.strip()) <= MAX_QUESTION:
             raise ValueError("Question must contain 1–2000 characters")
+        if not isinstance(provider, str) or provider not in self._adapters:
+            raise PermissionError("Supplier unavailable in this local session")
         with self._lock:
             turns = self._turns()
             history = self._history(turns)
@@ -154,9 +190,10 @@ class LiveChatService:
                 request = ExchangeRequest(
                     participant="operator", question=question,
                     selected_memories=(), previous_exchanges=history)
-                payload = prepare_message(request, output_tokens=OUTPUT_TOKENS)
+                payload = BUILD_PAYLOAD[provider](
+                    request, output_tokens=OUTPUT_TOKENS)
                 try:
-                    budget = check_preflight(payload)
+                    budget = PREFLIGHTS[provider](payload)
                     break
                 except ValueError as error:
                     if not history or "exceeds local" not in str(error):
@@ -170,10 +207,10 @@ class LiveChatService:
             if len(self._pending) >= MAX_PENDING:
                 raise PermissionError("Too many unconsumed previews")
             latest_id = turns[-1]["turn_id"] if turns else None
-            self._pending[token] = (now, request, payload, latest_id)
+            self._pending[token] = (now, request, payload, latest_id, provider)
             return {
                 "approval_token": token,
-                "provider": "openai", "question": question,
+                "provider": provider, "question": question,
                 "selected_memories": [],
                 "previous_exchanges": list(history),
                 "older_exchanges_omitted": originally_available - len(history),
@@ -190,7 +227,7 @@ class LiveChatService:
             entry = self._pending.pop(approval_token, None)
             if entry is None:
                 raise PermissionError("Approval absent or already consumed")
-            issued, request, payload, previous_last = entry
+            issued, request, payload, previous_last, provider = entry
             if time.monotonic() - issued > TTL_SECONDS:
                 raise PermissionError("Review expired; preview again")
             if self._inflight:
@@ -201,10 +238,11 @@ class LiveChatService:
                 raise PermissionError("Conversation changed after review; preview again")
             # Refuse a missing key BEFORE saving any outbound attempt.
             # Injected adapter is permitted only in offline unit tests.
-            if isinstance(self._adapter, OpenAIAdapter) and not (
-                self._adapter.key or os.environ.get("OPENAI_API_KEY")
+            adapter = self._adapters[provider]
+            if isinstance(adapter, ADAPTER_TYPES[provider]) and not (
+                adapter.key or os.environ.get(KEY_ENV[provider])
             ):
-                raise PermissionError("OPENAI_API_KEY is not configured on McKay")
+                raise PermissionError("Requested supplier credential is not configured locally")
             self._inflight = True
 
         turn_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f") + "-" + secrets.token_hex(6)
@@ -212,24 +250,24 @@ class LiveChatService:
         try:
             self._write("turns", turn_id, {
                 "turn_id": turn_id, "created_utc": datetime.now(timezone.utc).isoformat(),
-                "provider": "openai", "question": request.question,
+                "provider": provider, "question": request.question,
                 "context_sha256": request_context_digest(request),
                 "context": asdict(request), "payload": payload,
                 "outbound_payload_sha256": _digest(payload),
             })
             accepted = True
             self._write("attempts", turn_id, {
-                "turn_id": turn_id, "provider": "openai",
+                "turn_id": turn_id, "provider": provider,
                 "recorded_utc": datetime.now(timezone.utc).isoformat(),
                 "outbound_payload_sha256": _digest(payload),
                 "kind": "network_attempt_may_have_occurred",
             })
-            reply = self._adapter.answer(request)
+            reply = adapter.answer(request)
             if (not isinstance(reply, ProviderReply)
-                or reply.usage.get("kind") not in ("openai-api", "mock-openai-api")
+                or reply.usage.get("kind") not in ACCOUNTING[provider]
                 or not isinstance(reply.text, str) or not reply.text.strip()
                 or len(reply.text) > 12000):
-                raise ValueError("Unaccounted or invalid GPT reply")
+                raise ValueError("Unaccounted or invalid supplier reply")
             self._write("outcomes", turn_id, {
                 "turn_id": turn_id, "status": "completed",
                 "recorded_utc": datetime.now(timezone.utc).isoformat(),

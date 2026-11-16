@@ -28,7 +28,9 @@ SYSTEM = (
 )
 
 
-def prepare_message(request):
+def prepare_message(request, *, output_tokens=MAX_OUTPUT_TOKENS):
+    if type(output_tokens) is not int or not 1 <= output_tokens <= 4096:
+        raise ValueError("Mistral output token budget must be 1–4096")
     content = {
         "question": request.question,
         "participant": request.participant,
@@ -36,7 +38,7 @@ def prepare_message(request):
         "selected_previous_exchanges": list(request.previous_exchanges),
     }
     return {
-        "model": MODEL, "max_tokens": MAX_OUTPUT_TOKENS,
+        "model": MODEL, "max_tokens": output_tokens,
         "stream": False, "tool_choice": "none",
         "messages": [
             {"role": "system", "content": SYSTEM},
@@ -143,13 +145,17 @@ def _parse_reply(result, *, synthetic=False):
 class MistralAdapter:
     name = "mistral"
 
-    def __init__(self, *, allow_network=False, key=None, transport=None):
+    def __init__(self, *, allow_network=False, key=None, transport=None,
+                 output_tokens=MAX_OUTPUT_TOKENS):
+        if type(output_tokens) is not int or not 1 <= output_tokens <= 4096:
+            raise ValueError("Mistral output token budget must be 1–4096")
+        self.output_tokens = output_tokens
         self.allow_network = allow_network
         self.key = key
         self.transport = transport
 
     def preview(self, request):
-        payload = prepare_message(request)
+        payload = prepare_message(request, output_tokens=self.output_tokens)
         return {
             **check_preflight(payload),
             "selected_memories": [
@@ -164,7 +170,7 @@ class MistralAdapter:
         }
 
     def answer(self, request):
-        payload = prepare_message(request)
+        payload = prepare_message(request, output_tokens=self.output_tokens)
         check_preflight(payload)
         if not self.allow_network:
             raise PermissionError("Mistral network call not enabled")
