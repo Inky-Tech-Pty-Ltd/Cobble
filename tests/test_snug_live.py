@@ -102,6 +102,86 @@ class LiveTests(unittest.TestCase):
         # Unknown responses do not get smuggled into subsequent model context.
         self.assertEqual(reloaded.preview(question="Next")["previous_exchanges"], [])
 
+    def test_supplier_switch_preserves_shared_ledger_and_context(self):
+        """GPT -> Claude -> Mistral use a single durable conversation."""
+        class FakeOther(Supplier):
+            def __init__(self, store, name):
+                super().__init__(store)
+                self.name = name
+
+            def answer(self, request):
+                folder = self.store / "snug" / "live" / "default"
+                assert len(list((folder / "turns").glob("*.json"))) == len(
+                    list((folder / "attempts").glob("*.json")))
+                self.calls.append(request)
+                kind = {"claude": "mock-claude-api",
+                        "mistral": "mock-mistral-api"}[self.name]
+                result = fake_reply(self.name + " sees " +
+                                    str(len(request.previous_exchanges)) + " prior turns")
+                return ProviderReply(
+                    text=result.text, model=self.name+"-test",
+                    request_id=self.name+"-test-id",
+                    usage={**result.usage, "kind": kind})
+
+        claude = FakeOther(self.store, "claude")
+        mistral = FakeOther(self.store, "mistral")
+        adapters = {"openai": self.supplier, "claude": claude, "mistral": mistral}
+        svc = LiveChatService(self.store, adapters=adapters)
+        first_preview = svc.preview(question="Mr GPT, come here.", provider="openai")
+        first = svc.send(approval_token=first_preview["approval_token"])["turn"]
+        self.assertEqual(first["provider"], "openai")
+        second_preview = svc.preview(question="Claude, do you recognise that?", provider="claude")
+        self.assertEqual(second_preview["provider"], "claude")
+        self.assertEqual(second_preview["previous_exchanges"][0]["question"], first["question"])
+        self.assertEqual(second_preview["previous_exchanges"][0]["answer"], first["answer"])
+        self.assertEqual(second_preview["network_calls_if_approved"], 1)
+        second = svc.send(approval_token=second_preview["approval_token"])["turn"]
+        self.assertEqual(second["provider"], "claude")
+        self.assertEqual(second["answer"], "claude sees 1 prior turns")
+        third_preview = svc.preview(question="Mistral, any thoughts?", provider="mistral")
+        self.assertEqual([p["provider"] for p in third_preview["previous_exchanges"]],
+                         ["openai", "claude"])
+        self.assertEqual([p["answer"] for p in third_preview["previous_exchanges"]],
+                         ["Response 1", "claude sees 1 prior turns"])
+        third = svc.send(approval_token=third_preview["approval_token"])["turn"]
+        self.assertEqual(third["provider"], "mistral")
+        self.assertEqual(third["answer"], "mistral sees 2 prior turns")
+        fresh = LiveChatService(self.store, adapters=adapters)
+        self.assertEqual([t["provider"] for t in fresh.session()["turns"]],
+                         ["openai", "claude", "mistral"])
+        self.assertEqual(set(fresh.session()["live_providers"]),
+                         {"openai", "claude", "mistral"})
+        self.assertEqual(len(claude.calls[0].previous_exchanges), 1)
+        self.assertEqual(len(mistral.calls[0].previous_exchanges), 2)
+        for turn in fresh.session()["turns"]:
+            self.assertEqual(turn["status"], "completed")
+            self.assertIsNotNone(turn["usage"]["estimated_provider_cost_usd"])
+
+    def test_live_supplier_capabilities_and_approval_binding(self):
+        from cobble.claude_adapter import ClaudeAdapter, prepare_message as make_claude
+        from cobble.mistral_adapter import MistralAdapter, prepare_message as make_mistral
+        from cobble.snug_exchange import ExchangeRequest
+        with self.assertRaisesRegex(PermissionError, "unavailable"):
+            self.svc.preview(question="No Claude", provider="claude")
+        with self.assertRaisesRegex(PermissionError, "unavailable"):
+            self.svc.preview(question="No rogue provider", provider="unknown")
+        request = ExchangeRequest("operator", "Hi", (), ())
+        self.assertEqual(make_claude(request, output_tokens=2048)["max_tokens"], 2048)
+        self.assertEqual(make_mistral(request, output_tokens=2048)["max_tokens"], 2048)
+        self.assertEqual(make_claude(request)["max_tokens"], 256)
+        self.assertEqual(make_mistral(request)["max_tokens"], 256)
+        with self.assertRaises(ValueError):
+            ClaudeAdapter(output_tokens=5000)
+        with self.assertRaises(ValueError):
+            MistralAdapter(output_tokens=5000)
+        with self.assertRaisesRegex(ValueError, "identity"):
+            LiveChatService(self.store, adapters={"claude": self.supplier})
+        one = self.svc.preview(question="GPT question")
+        two = self.svc.preview(question="Other question")
+        self.svc.send(approval_token=one["approval_token"])
+        with self.assertRaisesRegex(PermissionError, "changed after review"):
+            self.svc.send(approval_token=two["approval_token"])
+
     def test_crash_gap_without_attempt_is_distinguished(self):
         turn_id = "20261115010203000000-" + "a" * 12
         self.svc._write("turns", turn_id, {
