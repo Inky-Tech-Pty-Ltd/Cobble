@@ -66,7 +66,7 @@ class DemoTests(unittest.TestCase):
                 "static" / "snug_demo.html").read_text(encoding="utf-8")
         for required in (
             'class="world-perspective"', 'viewBox="0 0 1600 900"',
-            'transform:perspective(94.5vh) rotateX(54deg)',
+            'transform:perspective(1600px) rotateX(18deg)',
             'class="table-plane"', 'id="ledger-content"',
             'id="table-mouse"', 'aria-pressed="false"',
             "scrollbar-width:none", 'class="folder-object"',
@@ -80,6 +80,15 @@ class DemoTests(unittest.TestCase):
             "live/preview", "live/send",
         ):
             self.assertIn(required, page)
+        # This revision removes the decorative cityscape and restrains
+        # the perspective to a near-rectangle. The figures are visibly
+        # seated at either long edge, not in floating information cards.
+        self.assertIn('A single architectural stage. There is no exterior skyline.', page)
+        self.assertIn('left:20%;top:34%;width:61%;height:63%', page)
+        self.assertIn('.corridor{left:0;width:13.5%}', page)
+        self.assertIn('.participant .person-panel:before', page)
+        self.assertIn('Folded upper arms and hands', page)
+        self.assertNotIn('id="archive-open">Archivist room</button>', page)
         # Avoid a subtle failure where event handlers bind to the wrong
         # duplicate id, especially the moved Send and textarea controls.
         ids = re.findall(' id="([^"]+)"', page)
