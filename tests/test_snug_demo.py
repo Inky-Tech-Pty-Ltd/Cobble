@@ -60,6 +60,35 @@ class DemoTests(unittest.TestCase):
                                     text=True, timeout=10, check=False)
             self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_spatial_boardroom_interactions_and_unique_controls(self):
+        """Perspective elements and control affordances remain wired together."""
+        page = (Path(__file__).resolve().parents[1] / "src" / "cobble" /
+                "static" / "snug_demo.html").read_text(encoding="utf-8")
+        for required in (
+            'class="world-perspective"', 'viewBox="0 0 1600 900"',
+            'transform:perspective(94.5vh) rotateX(54deg)',
+            'class="table-plane"', 'id="ledger-content"',
+            'id="table-mouse"', 'aria-pressed="false"',
+            "scrollbar-width:none", 'class="folder-object"',
+            'class="folder-cover"', 'id="speaker-window"',
+            'id="spoken-text"', 'id="speaking-name"',
+            'id="speech-tail"', 'id="tail-path"',
+            "portraitSVG('snug')", "portraitSVG(p.id)",
+            "requestAnimationFrame(placeTail)", "wheelArmed=!wheelArmed",
+            "e.preventDefault();beginComposing(e.key)",
+            "No live intelligence is at the table.",
+            "live/preview", "live/send",
+        ):
+            self.assertIn(required, page)
+        # Avoid a subtle failure where event handlers bind to the wrong
+        # duplicate id, especially the moved Send and textarea controls.
+        ids = re.findall(r'\\bid="([^"]+)"', page)
+        self.assertEqual(len(ids), len(set(ids)))
+        # Public room remains text-light; the guardrails are in a separate
+        # accessibility-labelled meeting information dialog.
+        self.assertNotIn('id="review"', page)
+        self.assertNotIn('class="speech-bubble"', page)
+
     def test_search_and_inspect_allow_only_github(self):
         self.assertEqual(self.service.find("Sankarshan")[0]["id"], self.github_id)
         self.assertEqual(self.service.find("SECRET"), [])
