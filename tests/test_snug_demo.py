@@ -39,7 +39,7 @@ class DemoTests(unittest.TestCase):
         page = (Path(__file__).resolve().parents[1] / "src" / "cobble" /
                 "static" / "snug_demo.html").read_text(encoding="utf-8")
         for label in (
-            "Speak to the table as Snug", "Corridor", "Meeting information",
+            "Speak to the table as Snug", "corridor-people", "Meeting information",
             'id="send"', "live/preview", "live/send",
             "What Claude heard", 'id="heard-toggle"',
             'class="pair collapsed"', "context-content", "heard-content",
