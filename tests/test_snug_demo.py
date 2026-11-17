@@ -66,28 +66,34 @@ class DemoTests(unittest.TestCase):
                 "static" / "snug_demo.html").read_text(encoding="utf-8")
         for required in (
             'class="world-perspective"', 'viewBox="0 0 1600 900"',
-            'transform:perspective(1600px) rotateX(18deg)',
+            'transform:perspective(2400px) rotateX(9deg)',
             'class="table-plane"', 'id="ledger-content"',
             'id="table-mouse"', 'aria-pressed="false"',
             "scrollbar-width:none", 'class="folder-object"',
             'class="folder-cover"', 'id="speaker-window"',
             'id="spoken-text"', 'id="speaking-name"',
             'id="speech-tail"', 'id="tail-path"',
-            "portraitSVG('snug')", "portraitSVG(p.id)",
+            "portraitSVG('snug')", "portraitSVG(p.id,p.active?p.position:null)",
             "requestAnimationFrame(placeTail)", "wheelArmed=!wheelArmed",
             "e.preventDefault();beginComposing(e.key)",
             "No live intelligence is at the table.",
             "live/preview", "live/send",
         ):
             self.assertIn(required, page)
-        # This revision removes the decorative cityscape and restrains
-        # the perspective to a near-rectangle. The figures are visibly
-        # seated at either long edge, not in floating information cards.
-        self.assertIn('A single architectural stage. There is no exterior skyline.', page)
-        self.assertIn('left:20%;top:34%;width:61%;height:63%', page)
-        self.assertIn('.corridor{left:0;width:13.5%}', page)
-        self.assertIn('.participant .person-panel:before', page)
-        self.assertIn('Folded upper arms and hands', page)
+        # Draw.io is the camera: an explicit 1600x900 stage, a single
+        # eight-vertex slab, and the same wall/floor geometry. Text is
+        # projected only a little, not skewed along a second camera.
+        self.assertIn("operator's 1600x900 Draw.io construction", page)
+        self.assertIn('class="table-sculpture"', page)
+        self.assertIn('M157.67 0 L751.5 0', page)
+        self.assertIn('left:19.1875%;top:14.8889%;width:52.1875%;height:73.8889%', page)
+        self.assertIn('id="drawio-floor-clip"', page)
+        self.assertIn('class="table-mouse"', page)
+        self.assertIn('rotateX(62deg) rotateZ(11deg)', page)
+        self.assertIn('rotateX(63deg) rotateZ(-7deg)', page)
+        self.assertIn('function profileSVG(kind,a,facing)', page)
+        self.assertIn('position===\'right-bottom\'?\'left\':\'right\'', page)
+        self.assertIn("No live intelligence is at the table.", page)
         self.assertNotIn('id="archive-open">Archivist room</button>', page)
         # Avoid a subtle failure where event handlers bind to the wrong
         # duplicate id, especially the moved Send and textarea controls.
