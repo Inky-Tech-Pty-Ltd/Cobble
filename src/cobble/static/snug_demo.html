@@ -819,18 +819,69 @@ function portraitSVG(kind,position){
  '</svg>';
 }
 function drawSnug(){ $('snug-avatar').innerHTML=portraitSVG('snug'); }
+function projectTableText(){
+ // This is a true planar homography, not rotateX masquerading as one.
+ // Source rectangle corners map to four inset points ON the same tabletop
+ // polygon used by the visible SVG. The near edge is wider, so the text
+ // itself scales continuously with apparent distance to the viewer.
+ const table=$('table-plane'),layer=$('transcript');
+ const W=table.clientWidth,H=table.clientHeight;
+ const w=layer.offsetWidth,h=layer.offsetHeight;
+ if(!(W>0&&H>0&&w>0&&h>0))return;
+ const q=[
+  [.253*W,.145*H], [.86*W,.145*H],
+  [.888*W,.846*H], [.126*W,.846*H]
+ ];
+ const [p0,p1,p2,p3]=q;
+ const dx1=p1[0]-p2[0],dy1=p1[1]-p2[1];
+ const dx2=p3[0]-p2[0],dy2=p3[1]-p2[1];
+ const dx3=p0[0]-p1[0]+p2[0]-p3[0];
+ const dy3=p0[1]-p1[1]+p2[1]-p3[1];
+ const det=dx1*dy2-dx2*dy1;
+ if(Math.abs(det)<1e-8)return;
+ const g=(dx3*dy2-dx2*dy3)/det;
+ const h0=(dx1*dy3-dx3*dy1)/det;
+ const a=(p1[0]-p0[0]+g*p1[0])/w;
+ const d=(p1[1]-p0[1]+g*p1[1])/w;
+ const b=(p3[0]-p0[0]+h0*p3[0])/h;
+ const e=(p3[1]-p0[1]+h0*p3[1])/h;
+ const G=g/w,H0=h0/h;
+ // CSS matrix3d uses column-major entries:
+ // x'=(a*x+b*y+c)/(G*x+H0*y+1), and similarly for y'.
+ layer.style.transform='matrix3d('+[
+  a,d,0,G,b,e,0,H0,0,0,1,0,p0[0],p0[1],0,1
+ ].join(',')+')';
+}
 function placeTail(){
  const room=document.querySelector('.room').getBoundingClientRect();
  const box=$('speaker-window').getBoundingClientRect();
  const avatar=currentSpeaker==='snug' ? $('snug-avatar') : $('avatar-'+currentSpeaker);
- if(!avatar)return;
+ if(!avatar||!room.width||!room.height)return;
  const dest=avatar.getBoundingClientRect();
  const x=v=>(v-room.left)*1600/room.width, y=v=>(v-room.top)*900/room.height;
- const x0=x(box.left+22),y0=y(box.bottom-12);
- const x1=x(dest.left+dest.width*.50),y1=y(dest.top+dest.height*.50);
- const bendX=(x0+x1)/2-26,bendY=Math.min(y0,y1)-28;
- $('tail-path').setAttribute('d','M'+x0+' '+y0+' Q'+bendX+' '+bendY+' '+x1+' '+y1);
- $('tail-tip').setAttribute('cx',String(x1));$('tail-tip').setAttribute('cy',String(y1));
+ const headX=x(dest.left+dest.width*.5),headY=y(dest.top+dest.height*.35);
+ const leftSide=currentSpeaker==='openai'||currentSpeaker==='claude'||
+  (people[currentSpeaker]&&!people[currentSpeaker].active);
+ let path;
+ if(currentSpeaker==='snug'){
+  const x0=x(box.left+7),y0=y(box.top+18);
+  path='M'+x0+' '+y0+' C'+(x0-95)+' '+(y0-70)+' '+(headX+100)+' '+(headY-85)+' '+headX+' '+headY;
+ }else if(leftSide){
+  // Go via the wall above the FAR edge, then around the left of the table.
+  const x0=x(box.left+9),y0=y(box.top+20);
+  path='M'+x0+' '+y0+
+   ' C'+(x0-135)+' 64 295 63 165 155'+
+   ' C95 220 115 '+(headY-100)+' '+headX+' '+headY;
+ }else{
+  // Right participant: follow the free space outside the right table edge.
+  const x0=x(box.right-10),y0=y(box.bottom-22);
+  path='M'+x0+' '+y0+
+   ' C'+(x0+42)+' '+(y0+75)+' 1552 '+(headY-135)+' 1458 '+(headY-74)+
+   ' C1360 '+(headY-15)+' '+(headX+110)+' '+headY+' '+headX+' '+headY;
+ }
+ $('tail-path').setAttribute('d',path);
+ $('tail-tip').setAttribute('cx',String(headX));
+ $('tail-tip').setAttribute('cy',String(headY));
 }
 function showSpeaker(provider,text){
  if(composing)return;
@@ -1002,7 +1053,7 @@ document.addEventListener('keydown',e=>{
     document.querySelector('dialog[open]')||e.key.length!==1)return;
  e.preventDefault();beginComposing(e.key);
 });
-window.addEventListener('resize',()=>requestAnimationFrame(placeTail));
+window.addEventListener('resize',()=>requestAnimationFrame(()=>{projectTableText();placeTail()}));
 
 $('question').onkeydown=e=>{
  if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){
@@ -1138,6 +1189,8 @@ $('search').onclick=async()=>{
   }
   drawSnug();
   drawPeople();
+  requestAnimationFrame(projectTableText);
+  if(document.fonts?.ready)document.fonts.ready.then(projectTableText);
   if(providers.size)await reload();
   else {
    showSpeaker('snug','');
