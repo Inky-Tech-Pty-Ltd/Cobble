@@ -66,7 +66,7 @@ class DemoTests(unittest.TestCase):
                 "static" / "snug_demo.html").read_text(encoding="utf-8")
         for required in (
             'class="world-perspective"', 'viewBox="0 0 1600 900"',
-            'transform:perspective(2400px) rotateX(9deg)',
+            'function projectTableText()',
             'class="table-plane"', 'id="ledger-content"',
             'id="table-mouse"', 'aria-pressed="false"',
             "scrollbar-width:none", 'class="folder-object"',
@@ -92,6 +92,27 @@ class DemoTests(unittest.TestCase):
         self.assertIn('rotateX(62deg) rotateZ(11deg)', page)
         self.assertIn('rotateX(63deg) rotateZ(-7deg)', page)
         self.assertIn('function profileSVG(kind,a,facing)', page)
+        # Perspective is an actual projective mapping for the transcript;
+        # the old shallow rotation alone could never establish convergence.
+        self.assertIn("layer.style.transform='matrix3d('", page)
+        self.assertIn('const q=[', page)
+        self.assertIn('[.253*W,.145*H]', page)
+        self.assertIn('[.888*W,.846*H]', page)
+        self.assertIn('requestAnimationFrame(projectTableText)', page)
+        self.assertIn('document.fonts.ready.then(projectTableText)', page)
+        # The three seats must not be stacked at the same depth: near
+        # figures sit lower and are larger in the room coordinate system.
+        self.assertIn('.participant.left{left:19.3%;top:34%}', page)
+        self.assertIn('.participant.right-top{left:12.7%;top:55%}', page)
+        self.assertIn('.participant.right-bottom{left:68.6%;top:56%}', page)
+        self.assertIn('.participant.left .avatar{width:102px;height:130px}', page)
+        self.assertIn('.participant.right-top .avatar{width:152px;height:192px}', page)
+        # No more miniature clasp and upright flying saucer.
+        self.assertIn('class="folder-illustration"', page)
+        self.assertIn('class="mouse-illustration"', page)
+        self.assertIn('Go via the wall above the FAR edge', page)
+        self.assertIn('follow the free space outside the right table edge', page)
+
         self.assertIn('position===\'right-bottom\'?\'left\':\'right\'', page)
         self.assertIn("No live intelligence is at the table.", page)
         self.assertNotIn('id="archive-open">Archivist room</button>', page)
