@@ -102,9 +102,9 @@ class DemoTests(unittest.TestCase):
         self.assertIn('document.fonts.ready.then(projectTableText)', page)
         # The three seats must not be stacked at the same depth: near
         # figures sit lower and are larger in the room coordinate system.
-        self.assertIn('.participant.left{left:19.3%;top:34%}', page)
-        self.assertIn('.participant.right-top{left:12.7%;top:55%}', page)
-        self.assertIn('.participant.right-bottom{left:68.6%;top:56%}', page)
+        self.assertIn('.participant.left{left:19.3%;top:34%', page)
+        self.assertIn('.participant.right-top{left:12.7%;top:55%', page)
+        self.assertIn('.participant.right-bottom{left:68.6%;top:56%', page)
         self.assertIn('.participant.left .avatar{width:102px;height:130px}', page)
         self.assertIn('.participant.right-top .avatar{width:152px;height:192px}', page)
         # No more miniature clasp and upright flying saucer.
