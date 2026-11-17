@@ -428,6 +428,79 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
  .table-mouse{right:11%;bottom:9%;width:52px;height:70px}
 }
 
+
+/* Pass 5: one screen-space camera, one tabletop projective map.
+   Moving a person nearer changes BOTH its size and its position along the
+   corresponding receding table edge. The speaker tail avoids the table. */
+.table-wood{left:17%;top:14.8889%;width:58%;height:73.8889%}
+.table-record{top:0;left:0;right:auto;bottom:auto;inset:auto;
+ width:100%;height:100%;box-sizing:border-box;padding:32px 34px 36px;
+ transform-origin:0 0;overflow-y:auto;overflow-x:hidden;
+ mask-image:linear-gradient(to bottom,transparent 0%,#000 8%,#000 100%);
+ /* JS computes the exact homography to the visible slate quadrilateral. */}
+.table-record .line{margin:0 0 15px;padding:7px 0 12px;line-height:1.42}
+.table-record .line .speech-text{font-size:1.44rem;font-weight:450}
+.table-record .line.narrow .speech-text{font-size:1.26rem}
+.table-record .line.medium .speech-text{font-size:1.36rem}
+.table-record .line .speaker{font-size:1.03rem}
+.participant{width:max-content;max-width:none}
+.participant .avatar{display:block}
+.participant.left{left:19.3%;top:34%;right:auto}
+.participant.left .avatar{width:102px;height:130px}
+.participant.right-top{left:12.7%;top:55%;right:auto}
+.participant.right-top .avatar{width:152px;height:192px}
+.participant.right-bottom{left:68.6%;top:56%;right:auto}
+.participant.right-bottom .avatar{width:152px;height:192px}
+.participant .person-name{font-size:1rem}
+.participant.right-top .person-name,.participant.right-bottom .person-name{font-size:1.16rem}
+.participant .person-cost{font-size:.76rem}
+.participant .person-actions button{width:27px;height:27px}
+.person-out{width:auto}
+.person-out .avatar,.participant.person-out .avatar{width:70px;height:91px}
+.person-out .person-name{font-size:.78rem!important}
+.person-out .person-cost{font-size:.62rem!important}
+.table-end{left:20%;bottom:6.5%;transform:none;gap:0}
+.folder-object{width:128px;height:94px;filter:drop-shadow(4px 4px 2px #2b3c4870);
+ transform:rotate(-5deg);transform-origin:center center;display:block}
+.folder-object:hover{transform:rotate(-5deg) translateY(-3px)}
+.folder-object .folder-tab,.folder-object .folder-cover{display:none}
+.folder-illustration{width:100%;height:100%;display:block;overflow:visible}
+.table-mouse{right:10%;bottom:6%;width:115px;height:88px;border:0;border-radius:0;
+ box-shadow:none;background:transparent;transform:rotate(4deg);padding:0;
+ filter:drop-shadow(4px 6px 3px #2b3f4680)}
+.table-mouse .mouse-seam,.table-mouse .mouse-wheel{display:none}
+.table-mouse .mouse-illustration{display:block;width:100%;height:100%;overflow:visible}
+.table-mouse[aria-pressed="true"]{outline:3px solid #78c6ba;outline-offset:2px;border-radius:40%}
+.speech-tail #tail-path{stroke-width:3;stroke:#fff3dc;opacity:.8}
+.speech-tail #tail-tip{r:4;opacity:.82}
+@media(max-width:1080px){
+ .table-wood{left:17%;width:58%}
+ .participant.left{left:18%;top:35%}
+ .participant.left .avatar{width:78px;height:100px}
+ .participant.right-top{left:12%;top:56%}
+ .participant.right-bottom{left:68%;top:57%}
+ .participant.right-top .avatar,.participant.right-bottom .avatar{width:118px;height:150px}
+ .table-record{padding:19px 20px 20px}
+ .table-record .line .speech-text{font-size:1.24rem}
+ .table-end{left:17%;bottom:6.5%}
+ .folder-object{width:103px;height:76px}
+ .table-mouse{right:9%;bottom:6%;width:92px;height:70px}
+}
+@media(max-width:650px){
+ .table-wood{left:17%;width:58%}
+ .participant.left{left:14%;top:35%}
+ .participant.left .avatar{width:54px;height:69px}
+ .participant.right-top{left:9%;top:56%}
+ .participant.right-bottom{left:66%;top:57%}
+ .participant.right-top .avatar,.participant.right-bottom .avatar{width:75px;height:96px}
+ .table-record{padding:9px 10px 12px}
+ .table-record .line .speech-text{font-size:1.01rem}
+ .table-record .line.narrow .speech-text{font-size:.93rem}
+ .table-end{left:13%;bottom:5%}
+ .folder-object{width:65px;height:47px}
+ .table-mouse{right:7%;bottom:5%;width:62px;height:46px}
+}
+
 </style></head>
 <body>
 <main class="room" aria-label="Snug's boardroom">
@@ -576,12 +649,44 @@ dialog::backdrop{background:#101e29bd;backdrop-filter:blur(5px)}
       </div>
       <div class="table-end">
         <button class="folder-object" id="folder-open" title="Tabled documents" aria-label="Open tabled document folder">
-          <span class="folder-tab"></span><span class="folder-cover"></span>
+          <svg class="folder-illustration" viewBox="0 0 180 130" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <defs>
+              <linearGradient id="manila-cover" x1="0" y1="0" x2="1" y2="1">
+                <stop stop-color="#ffd43b"/><stop offset=".58" stop-color="#ffc50b"/><stop offset="1" stop-color="#de9b12"/>
+              </linearGradient>
+            </defs>
+            <path d="M36 13 Q42 5 60 7 L145 18 Q162 19 163 38 L158 101 Q154 121 132 124 L28 113 Q10 111 13 91 L23 36 Q25 20 36 13Z"
+              fill="#dfae29" stroke="#8d6931" stroke-width="3" opacity=".6" transform="translate(4 4)"/>
+            <path d="M38 9 Q45 3 60 8 L144 19 Q163 22 163 37 L157 105 Q153 120 131 122 L29 111 Q10 110 13 91 L23 36 Q26 18 38 9Z"
+              fill="#f8d45a" stroke="#e7aa21" stroke-width="2.5"/>
+            <path d="M34 17 Q42 8 61 12 L144 23 Q157 25 157 40 L153 99 Q150 116 132 116 L31 105 Q20 104 22 90 L29 37 Q30 23 34 17Z"
+              fill="url(#manila-cover)" stroke="#e2a51f" stroke-width="2"/>
+            <path d="M32 29 Q52 21 92 28 L147 36" stroke="#fff4ba" stroke-width="3" opacity=".7" fill="none"/>
+          </svg><span class="folder-tab"></span><span class="folder-cover"></span>
         </button>
         <span class="doc-count" id="doc-count"></span>
       </div>
       <button class="table-mouse" id="table-mouse" title="Click mouse, then use wheel to scroll conversation" aria-label="Activate tabletop history scrolling" aria-pressed="false">
-        <span class="mouse-seam"></span><span class="mouse-wheel"></span>
+        <svg class="mouse-illustration" viewBox="0 0 140 102" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <defs>
+            <linearGradient id="physical-mouse" x1="0" y1="0" x2="1" y2=".9">
+              <stop stop-color="#edf3f0"/><stop offset=".48" stop-color="#d1ddd9"/><stop offset="1" stop-color="#71898b"/>
+            </linearGradient>
+            <radialGradient id="mouse-highlight" cx=".35" cy=".2" r=".8">
+              <stop stop-color="#fff" stop-opacity=".74"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="72" cy="85" rx="50" ry="12" fill="#28464d" opacity=".35"/>
+          <path d="M48 20 Q70 8 96 19 Q119 32 123 54 Q125 75 102 85 Q73 95 47 82 Q22 72 25 50 Q29 29 48 20Z"
+            fill="#445b62" opacity=".45" transform="translate(3 6)"/>
+          <path d="M48 18 Q71 6 95 17 Q119 29 121 51 Q123 72 100 82 Q73 91 47 79 Q23 69 26 48 Q29 27 48 18Z"
+            fill="url(#physical-mouse)" stroke="#586e74" stroke-width="2.6"/>
+          <path d="M48 18 Q71 6 95 17 Q119 29 121 51 Q123 72 100 82 Q73 91 47 79 Q23 69 26 48 Q29 27 48 18Z"
+            fill="url(#mouse-highlight)"/>
+          <path d="M78 17 Q77 30 76 45" fill="none" stroke="#7e999a" stroke-width="2"/>
+          <rect x="74" y="26" width="7" height="15" rx="3.5" transform="rotate(5 77 33)" fill="#5e767d"/>
+          <path d="M35 53 Q50 69 66 71" fill="none" stroke="#fff" stroke-width="2" opacity=".35"/>
+        </svg><span class="mouse-seam"></span><span class="mouse-wheel"></span>
       </button>
     </div>
     <input type="file" id="table-files" multiple aria-label="Select document for tabletop">
