@@ -9,6 +9,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 from cobble.github_memory_access import read_github_discussion_mcp_text as read_archived_discussion
+from cobble.github_conversation_access import read_github_conversation_mcp_text as read_archived_conversation
 from cobble.remote_ops import (
     arena_status as read_arena_status,
     verify_arena as verify_arena_copy,
@@ -65,6 +66,20 @@ def read_github_discussion(repository: str, number: int, offset: int = 0,
     changes memory. Import the discussion first.
     """
     return read_archived_discussion(store(), repository, number, offset, max_chars)
+
+
+@mcp.tool()
+def read_github_conversation(repository: str, kind: str, number: int,
+                             offset: int = 0, max_chars: int = 12000) -> str:
+    """Read a locally archived GitHub Issue, PR or Discussion, including comments.
+
+    kind must be exactly "issue", "pull", or "discussion". Returns a
+    bounded JSON-text page with source, original authors, chronological
+    comments, review material and next_offset. Never fetches live GitHub,
+    modifies memory, or silently substitutes a different conversation.
+    """
+    return read_archived_conversation(store(), repository, kind, number,
+                                      offset, max_chars)
 
 
 @mcp.tool()
