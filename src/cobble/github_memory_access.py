@@ -11,13 +11,24 @@ from pathlib import Path
 from cobble.git_archive import _slug
 
 
-def _archive_record(store: Path, slug: str, number: int) -> dict:
+_KINDS = {
+    "issue": ("issues", "issue", "issue"),
+    "pull": ("pulls", "pull_request", "issue"),
+    "discussion": ("discussions", "discussion", "discussion"),
+}
+
+
+def _archive_record(store: Path, slug: str, number: int,
+                    kind: str = "discussion") -> dict:
+    if type(kind) is not str or kind not in _KINDS:
+        raise ValueError("Kind must be issue, pull or discussion")
     slug = _slug(slug)
     if type(number) is not int or number < 1:
-        raise ValueError("Discussion number must be a positive integer")
+        raise ValueError("Conversation number must be a positive integer")
+    directory, expected_kind, entity_key = _KINDS[kind]
     owner, repo = slug.split("/")
     base = (Path(store).expanduser().resolve() / "github" / "conversations"
-            / owner / repo / "discussions" / str(number))
+            / owner / repo / directory / str(number))
     pointer_path = base / "latest.json"
     if pointer_path.is_symlink():
         raise ValueError("Archive pointer cannot be a symlink")
@@ -36,9 +47,18 @@ def _archive_record(store: Path, slug: str, number: int) -> dict:
                            separators=(",", ":")).encode("utf-8")
     if hashlib.sha256(canonical).hexdigest() != digest:
         raise ValueError("Archived discussion does not match its digest")
-    discussion = record.get("discussion", {})
-    if record.get("kind") != "discussion" or discussion.get("number") != number:
-        raise ValueError("Archive record is not the requested discussion")
+    entity = record.get(entity_key)
+    if (record.get("kind") != expected_kind or
+            not isinstance(entity, dict) or
+            type(entity.get("number")) is not int or
+            entity["number"] != number):
+        raise ValueError("Archive record is not the requested " + kind)
+    if kind == "pull":
+        pull = record.get("pull")
+        if (not isinstance(pull, dict) or
+                type(pull.get("number")) is not int or
+                pull["number"] != number):
+            raise ValueError("Archived pull metadata does not match requested number")
     return record
 
 

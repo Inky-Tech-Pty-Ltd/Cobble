@@ -1,0 +1,43 @@
+name: Local GitHub conversation reader
+on:
+  pull_request:
+    paths:
+      - 'src/cobble/github_memory_access.py'
+      - 'src/cobble/github_conversation_access.py'
+      - 'src/cobble/github_conversations.py'
+      - 'scripts/mcp_server.py'
+      - 'tests/test_github_memory_access.py'
+      - 'tests/test_github_conversation_access.py'
+      - 'tests/test_github_conversations.py'
+      - '.github/workflows/github-conversation-reader.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/cobble/github_memory_access.py'
+      - 'src/cobble/github_conversation_access.py'
+      - 'src/cobble/github_conversations.py'
+      - 'scripts/mcp_server.py'
+      - 'tests/test_github_memory_access.py'
+      - 'tests/test_github_conversation_access.py'
+      - 'tests/test_github_conversations.py'
+      - '.github/workflows/github-conversation-reader.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  archive-reader:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Offline immutable archive and reader tests
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_github_conversations.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_github_memory_access.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_github_conversation_access.py' -v
