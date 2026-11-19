@@ -39,6 +39,17 @@ The tools are:
 - `read_github_discussion(repository, number, offset=0, max_chars=12000)` —
   read paginated text from a **previously archived** GitHub Discussion,
   including comments and replies, with original author and source URL.
+- `read_github_conversation(repository, kind, number, offset=0, max_chars=12000)` —
+  retrieve a **previously archived** `kind="issue"`, `kind="pull"` or
+  `kind="discussion"`. Issue pages include original author and comments;
+  PR pages also include reviews, inline review comments with file/line
+  references, and timeline events. The caller selects the kind explicitly
+  because GitHub numbers can overlap across conversation types.
+  The result is **JSON text**, not a nested structured result, for compatibility
+  with the existing working Discussion MCP transport. Follow `next_offset`
+  to retrieve the remainder of the *local* snapshot. No GitHub requests
+  are made by this reader. Existing `read_github_discussion` is retained
+  for compatibility.
 
 The store defaults to `~/cobble-data` and may be overridden by
 `COBBLE_DATA_DIR`. The tools do not write to the store, make network
