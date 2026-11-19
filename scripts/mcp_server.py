@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
-from cobble.github_memory_access import read_github_discussion as read_archived_discussion
+from cobble.github_memory_access import read_github_discussion_mcp_text as read_archived_discussion
 from cobble.remote_ops import (
     arena_status as read_arena_status,
     verify_arena as verify_arena_copy,
@@ -57,11 +57,12 @@ def search_memory(query: str, limit: int = 10) -> dict:
 
 @mcp.tool()
 def read_github_discussion(repository: str, number: int, offset: int = 0,
-                           max_chars: int = 12000) -> dict:
+                           max_chars: int = 12000) -> str:
     """Read part of a GitHub Discussion archived in Cobble, including comments.
 
-    Returns bounded text pages and next_offset for continuation; never
-    requests GitHub live or changes memory. Import the discussion first.
+    Returns an explicit JSON text page with content and next_offset, avoiding
+    clients that drop structured responses. Never requests GitHub live or
+    changes memory. Import the discussion first.
     """
     return read_archived_discussion(store(), repository, number, offset, max_chars)
 

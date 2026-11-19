@@ -4,7 +4,8 @@ import unittest
 from pathlib import Path
 
 from cobble.github_conversations import preserve
-from cobble.github_memory_access import read_github_discussion
+from cobble.github_memory_access import (read_github_discussion,
+                                         read_github_discussion_mcp_text)
 
 
 class ArchivedDiscussionReaderTests(unittest.TestCase):
@@ -89,6 +90,20 @@ class ArchivedDiscussionReaderTests(unittest.TestCase):
         path.write_text(path.read_text().replace("Independent review", "Corrupted!"))
         with self.assertRaisesRegex(ValueError, "digest"):
             read_github_discussion(self.store, self.repo, 8)
+
+    def test_mcp_text_serialisation_preserves_page_and_pagination(self):
+        original = read_github_discussion(self.store, self.repo, 8,
+                                         offset=4, max_chars=1000)
+        wire = read_github_discussion_mcp_text(self.store, self.repo, 8,
+                                              offset=4, max_chars=1000)
+        self.assertIsInstance(wire, str)
+        self.assertEqual(json.loads(wire), original)
+        self.assertIn("Sankarshan", wire)
+        self.assertEqual(json.loads(wire)["next_offset"], 1004)
+
+    def test_mcp_text_keeps_file_not_found_explicit(self):
+        with self.assertRaises(FileNotFoundError):
+            read_github_discussion_mcp_text(self.store, self.repo, 999)
 
     def test_missing_discussion_is_not_silently_fetched(self):
         with self.assertRaises(FileNotFoundError):

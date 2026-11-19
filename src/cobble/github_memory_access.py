@@ -93,3 +93,16 @@ def read_github_discussion(store: Path, repository: str, number: int,
         "truncated": next_offset < len(text),
         "scope": "Locally archived GitHub discussion; no live GitHub request",
     }
+
+
+def read_github_discussion_mcp_text(store: Path, repository: str, number: int,
+                                    offset: int = 0, max_chars: int = 12000) -> str:
+    """Transport a verified discussion page as explicit UTF-8 JSON text.
+
+    Some MCP clients silently discard successful structured discussion
+    responses. Preserve the exact reader fields and bounded pagination,
+    but return text rather than a dictionary at the MCP boundary.
+    Missing files and integrity failures still raise their original errors.
+    """
+    page = read_github_discussion(store, repository, number, offset, max_chars)
+    return json.dumps(page, ensure_ascii=False)
