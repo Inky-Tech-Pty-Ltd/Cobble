@@ -54,7 +54,7 @@ class WorkbenchTests(unittest.TestCase):
                      'TABLE_FILES_LIMIT=8', "stageFiles(e.dataTransfer.files)",
                      "meetingDrop.ondrop=e=>", "drawTableFiles()",
                      "On table · names only · not shared",
-                     "No file bytes are read"):
+                     "File bytes are never read"):
             self.assertIn(item, self.page)
         for forbidden in ("FileReader", "readAsDataURL(", "file.text(",
                           "file.arrayBuffer(", "new FormData("):
