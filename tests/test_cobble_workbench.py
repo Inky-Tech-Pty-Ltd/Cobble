@@ -69,6 +69,15 @@ class WorkbenchTests(unittest.TestCase):
                      "$('question').value='';resizeComposer();"):
             self.assertIn(item, self.page)
 
+    def test_operator_posts_without_live_supplier(self):
+        for item in ("'post-only'", "None · post only", "'live/post'",
+                     "{text:question}", "result.turn.status!=='posted'",
+                     "if(t.status==='posted'&&t.provider==='operator')continue",
+                     "serverReady=true", "await reload();",
+                     "Posted locally · no supplier called."):
+            self.assertIn(item, self.page)
+        self.assertNotIn("serverReady=available.size>0", self.page)
+
     def test_live_call_contract_and_disclosure_are_retained(self):
         for required in ("'live/preview'", "'live/send'",
                          "{approval_token:preview.approval_token}",
