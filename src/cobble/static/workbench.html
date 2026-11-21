@@ -276,17 +276,44 @@ function titled(name,icon){
  return line;
 }
 const HELP_DOC='https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md';
-let currentMeetingTitle=(safeStorageGet('cobble.meeting.title')||'Current meeting').trim().slice(0,100)||'Current meeting';
-$('meeting-title').value=currentMeetingTitle;
-$('meeting-sidebar-title').textContent=currentMeetingTitle;
-document.title='Cobble · '+currentMeetingTitle;
+let meetings=[{id:'default',title:'Current meeting'}];
+let currentRoomId=safeStorageGet('cobble.meeting.active')||'default';
+let currentMeetingTitle='Current meeting';
+const roomDrafts=new Map();
+function renderMeetingList(){
+ const target=$('meeting-list');target.replaceChildren();
+ for(const room of meetings){
+  const item=make('button');item.className='meeting-item'+(room.id===currentRoomId?' active':'');
+  if(room.id===currentRoomId)item.setAttribute('aria-current','page');
+  const icon=make('span','▢');icon.setAttribute('aria-hidden','true');
+  item.append(icon,make('strong',room.title));item.title=room.title;
+  item.onclick=()=>switchMeeting(room.id);
+  target.append(item);
+ }
+}
+function setCurrentMeetingName(title){
+ currentMeetingTitle=title;
+ $('meeting-title').value=title;
+ if(currentScreen==='meetings')document.title='Cobble · '+title;
+ renderMeetingList();
+}
 $('meeting-title').oninput=()=>{
- currentMeetingTitle=$('meeting-title').value.trim().slice(0,100)||'Current meeting';
- $('meeting-sidebar-title').textContent=currentMeetingTitle;
- safeStorageSet('cobble.meeting.title',currentMeetingTitle);
+ currentMeetingTitle=$('meeting-title').value.trim().slice(0,100)||'New meeting';
  document.title='Cobble · '+currentMeetingTitle;
 };
-$('meeting-title').onblur=()=>{$('meeting-title').value=currentMeetingTitle};
+$('meeting-title').onblur=async()=>{
+ const roomId=currentRoomId,room=meetings.find(m=>m.id===roomId);
+ const title=$('meeting-title').value.trim().slice(0,100)||room?.title||'New meeting';
+ $('meeting-title').value=title;
+ if(room?.title===title)return;
+ try{
+  const renamed=await api('live/rooms/rename',{room_id:roomId,title});
+  Object.assign(room,renamed);
+  if(roomId==='default')safeStorageSet('cobble.meeting.title',title);
+  if(currentRoomId===roomId)setCurrentMeetingName(title);
+  else renderMeetingList();
+ }catch(error){status('Meeting rename failed: '+error.message,true);if(currentRoomId===roomId)setCurrentMeetingName(room.title)}
+};
 $('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
  if(!['senses','memories','intelligences','meetings','setup','help'].includes(name))return;
@@ -305,7 +332,47 @@ function setScreen(name){
  if(name==='intelligences')renderIntelligences();
 }
 for(const el of document.querySelectorAll('.nav-item'))el.onclick=()=>setScreen(el.dataset.screen);
-$('meeting-current').onclick=()=>setScreen('meetings');
+async function loadMeetings(){
+ const response=await fetch('/api/live/rooms',{cache:'no-store'});
+ if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
+ const data=await response.json();
+ meetings=data.rooms||[];
+ // Preserve the legacy default conversation and its browser-local title.
+ const oldLabel=safeStorageGet('cobble.meeting.title');
+ const original=meetings.find(m=>m.id==='default');
+ if(original&&original.title==='Current meeting'&&oldLabel&&oldLabel!=='Current meeting'){
+  const renamed=await api('live/rooms/rename',{room_id:'default',title:oldLabel});
+  Object.assign(original,renamed);
+ }
+ if(!meetings.some(m=>m.id===currentRoomId))currentRoomId='default';
+ safeStorageSet('cobble.meeting.active',currentRoomId);
+ setCurrentMeetingName(meetings.find(m=>m.id===currentRoomId)?.title||'Current meeting');
+}
+async function switchMeeting(roomId){
+ if(busy||roomId===currentRoomId)return;
+ const room=meetings.find(m=>m.id===roomId);if(!room)return;
+ roomDrafts.set(currentRoomId,$('question').value);
+ currentRoomId=roomId;
+ safeStorageSet('cobble.meeting.active',roomId);
+ setCurrentMeetingName(room.title);
+ $('question').value=roomDrafts.get(roomId)||'';
+ resizeComposer();
+ // Filename staging belongs to the active meeting only.
+ tabledFiles.length=0;drawTableFiles();
+ closeInspector();setScreen('meetings');updateSend();
+ try{await reload();status('')}catch(error){status('Meeting could not load: '+error.message,true)}
+}
+$('new-meeting').onclick=async()=>{
+ if(busy)return;
+ $('new-meeting').disabled=true;
+ try{
+  const created=await api('live/rooms/create',{title:'New meeting'});
+  meetings.splice(1,0,created);
+  await switchMeeting(created.id);
+  $('meeting-title').focus();$('meeting-title').select();
+ }catch(error){status('Could not create meeting: '+error.message,true)}
+ finally{$('new-meeting').disabled=false}
+};
 
 const sidebar=$('sidebar');
 const rememberedWidth=Number(safeStorageGet('cobble.sidebar.width'));
