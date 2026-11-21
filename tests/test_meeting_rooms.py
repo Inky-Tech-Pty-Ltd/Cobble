@@ -58,7 +58,7 @@ class MeetingRoomTests(unittest.TestCase):
                 catalog.require(bad_id)
         with self.assertRaises(ValueError):
             catalog.require("a" * 16)
-        for bad_title in ("", " ", "a" * 101, "abc\\n", None):
+        for bad_title in ("", " ", "a" * 101, "abc\n", None):
             with self.assertRaises(ValueError):
                 catalog.create(title=bad_title)
         with self.assertRaises(ValueError):
