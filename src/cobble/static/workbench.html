@@ -256,17 +256,33 @@ function titled(name,icon){
  if(icon)line.append(providerMark(icon));else line.append(make('span','☺'));
  return line;
 }
+const HELP_DOC='https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md';
+let currentMeetingTitle=(safeStorageGet('cobble.meeting.title')||'Current meeting').trim().slice(0,100)||'Current meeting';
+$('meeting-title').value=currentMeetingTitle;
+$('meeting-sidebar-title').textContent=currentMeetingTitle;
+document.title='Cobble · '+currentMeetingTitle;
+$('meeting-title').oninput=()=>{
+ currentMeetingTitle=$('meeting-title').value.trim().slice(0,100)||'Current meeting';
+ $('meeting-sidebar-title').textContent=currentMeetingTitle;
+ safeStorageSet('cobble.meeting.title',currentMeetingTitle);
+ document.title='Cobble · '+currentMeetingTitle;
+};
+$('meeting-title').onblur=()=>{$('meeting-title').value=currentMeetingTitle};
+$('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
- if(!['memories','intelligences','meetings','graph','setup'].includes(name))return;
+ if(!['senses','memories','intelligences','meetings','setup','help'].includes(name))return;
  currentScreen=name;
  for(const el of document.querySelectorAll('.screen'))el.classList.toggle('active',el.id==='screen-'+name);
  for(const el of document.querySelectorAll('.nav-item')){
   const on=el.dataset.screen===name;el.classList.toggle('active',on);
   if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
  }
- const titles={meetings:'Current meeting',memories:'Memories',intelligences:'Intelligences',graph:'Graph',setup:'Setup'};
- const subtitles={meetings:'One durable local meeting · no autonomous turn-taking yet',memories:'Explore the sources Cobble can remember',intelligences:'Supplier connections and participation',graph:'An emerging map of remembered relationships',setup:'Local service and privacy boundaries'};
- $('page-title').textContent=titles[name];$('page-subtitle').textContent=subtitles[name];
+ const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,setup:'Setup',help:'Help'};
+ $('meeting-title').hidden=name!=='meetings';
+ $('page-title').hidden=name==='meetings';
+ $('page-title').textContent=titles[name];
+ $('context-help').href=HELP_DOC+'#'+(name==='help'?'workspace-navigation':name);
+ document.title='Cobble · '+titles[name];
  if(name==='intelligences')renderIntelligences();
 }
 for(const el of document.querySelectorAll('.nav-item'))el.onclick=()=>setScreen(el.dataset.screen);
@@ -345,12 +361,7 @@ function renderIntelligences(){
 }
 function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
- if(!turns.length){
-  const empty=make('div');empty.className='zero';
-  empty.append(make('strong','A room for conversations.'));
-  empty.append(make('span',serverReady?'This meeting has no recorded turns yet.':'Connect McKay to load the locally recorded meeting.'));
-  thread.append(empty);return;
- }
+ if(!turns.length)return;
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
   const hb=make('div');hb.className='message';hb.append(titled('Joe',null),make('p',t.question||''));
@@ -507,7 +518,7 @@ $('memory-form').onsubmit=async e=>{
  target.append(make('p','Searching local archive…'));
  try{
   const result=await api('search',{query});target.replaceChildren();
-  if(!result.results?.length)target.append(make('p','No indexed GitHub memories found.'));
+  if(!result.results?.length)target.append(make('p','No indexed GitHub senses found.'));
   for(const entry of result.results||[]){
    const d=make('details'),summary=make('summary',(entry.title||'Untitled')+' · '+(entry.reference||''));d.append(summary,make('p',entry.excerpt||''));
    d.addEventListener('toggle',async()=>{
@@ -530,7 +541,7 @@ $('memory-form').onsubmit=async e=>{
   $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
   renderSuppliers();populateResponder();
   if(available.size)await reload();
-  else{renderTurns();status('No live intelligences connected. Start McKay with the supplier flags you intend to use.')}
+  else{renderTurns();status('')}
  }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}
 })();
 })();
