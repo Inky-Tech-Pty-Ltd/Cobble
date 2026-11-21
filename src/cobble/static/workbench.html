@@ -84,8 +84,9 @@ button{color:inherit}
 .thread{padding-top:25px;padding-bottom:26px;display:flex;flex-direction:column;gap:16px}
 .exchange{display:flex;align-items:flex-start;width:100%;max-width:100%;justify-content:flex-end;gap:9px}
 .exchange.human,.exchange.supplier{align-self:stretch}
-.exchange.human .message{width:83%}
-.exchange.supplier .message{width:85%}
+/* One reading column: suppliers start at its left edge, Joe is inset by 20%; all share the right edge. */
+.exchange.human .message{width:80%}
+.exchange.supplier .message{width:100%}
 .message{padding:15px 17px;border-radius:15px;line-height:1.53;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem;width:100%}
 .human .message{background:#e8f1fb;color:#243b4c}
 .supplier .message{background:#fff;border:1px solid #e0e5e9;box-shadow:0 2px 8px #1528350b}
@@ -147,8 +148,8 @@ button{color:inherit}
 .disclosure-note{border-left:3px solid #89a3bb;padding-left:10px;color:#667787;margin-top:18px}
 .link{color:#2b5e79;text-decoration:none}
 .link:hover{text-decoration:underline}
-@media(max-width:900px){.inspector.open{position:absolute;right:0;top:0;bottom:0;width:min(395px,90vw);box-shadow:-6px 0 26px #283b4e2b;z-index:15}.reading{padding:0 15px}.exchange{max-width:94%!important}}
-@media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}}
+@media(max-width:900px){.inspector.open{position:absolute;right:0;top:0;bottom:0;width:min(395px,90vw);box-shadow:-6px 0 26px #283b4e2b;z-index:15}.reading{padding:0 15px}.exchange{max-width:100%!important}}
+@media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}.exchange.human .message{width:90%}}
 @media(prefers-reduced-motion:no-preference){.supplier-card,.nav-item,.secondary{transition:background-color .12s ease}}
 </style>
 </head>

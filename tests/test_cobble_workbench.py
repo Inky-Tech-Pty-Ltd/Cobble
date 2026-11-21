@@ -107,8 +107,10 @@ class WorkbenchTests(unittest.TestCase):
                      "cobble.meeting.active", "roomDrafts.set(currentRoomId",
                      "tabledFiles.length=0;drawTableFiles()", "await loadMeetings()",
                      "room_id:roomId", "id=\"meeting-list\"",
-                     "id=\"new-meeting\"", ".exchange.supplier .message{width:85%}",
-                     ".exchange.human .message{width:83%}",
+                     "id=\"new-meeting\"", ".exchange.supplier .message{width:100%}",
+                     ".exchange.human .message{width:80%}",
+                     ".exchange.human .message{width:90%}",
+                     ".exchange{max-width:100%!important}",
                      "justify-content:flex-end", "meetings=data.rooms||[]"):
             self.assertIn(item, self.page)
         self.assertNotIn("On table · names only · not shared", self.page)
