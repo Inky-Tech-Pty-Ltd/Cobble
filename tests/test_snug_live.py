@@ -84,6 +84,39 @@ class LiveTests(unittest.TestCase):
         self.assertEqual(second["status"], "completed")
         self.assertEqual(len(self.supplier.calls[1].previous_exchanges), 1)
 
+    def test_operator_can_post_without_supplier_and_future_context_is_explicit(self):
+        offline = LiveChatService(self.store, adapters={})
+        post = offline.post_operator(text="  Standing order: listen first.  ")["turn"]
+        self.assertEqual(post["provider"], "operator")
+        self.assertEqual(post["status"], "posted")
+        self.assertEqual(post["question"], "Standing order: listen first.")
+        self.assertIsNone(post["answer"])
+        self.assertEqual(post["payload"], {})
+        self.assertEqual(offline.session()["live_providers"], [])
+        with self.assertRaisesRegex(PermissionError, "unavailable"):
+            offline.preview(question="No supplier here")
+        folder = self.store / "snug" / "live" / "default"
+        self.assertEqual(len(list((folder / "attempts").glob("*.json"))), 0)
+        self.assertFalse((folder / "outcomes").exists())
+        path = folder / "turns" / (post["turn_id"] + ".json")
+        self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+        again = LiveChatService(self.store, adapter=self.supplier)
+        self.assertEqual(again.session()["turns"][0]["question"], post["question"])
+        next_preview = again.preview(question="What is on the table?")
+        self.assertEqual(next_preview["previous_exchanges"][0]["provider"], "operator")
+        self.assertEqual(next_preview["previous_exchanges"][0]["question"], post["question"])
+        self.assertEqual(next_preview["previous_exchanges"][0]["answer"], "")
+
+    def test_post_is_bounded_and_invalidates_prior_supplier_review(self):
+        for value in ("", " ", "x" * 2001, None):
+            with self.assertRaises(ValueError):
+                self.svc.post_operator(text=value)
+        preview = self.svc.preview(question="Before the convenor posts")
+        self.svc.post_operator(text="A new fact is on the table")
+        self.assertEqual(len(self.supplier.calls), 0)
+        with self.assertRaisesRegex(PermissionError, "changed after review"):
+            self.svc.send(approval_token=preview["approval_token"])
+
     def test_unknown_outcome_is_retained_without_retry(self):
         failure = Supplier(self.store, fail=True)
         svc = LiveChatService(self.store, adapter=failure)

@@ -48,7 +48,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             adapters["claude"] = ClaudeAdapter(allow_network=True, output_tokens=2048)
         if live_mistral:
             adapters["mistral"] = MistralAdapter(allow_network=True, output_tokens=2048)
-    live = LiveChatService(store, adapters=adapters) if requested else None
+    # Retain the same durable local meeting even with zero supplier adapters.
+    live = LiveChatService(store, adapters=adapters)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
@@ -93,12 +94,12 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             elif self.path == "/assets/cobble-logo.png":
                 self.reply(200, LOGO.read_bytes(), "image/png")
             elif self.path == "/api/health":
-                self.reply(200, {"ok": True, "live_suppliers": bool(live),
+                self.reply(200, {"ok": True, "live_suppliers": bool(requested),
                                  "live_gpt": "openai" in requested,
                                  "live_providers": [p for p in ("openai", "claude", "mistral")
                                                     if p in requested],
                                  "source": "github"})
-            elif self.path == "/api/live/session" and live is not None:
+            elif self.path == "/api/live/session":
                 self.reply(200, live.session())
             else:
                 self.reply(404, {"error": "Not found"})
@@ -107,7 +108,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             if not self.trusted():
                 return
             if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange",
-                                 "/api/live/preview", "/api/live/send"):
+                                 "/api/live/preview", "/api/live/send", "/api/live/post"):
                 self.reply(404, {"error": "Not found"})
                 return
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
@@ -139,15 +140,19 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         raise PermissionError("Execute only a reviewed one-shot approval")
                     result = service.reviewed_exchange(
                         approval_token=data["approval_token"])
+                elif self.path == "/api/live/post":
+                    if set(data) != {"text"}:
+                        raise PermissionError("Only a local operator message may be posted")
+                    result = live.post_operator(text=data["text"])
                 elif self.path == "/api/live/preview":
-                    if live is None:
+                    if not requested:
                         raise PermissionError("Live supplier access is disabled")
                     if set(data) not in ({"question"}, {"question", "provider"}):
                         raise PermissionError("Only a question and supplier may be reviewed")
                     result = live.preview(question=data["question"],
                                           provider=data.get("provider", "openai"))
                 else:
-                    if live is None:
+                    if not requested:
                         raise PermissionError("Live supplier access is disabled")
                     if set(data) != {"approval_token"}:
                         raise PermissionError("Only the exact one-time live approval is accepted")

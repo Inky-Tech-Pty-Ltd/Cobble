@@ -30,10 +30,13 @@ readable shared conversation, and supplier controls below the navigation.
   heading to rename the meeting. The title is browser-local (localStorage),
   not yet stored in the server's durable conversation ledger. Multiple
   meetings and autonomous chairing remain future work.
-- A message goes **to the room** as an operator utterance. The browser
-  still makes **one** backend supplier call for each Send. A leading natural
-  address such as "Claude, ..." takes precedence; otherwise the visible
-  **Next reply** selector chooses the responding in-room supplier. Automatic
+- A message goes **to the room** as an operator utterance. When no
+  supplier is enabled, **Send records the message locally without requiring
+  a reply**, an API key or a network call. With suppliers enabled the
+  **Next reply** selector can choose a responding supplier or **None · post
+  only**. Supplier replies still use the existing single-use review and
+  approval-token mechanism. A leading address such as "Claude, ..." directs
+  a supplier call unless **post only** is explicitly selected. Automatic
   team turn-taking and standing orders are **not** implemented.
 - **The composer grows** as the operator types, up to a screen-relative cap;
   after a successful Send it contracts again. Shift+Enter inserts a newline.
@@ -92,9 +95,13 @@ shows historical **outbound calls**, not a private context or private side room.
 #### Meetings
 
 One durable local conversation. Click the heading to edit its browser-local
-title; other browsers do not automatically receive that title. Each Send
-currently calls one chosen supplier. A procedural Chair and standing orders
-are not implemented yet.
+title; other browsers do not automatically receive that title. The
+convenor can **post their own message without any supplier present**.
+Those posts are durably recorded on McKay in the same private ledger,
+identified as operator-only contributions, and included among the up-to-four
+prior exchanges in later *reviewed* supplier requests. When a supplier is
+selected, each Send still calls only that supplier, with no automatic retry.
+A procedural Chair and standing orders are not implemented yet.
 
 Drag a file anywhere onto the Meetings workspace to **stage its name on the
 table**, or click the paperclip next to the message box and choose local files.
