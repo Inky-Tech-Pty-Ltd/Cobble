@@ -1,6 +1,6 @@
 <p align="right">
   <img
-    src="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/assets/Cobble%20boot%20logo.png"
+    src="docs/assets/cobble-logo.png"
     alt="Cobble logo"
     width="130"
   />
