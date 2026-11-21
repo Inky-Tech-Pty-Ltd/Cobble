@@ -5,12 +5,14 @@ on:
       - 'src/cobble/snug_exchange.py'
       - 'src/cobble/snug_demo.py'
       - 'src/cobble/snug_live.py'
+      - 'src/cobble/meeting_rooms.py'
       - 'src/cobble/static/snug_demo.html'
       - 'src/cobble/static/workbench.html'
       - 'scripts/snug_demo_web.py'
       - 'tests/test_snug_demo.py'
       - 'tests/test_cobble_workbench.py'
       - 'tests/test_snug_live.py'
+      - 'tests/test_meeting_rooms.py'
       - 'docs/snug-demo.md'
       - 'scripts/snug_exchange.py'
       - 'tests/test_snug_exchange.py'
@@ -21,12 +23,14 @@ on:
       - 'src/cobble/snug_exchange.py'
       - 'src/cobble/snug_demo.py'
       - 'src/cobble/snug_live.py'
+      - 'src/cobble/meeting_rooms.py'
       - 'src/cobble/static/snug_demo.html'
       - 'src/cobble/static/workbench.html'
       - 'scripts/snug_demo_web.py'
       - 'tests/test_snug_demo.py'
       - 'tests/test_cobble_workbench.py'
       - 'tests/test_snug_live.py'
+      - 'tests/test_meeting_rooms.py'
       - 'docs/snug-demo.md'
       - 'scripts/snug_exchange.py'
       - 'tests/test_snug_exchange.py'
@@ -46,4 +50,5 @@ jobs:
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_exchange.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_demo.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_live.py' -v
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_meeting_rooms.py' -v
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_cobble_workbench.py' -v
