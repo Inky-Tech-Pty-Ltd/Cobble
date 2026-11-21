@@ -38,7 +38,7 @@ class WorkbenchTests(unittest.TestCase):
         self.assertNotIn("Use the padlock", self.page)
 
     def test_editable_browser_local_meeting_title_and_context_help(self):
-        for value in ('id="meeting-title"', 'id="meeting-sidebar-title"',
+        for value in ('id="meeting-title"', 'id="meeting-list"', 'id="new-meeting"',
                       "cobble.meeting.title", "'meeting-title').oninput",
                       "'meeting-title').onblur", "'meeting-title').onkeydown",
                       'id="context-help"', "HELP_DOC+'#'",
@@ -53,13 +53,13 @@ class WorkbenchTests(unittest.TestCase):
                      'id="add-table-file"', 'id="table-file-input"',
                      'TABLE_FILES_LIMIT=8', "stageFiles(e.dataTransfer.files)",
                      "meetingDrop.ondrop=e=>", "drawTableFiles()",
-                     "On table · names only · not shared",
+                     "Filename staged locally; contents not yet shared",
                      "File bytes are never read"):
             self.assertIn(item, self.page)
         for forbidden in ("FileReader", "readAsDataURL(", "file.text(",
                           "file.arrayBuffer(", "new FormData("):
             self.assertNotIn(forbidden, self.page)
-        self.assertIn("const preview=await api('live/preview',{question,provider:recipient})", self.page)
+        self.assertIn("const preview=await api('live/preview',{question,provider:recipient,room_id:roomId})", self.page)
 
     def test_composer_grows_and_resets_after_send(self):
         for item in ("function resizeComposer()", "input.scrollHeight",
@@ -71,7 +71,7 @@ class WorkbenchTests(unittest.TestCase):
 
     def test_operator_posts_without_live_supplier(self):
         for item in ("'post-only'", "None · post only", "'live/post'",
-                     "{text:question}", "result.turn.status!=='posted'",
+                     "{text:question,room_id:roomId}", "result.turn.status!=='posted'",
                      "if(t.status==='posted'&&t.provider==='operator')continue",
                      "serverReady=true", "await reload();",
                      "Posted locally · no supplier called."):
@@ -80,7 +80,7 @@ class WorkbenchTests(unittest.TestCase):
 
     def test_live_call_contract_and_disclosure_are_retained(self):
         for required in ("'live/preview'", "'live/send'",
-                         "{approval_token:preview.approval_token}",
+                         "{approval_token:preview.approval_token,room_id:roomId}",
                          "status==='outcome_unknown'", "status!=='completed'",
                          "no automatic retries", "No corpus passages supplied",
                          "selected_memories", "previous_exchanges",
@@ -94,12 +94,25 @@ class WorkbenchTests(unittest.TestCase):
                 continue
             self.assertIn(required, self.page)
         self.assertIn("Room presence in the UI is not a security boundary", self.page)
-        self.assertIn("Each Send makes exactly one supplier call", self.page)
+        self.assertIn("A supplier-directed Send makes one supplier call", self.page)
         self.assertNotIn("To the room · one supplier responds per Send</span>", self.page)
         self.assertNotIn("No live intelligences connected.", self.page)
         # No remote assets or calls to vendor APIs in browser.
         self.assertNotRegex(self.page, r'<script[^>]+src="https?://')
         self.assertNotRegex(self.page, r'<img[^>]+src="https?://')
+
+    def test_multiple_persistent_meetings_and_right_margin(self):
+        for item in ("function loadMeetings()", "function switchMeeting(roomId)",
+                     "live/rooms/create", "live/rooms/rename",
+                     "cobble.meeting.active", "roomDrafts.set(currentRoomId",
+                     "tabledFiles.length=0;drawTableFiles()", "await loadMeetings()",
+                     "room_id:roomId", "id=\"meeting-list\"",
+                     "id=\"new-meeting\"", ".exchange.supplier .message{width:85%}",
+                     ".exchange.human .message{width:83%}",
+                     "justify-content:flex-end", "meetings=data.rooms||[]"):
+            self.assertIn(item, self.page)
+        self.assertNotIn("On table · names only · not shared", self.page)
+        self.assertNotIn("id=\"meeting-current\"", self.page)
 
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
