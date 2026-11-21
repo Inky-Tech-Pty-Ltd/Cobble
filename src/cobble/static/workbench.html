@@ -442,7 +442,6 @@ function renderIntelligences(){
 }
 function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
- if(!turns.length)return;
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
   const hb=make('div');hb.className='message';hb.append(titled('Joe',null),make('p',t.question||''));
