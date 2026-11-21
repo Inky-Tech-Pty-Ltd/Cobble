@@ -128,8 +128,10 @@ cleared on switching meetings so names do not leak between tables. The
 message box grows as the operator types (up to 38% of viewport height,
 capped at 360px), scrolling beyond that size.
 
-Speaker messages now align to the **same right margin**, regardless of
-whether the speaker is the operator or a supplier. Their left margins differ.
+Speaker messages align to the **same right margin** as the composer.
+Supplier messages can extend to the composer's left edge, while Joe's
+messages begin about **20% farther right** (10% on narrow screens). This
+keeps the common reading frame but makes the operator visually distinct.
 
 #### Setup
 
