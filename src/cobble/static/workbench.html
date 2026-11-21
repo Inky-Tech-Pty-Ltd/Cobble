@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cobble · Meetings</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px}
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.42;cursor:not-allowed}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #89a3bb;outline-offset:2px}
+[hidden]{display:none!important}
+button{color:inherit}
+.app{height:100dvh;display:flex;overflow:hidden}
+.sidebar{position:relative;flex:0 0 var(--sidebar-width);width:var(--sidebar-width);min-width:0;border-right:1px solid #dce4eb;background:#fbfcfd;display:flex;flex-direction:column;overflow:hidden}
+.sidebar.collapsed{flex-basis:64px;width:64px}
+.sidebar-body{display:flex;flex-direction:column;min-height:0;flex:1;padding:16px 12px 12px}
+.identity{height:71px;display:flex;align-items:center;gap:6px;justify-content:space-between;padding:0 2px 6px}
+.brand{width:159px;height:70px;object-fit:contain;object-position:left center}
+.sidebar.collapsed .brand{width:40px;height:40px;object-fit:cover;object-position:left center}
+.icon-button{border:0;border-radius:9px;background:transparent;padding:7px 9px;color:var(--slate)}
+.icon-button:hover,.nav-item:hover,.meeting-item:hover{background:#edf2f6}
+.icon-button svg,.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.primary-nav{display:grid;gap:3px;margin-top:9px}
+.nav-item{display:flex;align-items:center;gap:13px;text-align:left;width:100%;background:transparent;border:0;border-radius:10px;padding:12px 13px;white-space:nowrap;color:#344354}
+.nav-item.active{background:#e2ebf3;color:#23475d;font-weight:650}
+.nav-label{overflow:hidden;text-overflow:ellipsis}
+.sidebar.collapsed .nav-item{padding:11px;justify-content:center}
+.separator{height:1px;background:var(--line);margin:18px 3px 12px}
+.tree{flex:1;min-height:80px;overflow-y:auto}
+.tree-heading{color:var(--muted);font-size:.78rem;letter-spacing:.01em;margin:8px 7px}
+.meeting-item{width:100%;text-align:left;border:0;border-radius:9px;padding:10px 12px;background:#eaf1f6;display:flex;gap:7px;align-items:center;font-size:.85rem}
+.meeting-item small{display:block;color:var(--muted);font-size:.74rem;margin-top:3px}
+.future-note{margin:7px 10px;color:#88949d;font-size:.74rem;line-height:1.4}
+.suppliers{flex-shrink:0;margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
+.suppliers h2{margin:4px 8px 10px;font-weight:600;font-size:.77rem;color:var(--muted)}
+.supplier-list{display:grid;gap:7px;overflow-y:auto;max-height:34dvh}
+.supplier-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e1e6ea;border-radius:12px;padding:7px 8px;box-shadow:0 2px 7px #1d28330b}
+.supplier-card.off{background:#f8f9fa;opacity:.78}
+.supplier-main{border:0;background:transparent;display:flex;align-items:center;gap:9px;min-width:0;flex:1;text-align:left;padding:2px 1px}
+.supplier-main .supplier-name{font-weight:650;font-size:.85rem}
+.supplier-detail{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
+.mark{display:inline-grid;place-items:center;flex-shrink:0;border-radius:8px;width:31px;height:31px;font-weight:750}
+.mark.openai{background:#edf1f1;color:#304f49;font-size:1rem}
+.mark.claude{color:#cf684c;background:#fcf0ec;font-size:1.55rem}
+.mark.mistral{background:#fff4e7;color:#c95e21;font-size:1.15rem}
+.supplier-lock,.supplier-model{display:grid;place-items:center;border:0;background:transparent;color:#3b5166;border-radius:7px;width:28px;height:32px}
+.supplier-model{font-size:.68rem;font-weight:600}
+.supplier-lock:hover,.supplier-model:hover{background:#e7eef3}
+.supplier-lock svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.supplier-main[aria-pressed="true"] .mark{box-shadow:0 0 0 2px #8db3ce}
+.grip{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;touch-action:none;z-index:5}
+.grip:hover,.grip.dragging{background:#bfd3e0}
+.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .tree,.sidebar.collapsed .suppliers h2,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-lock,.sidebar.collapsed .supplier-model{display:none}
+.sidebar.collapsed .suppliers .supplier-card{padding:5px;justify-content:center}
+.sidebar.collapsed .suppliers .supplier-main{justify-content:center}
+.sidebar.collapsed .suppliers{margin-top:auto}
+.main{min-width:0;flex:1;display:flex;background:#fff;position:relative}
+.workspace{display:flex;flex-direction:column;flex:1;min-width:0}
+.header{flex-shrink:0;padding:20px clamp(18px,3vw,55px) 16px;border-bottom:1px solid #eef0f2;display:flex;align-items:center;gap:12px;justify-content:space-between}
+.header h1{font-size:1.14rem;font-weight:680;letter-spacing:-.03em;margin:0 0 3px}
+.header p{margin:0;color:var(--muted);font-size:.81rem}
+.header-actions{display:flex;align-items:center;gap:4px}
+.reading{width:min(100%,960px);margin:0 auto;padding:0 20px}
+.screen{flex:1;min-height:0;display:none;flex-direction:column}
+.screen.active{display:flex}
+.chat-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain}
+.thread{padding-top:25px;padding-bottom:26px;display:flex;flex-direction:column;gap:16px}
+.exchange{display:flex;align-items:flex-start;max-width:85%;gap:9px}
+.exchange.human{align-self:flex-end;max-width:83%}
+.exchange.supplier{align-self:flex-start}
+.message{padding:15px 17px;border-radius:15px;line-height:1.53;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem;width:100%}
+.human .message{background:#e8f1fb;color:#243b4c}
+.supplier .message{background:#fff;border:1px solid #e0e5e9;box-shadow:0 2px 8px #1528350b}
+.exchange.latest .message{box-shadow:0 3px 16px #3b51661b}
+.message-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:6px;font-size:.83rem;font-weight:680}
+.message-heading .mark{width:23px;height:23px;border-radius:6px;font-size:.85rem}
+.message-heading .mark.claude{font-size:1.2rem}
+.message-body{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.turn-meta{color:#778491;font-size:.69rem;margin-top:9px}
+.composer-region{background:linear-gradient(180deg,#fff0,#fff 14%);padding:10px 0 21px;flex-shrink:0}
+.compose-box{border:1px solid #d8e0e6;border-radius:21px;padding:10px 11px;background:#fff;box-shadow:0 4px 16px #1d28330c;display:flex;align-items:flex-end;gap:10px}
+.compose-box textarea{flex:1;min-width:0;border:0;background:none;resize:none;outline:0;min-height:40px;max-height:145px;line-height:1.48;padding:9px 9px 5px;color:var(--ink)}
+.compose-box textarea::placeholder{color:#778694}
+.send{width:43px;height:43px;border:0;border-radius:50%;background:#365f7a;color:white;font-size:1.45rem;flex-shrink:0}
+.send:hover{background:#234b64}
+.compose-options{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:7px 4px 0;font-size:.73rem;color:var(--muted)}
+.compose-options select{border:0;color:#3b5166;background:transparent;max-width:215px;cursor:pointer}
+.compose-options label{white-space:nowrap}
+.status{min-height:18px;text-align:left;color:#6a7787;margin:7px 6px 0;font-size:.73rem}
+.status.error{color:#a13b30}
+.zero{margin:auto;padding:24px;text-align:center;color:var(--muted);font-size:.91rem;line-height:1.6}
+.zero strong{display:block;color:#3b5166;margin-bottom:7px;font-size:1.1rem}
+.content-pane{flex:1;overflow-y:auto}
+.content-pane .reading{padding-top:27px;padding-bottom:60px}
+.pane-intro{color:var(--muted);font-size:.89rem;line-height:1.6;margin:0 0 24px}
+.info-row{border:1px solid #e3e8ed;border-radius:12px;padding:15px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.9rem}
+.info-row small{color:var(--muted)}
+.section-title{font-size:1rem;margin:24px 0 12px}
+.search-form{display:flex;gap:8px}
+.search-form input{border:1px solid #ccd7df;border-radius:9px;padding:11px;flex:1;min-width:0}
+.secondary{border:1px solid #dce4eb;border-radius:10px;background:#fff;padding:10px 13px}
+.secondary:hover{background:#f2f6f9}
+.results details{border:1px solid #e2e7eb;padding:13px;border-radius:10px;margin-top:10px;line-height:1.5}
+.results summary{cursor:pointer;font-size:.89rem}
+.results pre,.inspector pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.78rem;line-height:1.5;background:#f5f8fa;padding:12px;border-radius:9px}
+.results p{white-space:pre-wrap}
+.inspector{flex:0 0 min(395px,41vw);width:min(395px,41vw);border-left:1px solid #d9e1e7;background:#fbfcfe;display:none;flex-direction:column;min-height:0}
+.inspector.open{display:flex}
+.inspector-head{padding:19px 20px 12px;display:flex;justify-content:space-between;align-items:start;gap:7px;border-bottom:1px solid var(--line)}
+.inspector-head h2{font-size:1rem;margin:0 0 6px}
+.inspector-head p{font-size:.78rem;color:var(--muted);margin:0}
+.inspector-tabs{display:flex;padding:10px 13px;gap:5px;flex-wrap:wrap}
+.inspector-tabs button{border:0;background:transparent;border-radius:8px;padding:8px 10px;font-size:.78rem}
+.inspector-tabs button.active{background:#e0eaf2;color:#234c66;font-weight:650}
+.inspector-body{flex:1;overflow:auto;padding:8px 20px 22px;line-height:1.5;font-size:.82rem}
+.inspector-body h3{font-size:.85rem}
+.inspector-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.76rem;margin:0 0 18px}
+.disclosure-note{border-left:3px solid #89a3bb;padding-left:10px;color:#667787;margin-top:18px}
+.link{color:#2b5e79;text-decoration:none}
+.link:hover{text-decoration:underline}
+@media(max-width:900px){.inspector.open{position:absolute;right:0;top:0;bottom:0;width:min(395px,90vw);box-shadow:-6px 0 26px #283b4e2b;z-index:15}.reading{padding:0 15px}.exchange{max-width:94%!important}}
+@media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}}
+@media(prefers-reduced-motion:no-preference){.supplier-card,.nav-item,.secondary{transition:background-color .12s ease}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation and intelligences">
+    <div class="sidebar-body">
+      <div class="identity">
+        <img class="brand" src="/assets/cobble-logo.png" alt="Cobble">
+        <button class="icon-button" id="collapse" title="Collapse or expand sidebar" aria-label="Collapse sidebar">☰</button>
+      </div>
+      <nav class="primary-nav" aria-label="Sections">
+        <button class="nav-item" data-screen="memories"><span aria-hidden="true">▤</span><span class="nav-label">Memories</span></button>
+        <button class="nav-item" data-screen="intelligences"><span aria-hidden="true">✦</span><span class="nav-label">Intelligences</span></button>
+        <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span></button>
+        <button class="nav-item" data-screen="graph"><span aria-hidden="true">◇</span><span class="nav-label">Graph</span></button>
+        <button class="nav-item" data-screen="setup"><span aria-hidden="true">⚙</span><span class="nav-label">Setup</span></button>
+      </nav>
+      <div class="tree">
+        <div class="separator"></div>
+        <div class="tree-heading">Recent meetings</div>
+        <button class="meeting-item" id="meeting-current"><span aria-hidden="true">▢</span><span><strong>Current meeting</strong><small>Locally saved conversation</small></span></button>
+        <p class="future-note">More meetings and meeting titles are not yet implemented.</p>
+      </div>
+      <section class="suppliers" aria-label="Intelligences">
+        <h2>Intelligences · this meeting</h2>
+        <div id="supplier-list" class="supplier-list"></div>
+      </section>
+    </div>
+    <div class="grip" id="resize-grip" title="Drag to resize; double-click to reset" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" tabindex="0"></div>
+  </aside>
+  <main class="main">
+    <div class="workspace">
+      <header class="header">
+        <div><h1 id="page-title">Current meeting</h1><p id="page-subtitle">One durable local meeting · live suppliers shown below</p></div>
+        <div class="header-actions"><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
+      </header>
+      <section class="screen active" id="screen-meetings" aria-label="Meeting">
+        <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
+          <div class="reading thread" id="thread"><div class="zero"><strong>Welcome to Cobble.</strong>The latest meeting will appear here when the local server is connected.</div></div>
+        </div>
+        <div class="composer-region"><div class="reading">
+          <div class="compose-box"><textarea id="question" rows="2" maxlength="2000" aria-label="Message to meeting" placeholder="Message the meeting…"></textarea>
+            <button class="send" id="send" title="Send one supplier request" aria-label="Send message" disabled>➤</button></div>
+          <div class="compose-options">
+            <span>To the room · one supplier responds per Send</span>
+            <label>Next reply: <select id="next-responder" aria-label="Next responding intelligence"></select></label>
+          </div>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-memories" aria-label="Memories">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">Connected memory sources live here. This demo can currently search and inspect the local GitHub corpus. Other sources and permission controls need their own integration.</p>
+          <div class="info-row"><span>Repositories</span><small>GitHub archive · local search available</small></div>
+          <div class="info-row"><span>Filesystems</span><small>Captured by Cobble; not searchable in this demo</small></div>
+          <div class="info-row"><span>Chat exports, email, databases and other histories</span><small>Future connectors</small></div>
+          <h2 class="section-title">Search local GitHub memories</h2>
+          <form class="search-form" id="memory-form"><input id="memory-query" type="search" aria-label="Search memory text" placeholder="Search the indexed GitHub archive"><button class="secondary" type="submit">Search</button></form>
+          <div id="memory-results" class="results" aria-live="polite"></div>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-intelligences" aria-label="Intelligences">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">The configured suppliers are shown here. Credentials, model selection and connection settings remain on McKay; changing the meeting controls below does not change server permissions.</p>
+          <div id="intelligence-list"></div>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-graph" aria-label="Graph">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">Graph exploration is a future workspace. No graph is being invented from your memories for this design preview.</p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-setup" aria-label="Setup">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">This is a loopback-only interface. Supplier calls use McKay's existing private credentials and immutable event ledger.</p>
+          <div class="info-row"><span>Server</span><small id="setup-health">Connecting…</small></div>
+          <div class="info-row"><span>Corpus access</span><small>Never automatically sent with a meeting question</small></div>
+          <div class="info-row"><span>Meeting access</span><small>Sidebar participation is browser-only</small></div>
+          <p><a class="link" href="/boardroom">Open the previous perspective boardroom</a> for comparison and legacy features.</p>
+        </div></div>
+      </section>
+    </div>
+    <aside class="inspector" id="inspector" aria-label="Inspection panel">
+      <div class="inspector-head"><div><h2 id="inspector-title">Supplier disclosures</h2><p id="inspector-subtitle"></p></div><button class="icon-button" id="close-inspector" aria-label="Close inspection panel">✕</button></div>
+      <div class="inspector-tabs" id="inspector-tabs"></div>
+      <div class="inspector-body" id="inspector-body"></div>
+    </aside>
+  </main>
+</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const PROVIDERS=[
+ {id:'openai',name:'GPT',mark:'◎'},
+ {id:'claude',name:'Claude',mark:'✺'},
+ {id:'mistral',name:'Mistral',mark:'▥'}
+];
+const states=Object.fromEntries(PROVIDERS.map(p=>[p.id,{active:false,live:false,cost:0}]));
+let turns=[],busy=false,lastProvider='openai',selectedProvider='openai',inspectorMode='context',inspectorTab='corpus',inspectionIndex=0;
+let serverReady=false,currentScreen='meetings',dragging=false;
+const make=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
+const money=v=>'US$'+Number(v||0).toFixed(5);
+const providerName=id=>PROVIDERS.find(p=>p.id===id)?.name||id;
+function safeStorageGet(key){try{return localStorage.getItem(key)}catch(_){return null}}
+function safeStorageSet(key,value){try{localStorage.setItem(key,value)}catch(_){}}
+function status(value,error=false){$('status').textContent=value||'';$('status').classList.toggle('error',error)}
+function providerMark(p){const mark=make('span',p.mark);mark.className='mark '+p.id;mark.title=p.name+' (identity marker)';mark.setAttribute('aria-hidden','true');return mark}
+function titled(name,icon){
+ const line=make('div');line.className='message-heading';
+ const label=make('span',name);line.append(label);
+ if(icon)line.append(providerMark(icon));else line.append(make('span','☺'));
+ return line;
+}
+function setScreen(name){
+ if(!['memories','intelligences','meetings','graph','setup'].includes(name))return;
+ currentScreen=name;
+ for(const el of document.querySelectorAll('.screen'))el.classList.toggle('active',el.id==='screen-'+name);
+ for(const el of document.querySelectorAll('.nav-item')){
+  const on=el.dataset.screen===name;el.classList.toggle('active',on);
+  if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
+ }
+ const titles={meetings:'Current meeting',memories:'Memories',intelligences:'Intelligences',graph:'Graph',setup:'Setup'};
+ const subtitles={meetings:'One durable local meeting · no autonomous turn-taking yet',memories:'Explore the sources Cobble can remember',intelligences:'Supplier connections and participation',graph:'An emerging map of remembered relationships',setup:'Local service and privacy boundaries'};
+ $('page-title').textContent=titles[name];$('page-subtitle').textContent=subtitles[name];
+ if(name==='intelligences')renderIntelligences();
+}
+for(const el of document.querySelectorAll('.nav-item'))el.onclick=()=>setScreen(el.dataset.screen);
+$('meeting-current').onclick=()=>setScreen('meetings');
+
+const sidebar=$('sidebar');
+const rememberedWidth=Number(safeStorageGet('cobble.sidebar.width'));
+function sidebarWidth(w){const allowed=Math.min(460,Math.max(215,Number(w)||272));sidebar.style.setProperty('--sidebar-width',allowed+'px');safeStorageSet('cobble.sidebar.width',String(allowed))}
+if(rememberedWidth)sidebarWidth(rememberedWidth);
+function collapse(value){
+ sidebar.classList.toggle('collapsed',value);
+ $('collapse').setAttribute('aria-label',value?'Expand sidebar':'Collapse sidebar');
+ safeStorageSet('cobble.sidebar.collapsed',value?'1':'0');
+}
+collapse(safeStorageGet('cobble.sidebar.collapsed')==='1');
+$('collapse').onclick=()=>collapse(!sidebar.classList.contains('collapsed'));
+const grip=$('resize-grip');
+grip.onpointerdown=e=>{
+ if(sidebar.classList.contains('collapsed'))collapse(false);
+ dragging=true;grip.classList.add('dragging');grip.setPointerCapture(e.pointerId);e.preventDefault();
+};
+grip.onpointermove=e=>{if(dragging)sidebarWidth(e.clientX)};
+grip.onpointerup=()=>{dragging=false;grip.classList.remove('dragging')};
+grip.onpointercancel=()=>{dragging=false;grip.classList.remove('dragging')};
+grip.ondblclick=()=>sidebarWidth(272);
+grip.onkeydown=e=>{
+ if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
+  e.preventDefault();if(sidebar.classList.contains('collapsed'))collapse(false);
+  sidebarWidth(sidebar.getBoundingClientRect().width+(e.key==='ArrowRight'?16:-16));
+ }
+};
+
+function populateResponder(){
+ const select=$('next-responder'),chosen=select.value||lastProvider;
+ select.replaceChildren();
+ for(const p of PROVIDERS.filter(x=>states[x.id].active&&states[x.id].live)){
+  const opt=make('option',p.name);opt.value=p.id;select.append(opt);
+ }
+ if(select.options.length){
+  select.value=Array.from(select.options).some(o=>o.value===chosen)?chosen:select.options[0].value;
+ }
+ updateSend();
+}
+function renderSuppliers(){
+ const list=$('supplier-list');list.replaceChildren();
+ for(const p of PROVIDERS){
+  const s=states[p.id],card=make('div');card.className='supplier-card'+(s.active?'':' off');
+  const toggle=make('button');toggle.className='supplier-main';toggle.disabled=!s.live;
+  toggle.setAttribute('aria-pressed',String(s.active));
+  toggle.title=s.live?(s.active?'Move '+p.name+' out of the meeting':'Invite '+p.name+' to the meeting'):p.name+' is not connected to this server';
+  const info=make('span');
+  const name=make('span',p.name);name.className='supplier-name';
+  const detail=make('span',s.live?money(s.cost)+' est. total':'Not connected');detail.className='supplier-detail';
+  info.append(name,detail);toggle.append(providerMark(p),info);
+  toggle.onclick=()=>{
+   s.active=!s.active;renderSuppliers();populateResponder();renderIntelligences();
+   status(s.active?p.name+' invited for future calls.':p.name+' moved out for future calls.');
+  };
+  const lock=make('button');lock.className='supplier-lock';lock.title='Inspect information sent to '+p.name;
+  lock.setAttribute('aria-label',lock.title);
+  lock.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+  lock.onclick=()=>openInspector(p.id,'context');
+  const model=make('button','···');model.className='supplier-model';model.title='Model and cost details for '+p.name;
+  model.setAttribute('aria-label',model.title);model.onclick=()=>openInspector(p.id,'model');
+  card.append(toggle,lock,model);list.append(card);
+ }
+}
+function renderIntelligences(){
+ const target=$('intelligence-list');target.replaceChildren();
+ for(const p of PROVIDERS){
+  const s=states[p.id],row=make('div');row.className='info-row';
+  const label=make('span',p.name);const summary=make('small',(s.live?'Connected · ':'Disconnected · ')+(s.active?'in meeting':'out of meeting')+' · '+money(s.cost)+' est. total');
+  const button=make('button','Inspect');button.className='secondary';button.onclick=()=>openInspector(p.id,'model');
+  row.append(label,summary,button);target.append(row);
+ }
+}
+function renderTurns(){
+ const thread=$('thread');thread.replaceChildren();
+ if(!turns.length){
+  const empty=make('div');empty.className='zero';
+  empty.append(make('strong','A room for conversations.'));
+  empty.append(make('span',serverReady?'This meeting has no recorded turns yet.':'Connect McKay to load the locally recorded meeting.'));
+  thread.append(empty);return;
+ }
+ for(let i=0;i<turns.length;i++){
+  const t=turns[i],human=make('article');human.className='exchange human';
+  const hb=make('div');hb.className='message';hb.append(titled('Joe',null),make('p',t.question||''));
+  hb.lastChild.className='message-body';human.append(hb);thread.append(human);
+  const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
+  const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');
+  const box=make('div');box.className='message';box.append(titled(p.name,p));
+  const body=make('p',t.status==='completed'?(t.answer||''):t.status==='outcome_unknown'?'Outcome unknown — do not automatically retry.':'No verified response retained.');
+  body.className='message-body';box.append(body);
+  const meta=make('div');meta.className='turn-meta';
+  meta.textContent=[t.model||'',t.status==='completed'?money(t.usage?.estimated_provider_cost_usd)+' estimated':'',t.status!=='completed'?t.status:''].filter(Boolean).join(' · ');
+  box.append(meta);exchange.append(box);thread.append(exchange);
+ }
+ $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;
+ for(const p of PROVIDERS)states[p.id].cost=0;
+ for(const t of turns){
+  const amount=Number(t.usage?.estimated_provider_cost_usd||0);
+  if(states[t.provider]&&Number.isFinite(amount))states[t.provider].cost+=amount;
+ }
+ renderSuppliers();
+ renderIntelligences();
+}
+function updateSend(){
+ $('send').disabled=busy||!serverReady||!$('question').value.trim()||!$('next-responder').options.length;
+}
+function chooseRecipient(question){
+ const named=question.match(/^(?:(?:hey|hello|hi|dear|mr\.?)\s+)?(GPT|Claude|Mistral)\b[\s,.:!?-]*/i);
+ if(named){
+  const p=PROVIDERS.find(x=>x.name.toLowerCase()===named[1].toLowerCase());
+  if(!p||!states[p.id].active||!states[p.id].live)throw Error((p?.name||named[1])+' is not currently in the meeting.');
+  return p.id;
+ }
+ const chosen=$('next-responder').value;
+ if(!states[chosen]?.active)throw Error('Invite an intelligence before sending.');
+ return chosen;
+}
+async function api(route,data){
+ const response=await fetch('/api/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
+ const result=await response.json();
+ if(!response.ok)throw Error(result.error||'Local request failed');
+ return result;
+}
+async function reload(){
+ const response=await fetch('/api/live/session',{cache:'no-store'});
+ if(!response.ok)throw Error('The local meeting is not available');
+ const data=await response.json();turns=data.turns||[];
+ const latest=turns.filter(t=>t.status==='completed').at(-1);
+ if(latest)lastProvider=latest.provider;
+ renderTurns();populateResponder();
+}
+async function send(){
+ if(busy)return;
+ const question=$('question').value.trim();if(!question)return;
+ let recipient;
+ try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
+ busy=true;updateSend();status('Consulting '+providerName(recipient)+' · one call, no automatic retries…');
+ try{
+  // Preserve the exact one-use preflight and private server ledger. No
+  // memory corpus passages are attached automatically in this version.
+  const preview=await api('live/preview',{question,provider:recipient});
+  const result=await api('live/send',{approval_token:preview.approval_token});
+  if(result.turn.status!=='completed')throw Error('No verified supplier reply');
+  lastProvider=recipient;$('question').value='';
+  await reload();status('Response recorded locally.');$('question').focus();
+ }catch(error){
+  // Unknown upstream outcomes must never be retried automatically.
+  status(error.message,true);
+  try{await reload()}catch(_){}
+ }finally{busy=false;updateSend()}
+}
+$('send').onclick=send;
+$('question').oninput=updateSend;
+$('question').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}};
+$('next-responder').onchange=()=>{lastProvider=$('next-responder').value};
+
+function inspectorTabs(tabs){
+ const target=$('inspector-tabs');target.replaceChildren();
+ for(const [id,label] of tabs){
+  const button=make('button',label);button.className=inspectorTab===id?'active':'';
+  button.setAttribute('aria-pressed',String(inspectorTab===id));
+  button.onclick=()=>{inspectorTab=id;renderInspector()};
+  target.append(button);
+ }
+}
+function openInspector(provider,mode='context'){
+ selectedProvider=provider;inspectorMode=mode;
+ inspectorTab=mode==='model'?'model':'corpus';inspectionIndex=0;
+ $('inspector').classList.add('open');renderInspector();
+}
+function closeInspector(){$('inspector').classList.remove('open')}
+$('close-inspector').onclick=closeInspector;
+function renderInspector(){
+ const p=PROVIDERS.find(x=>x.id===selectedProvider)||PROVIDERS[0];
+ $('inspector-title').textContent=inspectorMode==='info'?'About this meeting':p.name+' · private record';
+ $('inspector-subtitle').textContent=inspectorMode==='info'?'What this prototype actually does':(states[p.id].live?'Connected supplier':'Supplier not connected');
+ const body=$('inspector-body');body.replaceChildren();
+ if(inspectorMode==='info'){
+  $('inspector-tabs').replaceChildren();
+  for(const msg of [
+   'This is a single, locally retained meeting. Multiple saved meetings and autonomous turn-taking are not yet implemented.',
+   'Each Send makes exactly one supplier call, even when the message is addressed to the room. Explicit vocatives (Claude, GPT, Mistral) override the selected responder.',
+   'Up to four completed earlier exchanges may be included in a new call, subject to payload limits. Use the padlock to inspect the actual recorded context.',
+   'Moving a supplier out of the room blocks future selection in this browser. It cannot revoke prior disclosures and is not enforced as server-side access control.',
+   'The local corpus is not automatically searched or sent to a supplier. No new connector or memory permission has been granted.'
+  ]){body.append(make('p',msg))}
+  return;
+ }
+ if(inspectorMode==='model'){
+  inspectorTabs([['model','Model & cost'],['corpus','Corpus'],['heard','Heard'],['payload','Payload']]);
+ }else{
+  inspectorTabs([['corpus','Corpus'],['heard','Heard'],['payload','Payload'],['model','Model & cost']]);
+ }
+ const records=turns.filter(t=>t.provider===p.id);
+ const nav=make('div');nav.className='inspector-nav';
+ const prev=make('button','←');prev.className='secondary';prev.disabled=inspectionIndex===0;
+ const next=make('button','→');next.className='secondary';next.disabled=inspectionIndex>=records.length-1;
+ prev.onclick=()=>{inspectionIndex=Math.max(0,inspectionIndex-1);renderInspector()};
+ next.onclick=()=>{inspectionIndex++;renderInspector()};
+ nav.append(prev,make('span',records.length?(inspectionIndex+1)+' / '+records.length+' recorded calls':'No recorded calls'),next);
+ body.append(nav);
+ const t=records[inspectionIndex];
+ if(inspectorTab==='model'){
+  body.append(make('h3','Model and estimated cost'));
+  body.append(make('p','Recorded total: '+money(states[p.id].cost)));
+  body.append(make('p','Configured supplier: '+p.name));
+  if(t){body.append(make('p','Selected call model: '+(t.model||'Not recorded')));
+   body.append(make('pre',JSON.stringify(t.usage||{},null,2)));}
+  body.append(make('p','Change model and API credentials on McKay. This interface does not pretend to provide that server capability.'));
+ }else if(!t){
+  body.append(make('p','No consultations recorded for this intelligence.'));
+ }else if(inspectorTab==='corpus'){
+  body.append(make('h3','Corpus passages in this request'));
+  const selected=t.context?.selected_memories||[];
+  body.append(make('pre',selected.length?JSON.stringify(selected,null,2):'No private corpus passages supplied.'));
+  body.append(make('p','Question: '+(t.question||'')));
+  body.append(make('p','Request: '+(t.turn_id||'')));
+  body.append(make('p','SHA-256: '+(t.context_sha256||'')));
+ }else if(inspectorTab==='heard'){
+  body.append(make('h3','Earlier meeting exchanges in this request'));
+  const heard=t.context?.previous_exchanges||[];
+  body.append(make('pre',heard.length?heard.map(h=>'Joe: '+h.question+'\n'+providerName(h.provider)+': '+h.answer).join('\n\n'):'No earlier exchanges supplied.'));
+  body.append(make('p','Current question: '+(t.question||'')));
+ }else{
+  body.append(make('h3','Exact outgoing API payload'));
+  body.append(make('pre',JSON.stringify(t.payload||{},null,2)));
+ }
+ const foot=make('p','This is a record of information actually sent. Room presence in the UI is not a security boundary.');foot.className='disclosure-note';body.append(foot);
+}
+$('open-info').onclick=()=>{inspectorMode='info';$('inspector').classList.add('open');renderInspector()};
+
+$('memory-form').onsubmit=async e=>{
+ e.preventDefault();const target=$('memory-results');target.replaceChildren();
+ const query=$('memory-query').value.trim();if(!query)return;
+ target.append(make('p','Searching local archive…'));
+ try{
+  const result=await api('search',{query});target.replaceChildren();
+  if(!result.results?.length)target.append(make('p','No indexed GitHub memories found.'));
+  for(const entry of result.results||[]){
+   const d=make('details'),summary=make('summary',(entry.title||'Untitled')+' · '+(entry.reference||''));d.append(summary,make('p',entry.excerpt||''));
+   d.addEventListener('toggle',async()=>{
+    if(!d.open||d.dataset.loaded)return;
+    d.dataset.loaded='yes';try{const doc=await api('inspect',{id:entry.id});
+     d.append(make('pre',doc.text||''));}
+    catch(error){d.append(make('p','Inspection failed: '+error.message))}
+   });target.append(d);
+  }
+ }catch(error){target.replaceChildren(make('p','Search failed: '+error.message))}
+};
+(async()=>{
+ try{
+  const healthResponse=await fetch('/api/health',{cache:'no-store'});
+  if(!healthResponse.ok)throw Error('Local server unavailable');
+  const health=await healthResponse.json();
+  const available=new Set(health.live_providers||[]);
+  for(const p of PROVIDERS){states[p.id].live=available.has(p.id);states[p.id].active=states[p.id].live}
+  serverReady=available.size>0;
+  $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
+  renderSuppliers();populateResponder();
+  if(available.size)await reload();
+  else{renderTurns();status('No live intelligences connected. Start McKay with the supplier flags you intend to use.')}
+ }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}
+})();
+})();
+</script>
+</body>
+</html>
