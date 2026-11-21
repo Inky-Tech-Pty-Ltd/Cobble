@@ -488,9 +488,11 @@ async function api(route,data){
  return result;
 }
 async function reload(){
- const response=await fetch('/api/live/session',{cache:'no-store'});
+ const roomId=currentRoomId;
+ const response=await fetch('/api/live/session?room_id='+encodeURIComponent(roomId),{cache:'no-store'});
  if(!response.ok)throw Error('The local meeting is not available');
- const data=await response.json();turns=data.turns||[];
+ const data=await response.json();if(roomId!==currentRoomId)return;
+ turns=data.turns||[];
  const latest=turns.filter(t=>t.status==='completed').at(-1);
  if(latest)lastProvider=latest.provider;
  renderTurns();populateResponder();
@@ -498,6 +500,7 @@ async function reload(){
 async function send(){
  if(busy)return;
  const question=$('question').value.trim();if(!question)return;
+ const roomId=currentRoomId;
  let recipient;
  try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
  busy=true;updateSend();
@@ -505,7 +508,7 @@ async function send(){
   'Consulting '+providerName(recipient)+' · one call, no automatic retries…');
  try{
   if(recipient==='post-only'){
-   const result=await api('live/post',{text:question});
+   const result=await api('live/post',{text:question,room_id:roomId});
    if(result.turn.status!=='posted')throw Error('No verified local post retained');
    $('question').value='';resizeComposer();
    await reload();status('Posted locally · no supplier called.');$('question').focus();
@@ -513,8 +516,8 @@ async function send(){
   }
   // Preserve the exact one-use preflight and private server ledger. No
   // memory corpus passages are attached automatically in this version.
-  const preview=await api('live/preview',{question,provider:recipient});
-  const result=await api('live/send',{approval_token:preview.approval_token});
+  const preview=await api('live/preview',{question,provider:recipient,room_id:roomId});
+  const result=await api('live/send',{approval_token:preview.approval_token,room_id:roomId});
   if(result.turn.status!=='completed')throw Error('No verified supplier reply');
   lastProvider=recipient;$('question').value='';resizeComposer();
   await reload();status('Response recorded locally.');$('question').focus();
@@ -607,8 +610,8 @@ function renderInspector(){
  if(inspectorMode==='info'){
   $('inspector-tabs').replaceChildren();
   for(const msg of [
-   'This is a single, locally retained meeting. Multiple saved meetings and autonomous turn-taking are not yet implemented.',
-   'Each Send makes exactly one supplier call, even when the message is addressed to the room. Explicit vocatives (Claude, GPT, Mistral) override the selected responder.',
+   'Meetings are separate, locally retained conversations. The original 3D boardroom still displays the legacy default meeting.',
+   'A supplier-directed Send makes one supplier call. Post only makes none. Explicit vocatives (Claude, GPT, Mistral) override the selected supplier.',
    'Up to four completed earlier exchanges may be included in a new call, subject to payload limits. Use supplier details (···) to inspect the actual recorded request.',
    'Moving a supplier out of the room blocks future selection in this browser. It cannot revoke prior disclosures and is not enforced as server-side access control.',
    'The local corpus is not automatically searched or sent to a supplier. No new connector or memory permission has been granted.'
@@ -686,6 +689,7 @@ $('memory-form').onsubmit=async e=>{
   serverReady=true;
   $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
   renderSuppliers();populateResponder();
+  await loadMeetings();
   await reload();
   status('');
  }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}
