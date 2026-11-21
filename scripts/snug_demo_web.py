@@ -1,4 +1,4 @@
-"""Run Snug's boardroom on loopback, offline by default.
+"""Run Cobble's meetings workspace on loopback, offline by default.
 
 Live supplier access is explicit, per-supplier, and uses the shared private
 conversation ledger; keys remain only in local server process memory.
@@ -17,7 +17,10 @@ from pathlib import Path
 from cobble.snug_demo import DemoService
 from cobble.snug_live import LiveChatService, OutcomeUnknown
 
-HTML = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static" / "snug_demo.html"
+STATIC = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static"
+HTML = STATIC / "workbench.html"
+BOARDROOM_HTML = STATIC / "snug_demo.html"
+LOGO = Path(__file__).resolve().parent.parent / "docs" / "assets" / "cobble-logo.png"
 MAX_BYTES = 8192
 
 
@@ -85,6 +88,10 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                 return
             if self.path == "/":
                 self.reply(200, HTML.read_bytes(), "text/html; charset=utf-8")
+            elif self.path == "/boardroom":
+                self.reply(200, BOARDROOM_HTML.read_bytes(), "text/html; charset=utf-8")
+            elif self.path == "/assets/cobble-logo.png":
+                self.reply(200, LOGO.read_bytes(), "image/png")
             elif self.path == "/api/health":
                 self.reply(200, {"ok": True, "live_suppliers": bool(live),
                                  "live_gpt": "openai" in requested,
@@ -228,7 +235,7 @@ def main():
                        live_adapters=adapters if enabled else None) as server:
         description = ", ".join(name for name in ("openai", "claude", "mistral")
                                 if name in enabled) if enabled else "offline"
-        print(f"Snug boardroom ({description}): http://127.0.0.1:{server.server_port}/", flush=True)
+        print(f"Cobble meetings ({description}): http://127.0.0.1:{server.server_port}/", flush=True)
         print("Live calls require one-time exact context review." if enabled else
               "No external supplier calls; only approved fixture exchanges.", flush=True)
         try:
