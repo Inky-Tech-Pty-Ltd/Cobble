@@ -26,23 +26,31 @@ Meetings workspace**. It uses the Inky blue-grey palette, Cobble logo,
 resizable/collapsible left sidebar, persistent (browser-local) sidebar width,
 readable shared conversation, and supplier controls below the navigation.
 
-- **Meetings** opens to the single locally saved default conversation. More
-  meetings, meeting titles, and autonomous chairing remain future work.
+- **Meetings** opens to the single locally saved conversation. Click its
+  heading to rename the meeting. The title is browser-local (localStorage),
+  not yet stored in the server's durable conversation ledger. Multiple
+  meetings and autonomous chairing remain future work.
 - A message goes **to the room** as an operator utterance. The browser
   still makes **one** backend supplier call for each Send. A leading natural
   address such as "Claude, ..." takes precedence; otherwise the visible
   **Next reply** selector chooses the responding in-room supplier. Automatic
   team turn-taking and standing orders are **not** implemented.
-- Each supplier card shows availability, an estimated cumulative spend,
-  an explicit presence toggle, and separate inspection controls. The padlock
-  opens a **side panel** showing recorded corpus disclosures, earlier
-  exchanges actually sent, and exact saved payloads. The model/cost control
-  inspects records but does not pretend to change server credentials or models.
-- **Memories** offers GitHub-only search/inspection via the existing local
-  index. Filesystems and other future source classes are shown as status
-  only, not imaginary working connectors.
-- **Intelligences**, **Graph**, and **Setup** expose useful current status and
-  explicitly signal capabilities that have not been implemented.
+- Each supplier card shows availability, estimated cumulative spend, a
+  browser-only presence toggle, and a details (···) button. There is no
+  per-supplier private-context control: all participating intelligences
+  work from the meeting table. The details panel still exposes the
+  **actual recorded outbound requests** (including history and any corpus
+  passages), model and costs, without changing server permissions or models.
+- **Senses** offers GitHub-only source search/inspection via the local
+  index. The future design prioritises incoming diffs. Filesystems and
+  other source classes are shown as status, not imaginary working connectors.
+- **Memories** will be the graph of star credentials and rooms. It is
+  currently an empty workspace, not a new memory graph implementation.
+- **Intelligences** and **Setup** expose current provider and service status.
+- **Help** links to these repository docs. The small ? in the header opens
+  help for the current section in a separate tab.
+- The empty meeting and sidebar no longer display explanatory placeholder
+  text; status and limitations remain inspectable in Setup and the info panel.
 - No supplier responds automatically unless the operator clicks Send.
   The one-time, exact, server-side preview/approval-token mechanism and
   append-only live-event ledger are unchanged. Browser presence controls
@@ -52,6 +60,41 @@ readable shared conversation, and supplier controls below the navigation.
 markers, not official trademark artwork or endorsements. The existing
 perspective boardroom remains available at **http://127.0.0.1:8766/boardroom**
 for comparison and its filename-only staging controls.
+
+### Workspace navigation
+
+#### Senses
+
+Incoming source material and its changes. GitHub archive search and
+inspection currently work; change-first diff processing is a future feature.
+
+#### Memories
+
+Future navigable graph of star credentials and rooms, distinct from source
+material. No graph population is implied by the placeholder workspace.
+
+#### Intelligences
+
+Configured suppliers, live availability and estimated cost. Browser-side
+presence is not an access-control boundary. The supplier details (···) button
+shows historical **outbound calls**, not a private context or private side room.
+
+#### Meetings
+
+One durable local conversation. Click the heading to edit its browser-local
+title; other browsers do not automatically receive that title. Each Send
+currently calls one chosen supplier. A procedural Chair and standing orders
+are not implemented yet.
+
+#### Setup
+
+Local server, connection status and disclosure limits; link to the legacy
+perspective boardroom.
+
+#### Help
+
+Links to these sections. The header's ? points to the current section
+without sending meeting data to GitHub.
 
 ### Legacy perspective boardroom
 

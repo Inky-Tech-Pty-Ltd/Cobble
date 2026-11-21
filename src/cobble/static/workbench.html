@@ -46,14 +46,13 @@ button{color:inherit}
 .mark.openai{background:#edf1f1;color:#304f49;font-size:1rem}
 .mark.claude{color:#cf684c;background:#fcf0ec;font-size:1.55rem}
 .mark.mistral{background:#fff4e7;color:#c95e21;font-size:1.15rem}
-.supplier-lock,.supplier-model{display:grid;place-items:center;border:0;background:transparent;color:#3b5166;border-radius:7px;width:28px;height:32px}
+.supplier-model{display:grid;place-items:center;border:0;background:transparent;color:#3b5166;border-radius:7px;width:28px;height:32px}
 .supplier-model{font-size:.68rem;font-weight:600}
-.supplier-lock:hover,.supplier-model:hover{background:#e7eef3}
-.supplier-lock svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.supplier-model:hover{background:#e7eef3}
 .supplier-main[aria-pressed="true"] .mark{box-shadow:0 0 0 2px #8db3ce}
 .grip{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;touch-action:none;z-index:5}
 .grip:hover,.grip.dragging{background:#bfd3e0}
-.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .tree,.sidebar.collapsed .suppliers h2,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-lock,.sidebar.collapsed .supplier-model{display:none}
+.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .tree,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-model{display:none}
 .sidebar.collapsed .suppliers .supplier-card{padding:5px;justify-content:center}
 .sidebar.collapsed .suppliers .supplier-main{justify-content:center}
 .sidebar.collapsed .suppliers{margin-top:auto}
@@ -61,7 +60,16 @@ button{color:inherit}
 .workspace{display:flex;flex-direction:column;flex:1;min-width:0}
 .header{flex-shrink:0;padding:20px clamp(18px,3vw,55px) 16px;border-bottom:1px solid #eef0f2;display:flex;align-items:center;gap:12px;justify-content:space-between}
 .header h1{font-size:1.14rem;font-weight:680;letter-spacing:-.03em;margin:0 0 3px}
-.header p{margin:0;color:var(--muted);font-size:.81rem}
+.meeting-title-input{font-size:1.14rem;font-weight:680;letter-spacing:-.03em;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:7px;padding:3px 5px;margin:-3px -5px;width:min(460px,55vw);max-width:100%;text-overflow:ellipsis}
+.meeting-title-input:hover{background:#f5f8fa;border-color:#e1e7eb}
+.meeting-title-input:focus-visible{outline:2px solid #89a3bb;outline-offset:2px;border-color:#89a3bb;background:#fff}
+.meeting-item strong{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+.context-help{display:grid;place-items:center;width:31px;height:31px;text-decoration:none;font-weight:650;color:var(--slate);border-radius:9px}
+.context-help:hover{background:#edf2f6}
+.help-links{display:grid;gap:9px;margin-top:15px}
+.help-links a{display:block;border:1px solid #e3e8ed;border-radius:10px;padding:12px 15px;text-decoration:none;color:#2b5e79}
+.help-links a:hover{background:#f2f6f9}
+.status:empty{display:none}
 .header-actions{display:flex;align-items:center;gap:4px}
 .reading{width:min(100%,960px);margin:0 auto;padding:0 20px}
 .screen{flex:1;min-height:0;display:none;flex-direction:column}
@@ -86,7 +94,7 @@ button{color:inherit}
 .compose-box textarea::placeholder{color:#778694}
 .send{width:43px;height:43px;border:0;border-radius:50%;background:#365f7a;color:white;font-size:1.45rem;flex-shrink:0}
 .send:hover{background:#234b64}
-.compose-options{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:7px 4px 0;font-size:.73rem;color:var(--muted)}
+.compose-options{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin:7px 4px 0;font-size:.73rem;color:var(--muted)}
 .compose-options select{border:0;color:#3b5166;background:transparent;max-width:215px;cursor:pointer}
 .compose-options label{white-space:nowrap}
 .status{min-height:18px;text-align:left;color:#6a7787;margin:7px 6px 0;font-size:.73rem}
@@ -135,20 +143,19 @@ button{color:inherit}
         <button class="icon-button" id="collapse" title="Collapse or expand sidebar" aria-label="Collapse sidebar">☰</button>
       </div>
       <nav class="primary-nav" aria-label="Sections">
-        <button class="nav-item" data-screen="memories"><span aria-hidden="true">▤</span><span class="nav-label">Memories</span></button>
+        <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
+        <button class="nav-item" data-screen="memories"><span aria-hidden="true">◇</span><span class="nav-label">Memories</span></button>
         <button class="nav-item" data-screen="intelligences"><span aria-hidden="true">✦</span><span class="nav-label">Intelligences</span></button>
         <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span></button>
-        <button class="nav-item" data-screen="graph"><span aria-hidden="true">◇</span><span class="nav-label">Graph</span></button>
         <button class="nav-item" data-screen="setup"><span aria-hidden="true">⚙</span><span class="nav-label">Setup</span></button>
+        <button class="nav-item" data-screen="help"><span aria-hidden="true">?</span><span class="nav-label">Help</span></button>
       </nav>
       <div class="tree">
         <div class="separator"></div>
         <div class="tree-heading">Recent meetings</div>
-        <button class="meeting-item" id="meeting-current"><span aria-hidden="true">▢</span><span><strong>Current meeting</strong><small>Locally saved conversation</small></span></button>
-        <p class="future-note">More meetings and meeting titles are not yet implemented.</p>
+        <button class="meeting-item" id="meeting-current"><span aria-hidden="true">▢</span><strong id="meeting-sidebar-title">Current meeting</strong></button>
       </div>
       <section class="suppliers" aria-label="Intelligences">
-        <h2>Intelligences · this meeting</h2>
         <div id="supplier-list" class="supplier-list"></div>
       </section>
     </div>
@@ -157,30 +164,29 @@ button{color:inherit}
   <main class="main">
     <div class="workspace">
       <header class="header">
-        <div><h1 id="page-title">Current meeting</h1><p id="page-subtitle">One durable local meeting · live suppliers shown below</p></div>
-        <div class="header-actions"><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
+        <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
+        <div class="header-actions"><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
       <section class="screen active" id="screen-meetings" aria-label="Meeting">
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
-          <div class="reading thread" id="thread"><div class="zero"><strong>Welcome to Cobble.</strong>The latest meeting will appear here when the local server is connected.</div></div>
+          <div class="reading thread" id="thread"></div>
         </div>
         <div class="composer-region"><div class="reading">
           <div class="compose-box"><textarea id="question" rows="2" maxlength="2000" aria-label="Message to meeting" placeholder="Message the meeting…"></textarea>
             <button class="send" id="send" title="Send one supplier request" aria-label="Send message" disabled>➤</button></div>
           <div class="compose-options">
-            <span>To the room · one supplier responds per Send</span>
             <label>Next reply: <select id="next-responder" aria-label="Next responding intelligence"></select></label>
           </div>
           <p class="status" id="status" role="status" aria-live="polite"></p>
         </div></div>
       </section>
-      <section class="screen" id="screen-memories" aria-label="Memories">
+      <section class="screen" id="screen-senses" aria-label="Senses">
         <div class="content-pane"><div class="reading">
-          <p class="pane-intro">Connected memory sources live here. This demo can currently search and inspect the local GitHub corpus. Other sources and permission controls need their own integration.</p>
+          <p class="pane-intro">Incoming sources and changes. GitHub archive search is available; change-first sensory processing is still being developed.</p>
           <div class="info-row"><span>Repositories</span><small>GitHub archive · local search available</small></div>
           <div class="info-row"><span>Filesystems</span><small>Captured by Cobble; not searchable in this demo</small></div>
           <div class="info-row"><span>Chat exports, email, databases and other histories</span><small>Future connectors</small></div>
-          <h2 class="section-title">Search local GitHub memories</h2>
+          <h2 class="section-title">Search local GitHub senses</h2>
           <form class="search-form" id="memory-form"><input id="memory-query" type="search" aria-label="Search memory text" placeholder="Search the indexed GitHub archive"><button class="secondary" type="submit">Search</button></form>
           <div id="memory-results" class="results" aria-live="polite"></div>
         </div></div>
@@ -191,9 +197,9 @@ button{color:inherit}
           <div id="intelligence-list"></div>
         </div></div>
       </section>
-      <section class="screen" id="screen-graph" aria-label="Graph">
+      <section class="screen" id="screen-memories" aria-label="Memories">
         <div class="content-pane"><div class="reading">
-          <p class="pane-intro">Graph exploration is a future workspace. No graph is being invented from your memories for this design preview.</p>
+          <p class="pane-intro">The memory graph will connect star credentials and rooms. This workspace is not populated yet.</p>
         </div></div>
       </section>
       <section class="screen" id="screen-setup" aria-label="Setup">
@@ -203,6 +209,18 @@ button{color:inherit}
           <div class="info-row"><span>Corpus access</span><small>Never automatically sent with a meeting question</small></div>
           <div class="info-row"><span>Meeting access</span><small>Sidebar participation is browser-only</small></div>
           <p><a class="link" href="/boardroom">Open the previous perspective boardroom</a> for comparison and legacy features.</p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-help" aria-label="Help">
+        <div class="content-pane"><div class="reading">
+          <h2 class="section-title">Cobble documentation</h2>
+          <div class="help-links">
+            <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#senses" target="_blank" rel="noopener noreferrer">Senses</a>
+            <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#memories" target="_blank" rel="noopener noreferrer">Memories</a>
+            <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#intelligences" target="_blank" rel="noopener noreferrer">Intelligences</a>
+            <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer">Meetings</a>
+            <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#setup" target="_blank" rel="noopener noreferrer">Setup</a>
+          </div>
         </div></div>
       </section>
     </div>
@@ -222,7 +240,7 @@ const PROVIDERS=[
  {id:'mistral',name:'Mistral',mark:'▥'}
 ];
 const states=Object.fromEntries(PROVIDERS.map(p=>[p.id,{active:false,live:false,cost:0}]));
-let turns=[],busy=false,lastProvider='openai',selectedProvider='openai',inspectorMode='context',inspectorTab='corpus',inspectionIndex=0;
+let turns=[],busy=false,lastProvider='openai',selectedProvider='openai',inspectorMode='model',inspectorTab='corpus',inspectionIndex=0;
 let serverReady=false,currentScreen='meetings',dragging=false;
 const make=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
 const money=v=>'US$'+Number(v||0).toFixed(5);
@@ -237,17 +255,33 @@ function titled(name,icon){
  if(icon)line.append(providerMark(icon));else line.append(make('span','☺'));
  return line;
 }
+const HELP_DOC='https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md';
+let currentMeetingTitle=(safeStorageGet('cobble.meeting.title')||'Current meeting').trim().slice(0,100)||'Current meeting';
+$('meeting-title').value=currentMeetingTitle;
+$('meeting-sidebar-title').textContent=currentMeetingTitle;
+document.title='Cobble · '+currentMeetingTitle;
+$('meeting-title').oninput=()=>{
+ currentMeetingTitle=$('meeting-title').value.trim().slice(0,100)||'Current meeting';
+ $('meeting-sidebar-title').textContent=currentMeetingTitle;
+ safeStorageSet('cobble.meeting.title',currentMeetingTitle);
+ document.title='Cobble · '+currentMeetingTitle;
+};
+$('meeting-title').onblur=()=>{$('meeting-title').value=currentMeetingTitle};
+$('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
- if(!['memories','intelligences','meetings','graph','setup'].includes(name))return;
+ if(!['senses','memories','intelligences','meetings','setup','help'].includes(name))return;
  currentScreen=name;
  for(const el of document.querySelectorAll('.screen'))el.classList.toggle('active',el.id==='screen-'+name);
  for(const el of document.querySelectorAll('.nav-item')){
   const on=el.dataset.screen===name;el.classList.toggle('active',on);
   if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
  }
- const titles={meetings:'Current meeting',memories:'Memories',intelligences:'Intelligences',graph:'Graph',setup:'Setup'};
- const subtitles={meetings:'One durable local meeting · no autonomous turn-taking yet',memories:'Explore the sources Cobble can remember',intelligences:'Supplier connections and participation',graph:'An emerging map of remembered relationships',setup:'Local service and privacy boundaries'};
- $('page-title').textContent=titles[name];$('page-subtitle').textContent=subtitles[name];
+ const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,setup:'Setup',help:'Help'};
+ $('meeting-title').hidden=name!=='meetings';
+ $('page-title').hidden=name==='meetings';
+ $('page-title').textContent=titles[name];
+ $('context-help').href=HELP_DOC+'#'+(name==='help'?'workspace-navigation':name);
+ document.title='Cobble · '+titles[name];
  if(name==='intelligences')renderIntelligences();
 }
 for(const el of document.querySelectorAll('.nav-item'))el.onclick=()=>setScreen(el.dataset.screen);
@@ -306,13 +340,9 @@ function renderSuppliers(){
    s.active=!s.active;renderSuppliers();populateResponder();renderIntelligences();
    status(s.active?p.name+' invited for future calls.':p.name+' moved out for future calls.');
   };
-  const lock=make('button');lock.className='supplier-lock';lock.title='Inspect information sent to '+p.name;
-  lock.setAttribute('aria-label',lock.title);
-  lock.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
-  lock.onclick=()=>openInspector(p.id,'context');
   const model=make('button','···');model.className='supplier-model';model.title='Model and cost details for '+p.name;
   model.setAttribute('aria-label',model.title);model.onclick=()=>openInspector(p.id,'model');
-  card.append(toggle,lock,model);list.append(card);
+  card.append(toggle,model);list.append(card);
  }
 }
 function renderIntelligences(){
@@ -326,12 +356,7 @@ function renderIntelligences(){
 }
 function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
- if(!turns.length){
-  const empty=make('div');empty.className='zero';
-  empty.append(make('strong','A room for conversations.'));
-  empty.append(make('span',serverReady?'This meeting has no recorded turns yet.':'Connect McKay to load the locally recorded meeting.'));
-  thread.append(empty);return;
- }
+ if(!turns.length)return;
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
   const hb=make('div');hb.className='message';hb.append(titled('Joe',null),make('p',t.question||''));
@@ -416,7 +441,7 @@ function inspectorTabs(tabs){
   target.append(button);
  }
 }
-function openInspector(provider,mode='context'){
+function openInspector(provider,mode='model'){
  selectedProvider=provider;inspectorMode=mode;
  inspectorTab=mode==='model'?'model':'corpus';inspectionIndex=0;
  $('inspector').classList.add('open');renderInspector();
@@ -425,7 +450,7 @@ function closeInspector(){$('inspector').classList.remove('open')}
 $('close-inspector').onclick=closeInspector;
 function renderInspector(){
  const p=PROVIDERS.find(x=>x.id===selectedProvider)||PROVIDERS[0];
- $('inspector-title').textContent=inspectorMode==='info'?'About this meeting':p.name+' · private record';
+ $('inspector-title').textContent=inspectorMode==='info'?'About this meeting':p.name+' · call record';
  $('inspector-subtitle').textContent=inspectorMode==='info'?'What this prototype actually does':(states[p.id].live?'Connected supplier':'Supplier not connected');
  const body=$('inspector-body');body.replaceChildren();
  if(inspectorMode==='info'){
@@ -433,7 +458,7 @@ function renderInspector(){
   for(const msg of [
    'This is a single, locally retained meeting. Multiple saved meetings and autonomous turn-taking are not yet implemented.',
    'Each Send makes exactly one supplier call, even when the message is addressed to the room. Explicit vocatives (Claude, GPT, Mistral) override the selected responder.',
-   'Up to four completed earlier exchanges may be included in a new call, subject to payload limits. Use the padlock to inspect the actual recorded context.',
+   'Up to four completed earlier exchanges may be included in a new call, subject to payload limits. Use supplier details (···) to inspect the actual recorded request.',
    'Moving a supplier out of the room blocks future selection in this browser. It cannot revoke prior disclosures and is not enforced as server-side access control.',
    'The local corpus is not automatically searched or sent to a supplier. No new connector or memory permission has been granted.'
   ]){body.append(make('p',msg))}
@@ -465,7 +490,7 @@ function renderInspector(){
  }else if(inspectorTab==='corpus'){
   body.append(make('h3','Corpus passages in this request'));
   const selected=t.context?.selected_memories||[];
-  body.append(make('pre',selected.length?JSON.stringify(selected,null,2):'No private corpus passages supplied.'));
+  body.append(make('pre',selected.length?JSON.stringify(selected,null,2):'No corpus passages supplied.'));
   body.append(make('p','Question: '+(t.question||'')));
   body.append(make('p','Request: '+(t.turn_id||'')));
   body.append(make('p','SHA-256: '+(t.context_sha256||'')));
@@ -488,7 +513,7 @@ $('memory-form').onsubmit=async e=>{
  target.append(make('p','Searching local archive…'));
  try{
   const result=await api('search',{query});target.replaceChildren();
-  if(!result.results?.length)target.append(make('p','No indexed GitHub memories found.'));
+  if(!result.results?.length)target.append(make('p','No indexed GitHub senses found.'));
   for(const entry of result.results||[]){
    const d=make('details'),summary=make('summary',(entry.title||'Untitled')+' · '+(entry.reference||''));d.append(summary,make('p',entry.excerpt||''));
    d.addEventListener('toggle',async()=>{
@@ -511,7 +536,7 @@ $('memory-form').onsubmit=async e=>{
   $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
   renderSuppliers();populateResponder();
   if(available.size)await reload();
-  else{renderTurns();status('No live intelligences connected. Start McKay with the supplier flags you intend to use.')}
+  else{renderTurns();status('')}
  }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}
 })();
 })();
