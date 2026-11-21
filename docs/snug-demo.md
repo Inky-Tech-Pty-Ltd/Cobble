@@ -1,6 +1,6 @@
-# Snug's first working browser slice
+# Cobble local meeting workspace and legacy boardroom
 
-Snug's local boardroom starts **offline** by default. With explicit flags
+The local meeting service starts **offline** by default. With explicit flags
 and locally supplied API credentials, GPT, Claude and Mistral can join the
 same durable conversation. No model keys are committed to GitHub.
 
@@ -19,7 +19,43 @@ PYTHONPATH=src python3 scripts/snug_demo_web.py
 Open **http://127.0.0.1:8766/** in Windows Chrome (with WSL localhost
 forwarding enabled). Never change the listener to `0.0.0.0`.
 
-The boardroom lets you:
+### Candidate 1: Meetings workspace
+
+The default page at **http://127.0.0.1:8766/** is now a **lightweight
+Meetings workspace**. It uses the Inky blue-grey palette, Cobble logo,
+resizable/collapsible left sidebar, persistent (browser-local) sidebar width,
+readable shared conversation, and supplier controls below the navigation.
+
+- **Meetings** opens to the single locally saved default conversation. More
+  meetings, meeting titles, and autonomous chairing remain future work.
+- A message goes **to the room** as an operator utterance. The browser
+  still makes **one** backend supplier call for each Send. A leading natural
+  address such as "Claude, ..." takes precedence; otherwise the visible
+  **Next reply** selector chooses the responding in-room supplier. Automatic
+  team turn-taking and standing orders are **not** implemented.
+- Each supplier card shows availability, an estimated cumulative spend,
+  an explicit presence toggle, and separate inspection controls. The padlock
+  opens a **side panel** showing recorded corpus disclosures, earlier
+  exchanges actually sent, and exact saved payloads. The model/cost control
+  inspects records but does not pretend to change server credentials or models.
+- **Memories** offers GitHub-only search/inspection via the existing local
+  index. Filesystems and other future source classes are shown as status
+  only, not imaginary working connectors.
+- **Intelligences**, **Graph**, and **Setup** expose useful current status and
+  explicitly signal capabilities that have not been implemented.
+- No supplier responds automatically unless the operator clicks Send.
+  The one-time, exact, server-side preview/approval-token mechanism and
+  append-only live-event ledger are unchanged. Browser presence controls
+  are **not** security boundaries and cannot revoke disclosure.
+
+**Important:** provider icons in Candidate 1 are local, approximate identity
+markers, not official trademark artwork or endorsements. The existing
+perspective boardroom remains available at **http://127.0.0.1:8766/boardroom**
+for comparison and its filename-only staging controls.
+
+### Legacy perspective boardroom
+
+The previous boardroom, now at \`/boardroom\`, lets you:
 
 1. **Speak as Snug** from the Chair. The interface treats the human operator
    as Snug's mouthpiece, not as someone asking a separate Snug chatbot.
