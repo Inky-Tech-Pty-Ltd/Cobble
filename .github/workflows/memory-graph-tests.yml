@@ -38,7 +38,7 @@ jobs:
       - name: Current implementation regression safeguards
         working-directory: Cobble
         run: |
-          for test in test_traces.py test_stars.py test_memory_graph.py test_observation_contract.py; do
+          for test in test_traces.py test_stars.py test_memory_graph.py test_observation_contract.py test_adversarial_memory_graph_boundaries.py; do
             PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -p "$test" -v
           done
       # Research remains executable and visible in CI, but a changed experimental
