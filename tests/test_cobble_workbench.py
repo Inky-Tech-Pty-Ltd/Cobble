@@ -16,7 +16,7 @@ class WorkbenchTests(unittest.TestCase):
         cls.page = HTML.read_text(encoding="utf-8")
 
     def test_navigation_sidebar_and_meeting_layout(self):
-        for item in ("Memories", "Intelligences", "Meetings", "Graph", "Setup",
+        for item in ("Senses", "Memories", "Intelligences", "Meetings", "Setup", "Help",
                      'id="sidebar"', 'id="resize-grip"', "ondblclick",
                      "cobble.sidebar.width", "cobble.sidebar.collapsed",
                      'id="thread"', 'id="chat-scroll"',
@@ -28,8 +28,25 @@ class WorkbenchTests(unittest.TestCase):
         self.assertNotIn("projectTableText", self.page)
         self.assertNotIn("rotateX(", self.page)
         self.assertIn('src="/assets/cobble-logo.png"', self.page)
-        self.assertIn("No graph is being invented", self.page)
-        self.assertIn("More meetings and meeting titles are not yet implemented", self.page)
+        self.assertIn('id="screen-senses"', self.page)
+        self.assertIn('id="screen-memories"', self.page)
+        self.assertIn('id="screen-help"', self.page)
+        self.assertNotIn('id="screen-graph"', self.page)
+        self.assertNotIn("More meetings and meeting titles are not yet implemented", self.page)
+        self.assertNotIn("A room for conversations.", self.page)
+        self.assertNotIn('class="supplier-lock"', self.page)
+        self.assertNotIn("Use the padlock", self.page)
+
+    def test_editable_browser_local_meeting_title_and_context_help(self):
+        for value in ('id="meeting-title"', 'id="meeting-sidebar-title"',
+                      "cobble.meeting.title", "'meeting-title').oninput",
+                      "'meeting-title').onblur", "'meeting-title').onkeydown",
+                      'id="context-help"', "HELP_DOC+'#'",
+                      "#senses", "#memories", "#intelligences", "#meetings",
+                      "#setup"):
+            self.assertIn(value, self.page)
+        self.assertIn('target="_blank"', self.page)
+        self.assertIn('rel="noopener noreferrer"', self.page)
 
     def test_live_call_contract_and_disclosure_are_retained(self):
         for required in ("'live/preview'", "'live/send'",
@@ -48,7 +65,9 @@ class WorkbenchTests(unittest.TestCase):
             self.assertIn(required, self.page)
         self.assertIn("Room presence in the UI is not a security boundary", self.page)
         self.assertIn("one supplier responds per Send", self.page)
-        self.assertIn("No live intelligences connected", self.page)
+        self.assertNotIn("To the room · one supplier responds per Send</span>", self.page)
+        self.assertNotIn("No live intelligences connected.", self.page)
+        self.assertIn("Room presence in the UI is not a security boundary", self.page)
         # No remote assets or calls to vendor APIs in browser.
         self.assertNotRegex(self.page, r'<script[^>]+src="https?://')
         self.assertNotRegex(self.page, r'<img[^>]+src="https?://')
