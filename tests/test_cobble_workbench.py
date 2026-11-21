@@ -35,7 +35,7 @@ class WorkbenchTests(unittest.TestCase):
         for required in ("'live/preview'", "'live/send'",
                          "{approval_token:preview.approval_token}",
                          "status==='outcome_unknown'", "status!=='completed'",
-                         "No automatic retries", "No private corpus passages supplied",
+                         "no automatic retries", "No private corpus passages supplied",
                          "selected_memories", "previous_exchanges",
                          "outbound", "context_sha256", "t.payload",
                          "role=\"status\"", "X-Snug-Client",
