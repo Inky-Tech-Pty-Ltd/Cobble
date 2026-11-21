@@ -52,7 +52,7 @@ class WorkbenchTests(unittest.TestCase):
         for required in ("'live/preview'", "'live/send'",
                          "{approval_token:preview.approval_token}",
                          "status==='outcome_unknown'", "status!=='completed'",
-                         "no automatic retries", "No private corpus passages supplied",
+                         "no automatic retries", "No corpus passages supplied",
                          "selected_memories", "previous_exchanges",
                          "outbound", "context_sha256", "t.payload",
                          "role=\"status\"", "X-Snug-Client",
@@ -64,10 +64,9 @@ class WorkbenchTests(unittest.TestCase):
                 continue
             self.assertIn(required, self.page)
         self.assertIn("Room presence in the UI is not a security boundary", self.page)
-        self.assertIn("one supplier responds per Send", self.page)
+        self.assertIn("Each Send makes exactly one supplier call", self.page)
         self.assertNotIn("To the room · one supplier responds per Send</span>", self.page)
         self.assertNotIn("No live intelligences connected.", self.page)
-        self.assertIn("Room presence in the UI is not a security boundary", self.page)
         # No remote assets or calls to vendor APIs in browser.
         self.assertNotRegex(self.page, r'<script[^>]+src="https?://')
         self.assertNotRegex(self.page, r'<img[^>]+src="https?://')
