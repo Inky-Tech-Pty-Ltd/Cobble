@@ -48,6 +48,27 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn('target="_blank"', self.page)
         self.assertIn('rel="noopener noreferrer"', self.page)
 
+    def test_drop_to_stage_documents_without_reading_or_sending_bytes(self):
+        for item in ('id="drop-cue"', 'id="tabled-files"',
+                     'id="add-table-file"', 'id="table-file-input"',
+                     'TABLE_FILES_LIMIT=8', "stageFiles(e.dataTransfer.files)",
+                     "meetingDrop.ondrop=e=>", "drawTableFiles()",
+                     "On table · names only · not shared",
+                     "No file bytes are read"):
+            self.assertIn(item, self.page)
+        for forbidden in ("FileReader", "readAsDataURL(", "file.text(",
+                          "file.arrayBuffer(", "new FormData("):
+            self.assertNotIn(forbidden, self.page)
+        self.assertIn("const preview=await api('live/preview',{question,provider:recipient})", self.page)
+
+    def test_composer_grows_and_resets_after_send(self):
+        for item in ("function resizeComposer()", "input.scrollHeight",
+                     "window.addEventListener('resize',resizeComposer)",
+                     "Math.floor(window.innerHeight*0.38)",
+                     "$('question').oninput=()=>{resizeComposer();updateSend()}",
+                     "$('question').value='';resizeComposer();"):
+            self.assertIn(item, self.page)
+
     def test_live_call_contract_and_disclosure_are_retained(self):
         for required in ("'live/preview'", "'live/send'",
                          "{approval_token:preview.approval_token}",
