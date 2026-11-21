@@ -90,7 +90,18 @@ button{color:inherit}
 .turn-meta{color:#778491;font-size:.69rem;margin-top:9px}
 .composer-region{background:linear-gradient(180deg,#fff0,#fff 14%);padding:10px 0 21px;flex-shrink:0}
 .compose-box{border:1px solid #d8e0e6;border-radius:21px;padding:10px 11px;background:#fff;box-shadow:0 4px 16px #1d28330c;display:flex;align-items:flex-end;gap:10px}
-.compose-box textarea{flex:1;min-width:0;border:0;background:none;resize:none;outline:0;min-height:40px;max-height:145px;line-height:1.48;padding:9px 9px 5px;color:var(--ink)}
+.compose-box textarea{flex:1;min-width:0;border:0;background:none;resize:none;outline:0;min-height:40px;max-height:min(38dvh,360px);overflow-y:hidden;line-height:1.48;padding:9px 9px 5px;color:var(--ink)}
+.attach{border:0;background:transparent;display:grid;place-items:center;border-radius:9px;color:var(--slate);height:42px;width:36px;flex-shrink:0}
+.attach:hover,.remove-tabled:hover{background:#edf2f6}
+.attach svg{height:21px;width:21px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.tabled-files{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 9px;font-size:.75rem}
+.table-note{color:var(--muted);margin-right:5px}
+.file-chip{display:inline-flex;align-items:center;max-width:100%;gap:4px;border:1px solid #dce4eb;border-radius:12px;background:#f5f8fb;padding:4px 5px 4px 10px}
+.file-name{display:inline-block;max-width:210px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.remove-tabled{border:0;background:transparent;border-radius:7px;padding:2px 5px;font-size:1rem}
+#screen-meetings{position:relative}
+#screen-meetings.file-over .chat-scroll{outline:2px dashed #89a3bb;outline-offset:-10px;background:#f8fbfd}
+.drop-cue{position:absolute;top:43%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;background:#fff;border:1px solid #b9cbd9;border-radius:14px;padding:14px 20px;box-shadow:0 3px 15px #1d28331a;color:#3b5166;font-size:.9rem;text-align:center}
 .compose-box textarea::placeholder{color:#778694}
 .send{width:43px;height:43px;border:0;border-radius:50%;background:#365f7a;color:white;font-size:1.45rem;flex-shrink:0}
 .send:hover{background:#234b64}
@@ -168,11 +179,13 @@ button{color:inherit}
         <div class="header-actions"><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
       <section class="screen active" id="screen-meetings" aria-label="Meeting">
+        <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
         </div>
         <div class="composer-region"><div class="reading">
-          <div class="compose-box"><textarea id="question" rows="2" maxlength="2000" aria-label="Message to meeting" placeholder="Message the meeting…"></textarea>
+          <div id="tabled-files" class="tabled-files" hidden aria-live="polite"></div>
+          <div class="compose-box"><button id="add-table-file" class="attach" title="Place documents on the table" aria-label="Place documents on the table"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 11.6l-8.9 8.9a6 6 0 0 1-8.5-8.5L13.6 2.4a4 4 0 0 1 5.7 5.7L9.6 17.8a2 2 0 0 1-2.8-2.8l8.2-8.2"/></svg></button><input id="table-file-input" type="file" multiple hidden aria-label="Choose local files to stage"><textarea id="question" rows="2" maxlength="2000" aria-label="Message to meeting" placeholder="Message the meeting…"></textarea>
             <button class="send" id="send" title="Send one supplier request" aria-label="Send message" disabled>➤</button></div>
           <div class="compose-options">
             <label>Next reply: <select id="next-responder" aria-label="Next responding intelligence"></select></label>
@@ -419,7 +432,7 @@ async function send(){
   const preview=await api('live/preview',{question,provider:recipient});
   const result=await api('live/send',{approval_token:preview.approval_token});
   if(result.turn.status!=='completed')throw Error('No verified supplier reply');
-  lastProvider=recipient;$('question').value='';
+  lastProvider=recipient;$('question').value='';resizeComposer();
   await reload();status('Response recorded locally.');$('question').focus();
  }catch(error){
   // Unknown upstream outcomes must never be retried automatically.
@@ -428,7 +441,62 @@ async function send(){
  }finally{busy=false;updateSend()}
 }
 $('send').onclick=send;
-$('question').oninput=updateSend;
+function resizeComposer(){
+ const input=$('question');
+ const max=Math.min(360,Math.max(120,Math.floor(window.innerHeight*0.38)));
+ input.style.height='auto';
+ const needed=input.scrollHeight;
+ input.style.height=Math.min(needed,max)+'px';
+ input.style.overflowY=needed>max?'auto':'hidden';
+}
+$('question').oninput=()=>{resizeComposer();updateSend()};
+window.addEventListener('resize',resizeComposer);
+resizeComposer();
+
+// Only file metadata is staged. File bytes are never read or included in API requests.
+const TABLE_FILES_LIMIT=8;
+const tabledFiles=[];
+function drawTableFiles(){
+ const tray=$('tabled-files');tray.replaceChildren();tray.hidden=!tabledFiles.length;
+ if(!tabledFiles.length)return;
+ const note=make('span','On table · names only · not shared');note.className='table-note';tray.append(note);
+ tabledFiles.forEach((file,index)=>{
+  const chip=make('span');chip.className='file-chip';
+  const name=make('span',file.name);name.className='file-name';name.title=file.name;
+  const remove=make('button','×');remove.className='remove-tabled';
+  remove.type='button';remove.setAttribute('aria-label','Remove '+file.name+' from table');
+  remove.onclick=()=>{tabledFiles.splice(index,1);drawTableFiles()};
+  chip.append(name,remove);tray.append(chip);
+ });
+}
+function stageFiles(files){
+ let skipped=0;
+ for(const file of Array.from(files||[])){
+  if(!file?.name)continue;
+  if(tabledFiles.length>=TABLE_FILES_LIMIT){skipped++;continue}
+  if(tabledFiles.some(f=>f.name===file.name&&f.size===file.size&&f.modified===file.lastModified))continue;
+  tabledFiles.push({name:file.name,size:file.size,modified:file.lastModified});
+ }
+ drawTableFiles();
+ if(skipped)status('The table holds up to eight document names.',true);
+}
+$('add-table-file').onclick=()=>$('table-file-input').click();
+$('table-file-input').onchange=e=>{stageFiles(e.target.files);e.target.value=''};
+const meetingDrop=$('screen-meetings');
+const isFileDrag=e=>Array.from(e.dataTransfer?.types||[]).includes('Files');
+function clearFileDrag(){meetingDrop.classList.remove('file-over');$('drop-cue').hidden=true}
+meetingDrop.ondragenter=e=>{
+ if(!isFileDrag(e))return;e.preventDefault();
+ meetingDrop.classList.add('file-over');$('drop-cue').hidden=false;
+};
+meetingDrop.ondragover=e=>{if(isFileDrag(e))e.preventDefault()};
+meetingDrop.ondragleave=e=>{if(!meetingDrop.contains(e.relatedTarget))clearFileDrag()};
+meetingDrop.ondrop=e=>{
+ if(!isFileDrag(e))return;e.preventDefault();clearFileDrag();stageFiles(e.dataTransfer.files);
+};
+// A stray file drop must not navigate away and discard the meeting.
+document.addEventListener('dragover',e=>{if(isFileDrag(e))e.preventDefault()});
+document.addEventListener('drop',e=>{if(isFileDrag(e))e.preventDefault()});
 $('question').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}};
 $('next-responder').onchange=()=>{lastProvider=$('next-responder').value};
 
