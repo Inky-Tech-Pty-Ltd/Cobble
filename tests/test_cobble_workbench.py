@@ -112,6 +112,7 @@ class WorkbenchTests(unittest.TestCase):
                      "justify-content:flex-end", "meetings=data.rooms||[]"):
             self.assertIn(item, self.page)
         self.assertNotIn("On table · names only · not shared", self.page)
+        self.assertNotIn("if(!turns.length)return;", self.page)
         self.assertNotIn("id=\"meeting-current\"", self.page)
 
     def test_dom_ids_unique_and_javascript_parses(self):
