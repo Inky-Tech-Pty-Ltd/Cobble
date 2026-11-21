@@ -77,7 +77,7 @@ class LiveChatService:
             "openai": adapter if adapter is not None else OpenAIAdapter(
                 allow_network=True, output_tokens=OUTPUT_TOKENS)
         }
-        if not self._adapters or any(
+        if any(
             p not in PROVIDERS or getattr(a, "name", None) != p
             for p, a in self._adapters.items()
         ):
@@ -141,8 +141,9 @@ class LiveChatService:
             start = self._read("turns", p.stem)
             attempt = self._read("attempts", p.stem)
             outcome = self._read("outcomes", p.stem)
-            status = outcome["status"] if outcome else (
-                "outcome_unknown" if attempt else "saved_not_sent")
+            status = ("posted" if start.get("kind") == "operator_message" else
+                      outcome["status"] if outcome else
+                      "outcome_unknown" if attempt else "saved_not_sent")
             turns.append({
                 "turn_id": p.stem,
                 "created_utc": start["created_utc"],
@@ -174,8 +175,33 @@ class LiveChatService:
             "provider": turn["provider"],
             "participant": "operator",
             "question": turn["question"],
-            "answer": turn["answer"],
-        } for turn in turns if turn["status"] == "completed")[-MAX_PRIOR:]
+            "answer": turn["answer"] or "",
+        } for turn in turns if turn["status"] in ("completed", "posted"))[-MAX_PRIOR:]
+
+    def post_operator(self, *, text):
+        """Record one operator utterance locally; no supplier call or attempt.
+
+        This has the same durable, append-only event format as paid turns.
+        Posts are included in later explicitly reviewed supplier context.
+        """
+        if not isinstance(text, str) or not 0 < len(text.strip()) <= MAX_QUESTION:
+            raise ValueError("Post must contain 1–2000 characters")
+        with self._lock:
+            if self._inflight:
+                raise PermissionError("A supplier request is underway; post afterward")
+            turn_id = (datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")
+                       + "-" + secrets.token_hex(6))
+            self._write("turns", turn_id, {
+                "turn_id": turn_id,
+                "created_utc": datetime.now(timezone.utc).isoformat(),
+                "kind": "operator_message",
+                "provider": "operator",
+                "question": text.strip(),
+                "context_sha256": _digest({"operator_message": text.strip()}),
+                "context": {},
+                "payload": {},
+            })
+            return {"turn": self._turns_by_id(turn_id)}
 
     def preview(self, *, question, provider="openai"):
         if not isinstance(question, str) or not 0 < len(question.strip()) <= MAX_QUESTION:
