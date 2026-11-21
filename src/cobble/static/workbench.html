@@ -46,14 +46,13 @@ button{color:inherit}
 .mark.openai{background:#edf1f1;color:#304f49;font-size:1rem}
 .mark.claude{color:#cf684c;background:#fcf0ec;font-size:1.55rem}
 .mark.mistral{background:#fff4e7;color:#c95e21;font-size:1.15rem}
-.supplier-lock,.supplier-model{display:grid;place-items:center;border:0;background:transparent;color:#3b5166;border-radius:7px;width:28px;height:32px}
+.supplier-model{display:grid;place-items:center;border:0;background:transparent;color:#3b5166;border-radius:7px;width:28px;height:32px}
 .supplier-model{font-size:.68rem;font-weight:600}
-.supplier-lock:hover,.supplier-model:hover{background:#e7eef3}
-.supplier-lock svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.supplier-model:hover{background:#e7eef3}
 .supplier-main[aria-pressed="true"] .mark{box-shadow:0 0 0 2px #8db3ce}
 .grip{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;touch-action:none;z-index:5}
 .grip:hover,.grip.dragging{background:#bfd3e0}
-.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .tree,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-lock,.sidebar.collapsed .supplier-model{display:none}
+.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .tree,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-model{display:none}
 .sidebar.collapsed .suppliers .supplier-card{padding:5px;justify-content:center}
 .sidebar.collapsed .suppliers .supplier-main{justify-content:center}
 .sidebar.collapsed .suppliers{margin-top:auto}
@@ -241,7 +240,7 @@ const PROVIDERS=[
  {id:'mistral',name:'Mistral',mark:'▥'}
 ];
 const states=Object.fromEntries(PROVIDERS.map(p=>[p.id,{active:false,live:false,cost:0}]));
-let turns=[],busy=false,lastProvider='openai',selectedProvider='openai',inspectorMode='context',inspectorTab='corpus',inspectionIndex=0;
+let turns=[],busy=false,lastProvider='openai',selectedProvider='openai',inspectorMode='model',inspectorTab='corpus',inspectionIndex=0;
 let serverReady=false,currentScreen='meetings',dragging=false;
 const make=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
 const money=v=>'US$'+Number(v||0).toFixed(5);
@@ -341,13 +340,9 @@ function renderSuppliers(){
    s.active=!s.active;renderSuppliers();populateResponder();renderIntelligences();
    status(s.active?p.name+' invited for future calls.':p.name+' moved out for future calls.');
   };
-  const lock=make('button');lock.className='supplier-lock';lock.title='Inspect information sent to '+p.name;
-  lock.setAttribute('aria-label',lock.title);
-  lock.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
-  lock.onclick=()=>openInspector(p.id,'context');
   const model=make('button','···');model.className='supplier-model';model.title='Model and cost details for '+p.name;
   model.setAttribute('aria-label',model.title);model.onclick=()=>openInspector(p.id,'model');
-  card.append(toggle,lock,model);list.append(card);
+  card.append(toggle,model);list.append(card);
  }
 }
 function renderIntelligences(){
@@ -446,7 +441,7 @@ function inspectorTabs(tabs){
   target.append(button);
  }
 }
-function openInspector(provider,mode='context'){
+function openInspector(provider,mode='model'){
  selectedProvider=provider;inspectorMode=mode;
  inspectorTab=mode==='model'?'model':'corpus';inspectionIndex=0;
  $('inspector').classList.add('open');renderInspector();
@@ -455,7 +450,7 @@ function closeInspector(){$('inspector').classList.remove('open')}
 $('close-inspector').onclick=closeInspector;
 function renderInspector(){
  const p=PROVIDERS.find(x=>x.id===selectedProvider)||PROVIDERS[0];
- $('inspector-title').textContent=inspectorMode==='info'?'About this meeting':p.name+' · private record';
+ $('inspector-title').textContent=inspectorMode==='info'?'About this meeting':p.name+' · call record';
  $('inspector-subtitle').textContent=inspectorMode==='info'?'What this prototype actually does':(states[p.id].live?'Connected supplier':'Supplier not connected');
  const body=$('inspector-body');body.replaceChildren();
  if(inspectorMode==='info'){
@@ -463,7 +458,7 @@ function renderInspector(){
   for(const msg of [
    'This is a single, locally retained meeting. Multiple saved meetings and autonomous turn-taking are not yet implemented.',
    'Each Send makes exactly one supplier call, even when the message is addressed to the room. Explicit vocatives (Claude, GPT, Mistral) override the selected responder.',
-   'Up to four completed earlier exchanges may be included in a new call, subject to payload limits. Use the padlock to inspect the actual recorded context.',
+   'Up to four completed earlier exchanges may be included in a new call, subject to payload limits. Use supplier details (···) to inspect the actual recorded request.',
    'Moving a supplier out of the room blocks future selection in this browser. It cannot revoke prior disclosures and is not enforced as server-side access control.',
    'The local corpus is not automatically searched or sent to a supplier. No new connector or memory permission has been granted.'
   ]){body.append(make('p',msg))}
@@ -495,7 +490,7 @@ function renderInspector(){
  }else if(inspectorTab==='corpus'){
   body.append(make('h3','Corpus passages in this request'));
   const selected=t.context?.selected_memories||[];
-  body.append(make('pre',selected.length?JSON.stringify(selected,null,2):'No private corpus passages supplied.'));
+  body.append(make('pre',selected.length?JSON.stringify(selected,null,2):'No corpus passages supplied.'));
   body.append(make('p','Question: '+(t.question||'')));
   body.append(make('p','Request: '+(t.turn_id||'')));
   body.append(make('p','SHA-256: '+(t.context_sha256||'')));
