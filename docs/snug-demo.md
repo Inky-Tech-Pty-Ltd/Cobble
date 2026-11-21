@@ -35,6 +35,16 @@ readable shared conversation, and supplier controls below the navigation.
   address such as "Claude, ..." takes precedence; otherwise the visible
   **Next reply** selector chooses the responding in-room supplier. Automatic
   team turn-taking and standing orders are **not** implemented.
+- **The composer grows** as the operator types, up to a screen-relative cap;
+  after a successful Send it contracts again. Shift+Enter inserts a newline.
+- **Documents can be staged** by dragging local files onto the Meeting area,
+  or clicking the paperclip in the composer. Up to eight file names are shown
+  above the composer, each removable with ×. **These are local, volatile
+  filename/size references only.** They are not opened, read, uploaded,
+  persisted, or included in supplier requests. This restores the legacy
+  *visual tabling* feature without misrepresenting it as shared context.
+  Actual tabled-document context will require a separately audited server
+  pathway.
 - Each supplier card shows availability, estimated cumulative spend, a
   browser-only presence toggle, and a details (···) button. There is no
   per-supplier private-context control: all participating intelligences
@@ -85,6 +95,14 @@ One durable local conversation. Click the heading to edit its browser-local
 title; other browsers do not automatically receive that title. Each Send
 currently calls one chosen supplier. A procedural Chair and standing orders
 are not implemented yet.
+
+Drag a file anywhere onto the Meetings workspace to **stage its name on the
+table**, or click the paperclip next to the message box and choose local files.
+The small chips above the composer are removable and exist only until the page
+is reloaded. The browser reads no file contents, and the supplier receives no
+staged file data. The UI labels this honestly so files are never mistaken for
+shared context. The message box grows as the operator types (up to 38% of
+viewport height, capped at 360px), scrolling beyond that size.
 
 #### Setup
 
