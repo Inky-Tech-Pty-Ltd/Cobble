@@ -333,9 +333,8 @@ function populateResponder(){
  for(const p of PROVIDERS.filter(x=>states[x.id].active&&states[x.id].live)){
   const opt=make('option',p.name);opt.value=p.id;select.append(opt);
  }
- if(select.options.length){
-  select.value=Array.from(select.options).some(o=>o.value===chosen)?chosen:select.options[0].value;
- }
+ const local=make('option','None · post only');local.value='post-only';select.append(local);
+ select.value=Array.from(select.options).some(o=>o.value===chosen)?chosen:select.options[0].value;
  updateSend();
 }
 function renderSuppliers(){
@@ -374,6 +373,7 @@ function renderTurns(){
   const t=turns[i],human=make('article');human.className='exchange human';
   const hb=make('div');hb.className='message';hb.append(titled('Joe',null),make('p',t.question||''));
   hb.lastChild.className='message-body';human.append(hb);thread.append(human);
+  if(t.status==='posted'&&t.provider==='operator')continue;
   const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
   const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');
   const box=make('div');box.className='message';box.append(titled(p.name,p));
@@ -393,9 +393,10 @@ function renderTurns(){
  renderIntelligences();
 }
 function updateSend(){
- $('send').disabled=busy||!serverReady||!$('question').value.trim()||!$('next-responder').options.length;
+ $('send').disabled=busy||!serverReady||!$('question').value.trim();
 }
 function chooseRecipient(question){
+ if($('next-responder').value==='post-only')return 'post-only';
  const named=question.match(/^(?:(?:hey|hello|hi|dear|mr\.?)\s+)?(GPT|Claude|Mistral)\b[\s,.:!?-]*/i);
  if(named){
   const p=PROVIDERS.find(x=>x.name.toLowerCase()===named[1].toLowerCase());
@@ -425,8 +426,17 @@ async function send(){
  const question=$('question').value.trim();if(!question)return;
  let recipient;
  try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
- busy=true;updateSend();status('Consulting '+providerName(recipient)+' · one call, no automatic retries…');
+ busy=true;updateSend();
+ status(recipient==='post-only'?'Recording a local meeting contribution…':
+  'Consulting '+providerName(recipient)+' · one call, no automatic retries…');
  try{
+  if(recipient==='post-only'){
+   const result=await api('live/post',{text:question});
+   if(result.turn.status!=='posted')throw Error('No verified local post retained');
+   $('question').value='';resizeComposer();
+   await reload();status('Posted locally · no supplier called.');$('question').focus();
+   return;
+  }
   // Preserve the exact one-use preflight and private server ledger. No
   // memory corpus passages are attached automatically in this version.
   const preview=await api('live/preview',{question,provider:recipient});
@@ -498,7 +508,7 @@ meetingDrop.ondrop=e=>{
 document.addEventListener('dragover',e=>{if(isFileDrag(e))e.preventDefault()});
 document.addEventListener('drop',e=>{if(isFileDrag(e))e.preventDefault()});
 $('question').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}};
-$('next-responder').onchange=()=>{lastProvider=$('next-responder').value};
+$('next-responder').onchange=()=>{if($('next-responder').value!=='post-only')lastProvider=$('next-responder').value};
 
 function inspectorTabs(tabs){
  const target=$('inspector-tabs');target.replaceChildren();
@@ -600,11 +610,11 @@ $('memory-form').onsubmit=async e=>{
   const health=await healthResponse.json();
   const available=new Set(health.live_providers||[]);
   for(const p of PROVIDERS){states[p.id].live=available.has(p.id);states[p.id].active=states[p.id].live}
-  serverReady=available.size>0;
+  serverReady=true;
   $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
   renderSuppliers();populateResponder();
-  if(available.size)await reload();
-  else{renderTurns();status('')}
+  await reload();
+  status('');
  }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}
 })();
 })();
