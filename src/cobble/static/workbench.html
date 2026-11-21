@@ -30,7 +30,13 @@ button{color:inherit}
 .sidebar.collapsed .nav-item{padding:11px;justify-content:center}
 .separator{height:1px;background:var(--line);margin:18px 3px 12px}
 .tree{flex:1;min-height:80px;overflow-y:auto}
-.tree-heading{color:var(--muted);font-size:.78rem;letter-spacing:.01em;margin:8px 7px}
+.tree-heading{color:var(--muted);font-size:.78rem;letter-spacing:.01em;margin:8px 7px;display:flex;justify-content:space-between;align-items:center}
+.new-meeting{border:0;background:transparent;font-size:1.32rem;line-height:1;border-radius:7px;color:var(--slate);padding:2px 7px;cursor:pointer}
+.new-meeting:hover{background:#e2ebf3}
+#meeting-list{display:grid;gap:4px}
+.meeting-item{background:transparent;cursor:pointer}
+.meeting-item.active{background:#eaf1f6}
+.meeting-item:hover{background:#e7eef4}
 .meeting-item{width:100%;text-align:left;border:0;border-radius:9px;padding:10px 12px;background:#eaf1f6;display:flex;gap:7px;align-items:center;font-size:.85rem}
 .meeting-item small{display:block;color:var(--muted);font-size:.74rem;margin-top:3px}
 .future-note{margin:7px 10px;color:#88949d;font-size:.74rem;line-height:1.4}
@@ -76,9 +82,10 @@ button{color:inherit}
 .screen.active{display:flex}
 .chat-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain}
 .thread{padding-top:25px;padding-bottom:26px;display:flex;flex-direction:column;gap:16px}
-.exchange{display:flex;align-items:flex-start;max-width:85%;gap:9px}
-.exchange.human{align-self:flex-end;max-width:83%}
-.exchange.supplier{align-self:flex-start}
+.exchange{display:flex;align-items:flex-start;width:100%;max-width:100%;justify-content:flex-end;gap:9px}
+.exchange.human,.exchange.supplier{align-self:stretch}
+.exchange.human .message{width:83%}
+.exchange.supplier .message{width:85%}
 .message{padding:15px 17px;border-radius:15px;line-height:1.53;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem;width:100%}
 .human .message{background:#e8f1fb;color:#243b4c}
 .supplier .message{background:#fff;border:1px solid #e0e5e9;box-shadow:0 2px 8px #1528350b}
@@ -163,8 +170,8 @@ button{color:inherit}
       </nav>
       <div class="tree">
         <div class="separator"></div>
-        <div class="tree-heading">Recent meetings</div>
-        <button class="meeting-item" id="meeting-current"><span aria-hidden="true">▢</span><strong id="meeting-sidebar-title">Current meeting</strong></button>
+        <div class="tree-heading"><span>Recent meetings</span><button id="new-meeting" class="new-meeting" aria-label="Create new meeting" title="New meeting">+</button></div>
+        <div id="meeting-list" aria-label="Saved meetings"></div>
       </div>
       <section class="suppliers" aria-label="Intelligences">
         <div id="supplier-list" class="supplier-list"></div>
@@ -185,7 +192,7 @@ button{color:inherit}
         </div>
         <div class="composer-region"><div class="reading">
           <div id="tabled-files" class="tabled-files" hidden aria-live="polite"></div>
-          <div class="compose-box"><button id="add-table-file" class="attach" title="Place documents on the table" aria-label="Place documents on the table"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 11.6l-8.9 8.9a6 6 0 0 1-8.5-8.5L13.6 2.4a4 4 0 0 1 5.7 5.7L9.6 17.8a2 2 0 0 1-2.8-2.8l8.2-8.2"/></svg></button><input id="table-file-input" type="file" multiple hidden aria-label="Choose local files to stage"><textarea id="question" rows="2" maxlength="2000" aria-label="Message to meeting" placeholder="Message the meeting…"></textarea>
+          <div class="compose-box"><button id="add-table-file" class="attach" title="Stage filename (contents not shared yet)" aria-label="Place documents on the table"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 11.6l-8.9 8.9a6 6 0 0 1-8.5-8.5L13.6 2.4a4 4 0 0 1 5.7 5.7L9.6 17.8a2 2 0 0 1-2.8-2.8l8.2-8.2"/></svg></button><input id="table-file-input" type="file" multiple hidden aria-label="Choose local files to stage"><textarea id="question" rows="2" maxlength="2000" aria-label="Message to meeting" placeholder="Message the meeting…"></textarea>
             <button class="send" id="send" title="Send one supplier request" aria-label="Send message" disabled>➤</button></div>
           <div class="compose-options">
             <label>Next reply: <select id="next-responder" aria-label="Next responding intelligence"></select></label>
@@ -269,17 +276,44 @@ function titled(name,icon){
  return line;
 }
 const HELP_DOC='https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md';
-let currentMeetingTitle=(safeStorageGet('cobble.meeting.title')||'Current meeting').trim().slice(0,100)||'Current meeting';
-$('meeting-title').value=currentMeetingTitle;
-$('meeting-sidebar-title').textContent=currentMeetingTitle;
-document.title='Cobble · '+currentMeetingTitle;
+let meetings=[{id:'default',title:'Current meeting'}];
+let currentRoomId=safeStorageGet('cobble.meeting.active')||'default';
+let currentMeetingTitle='Current meeting';
+const roomDrafts=new Map();
+function renderMeetingList(){
+ const target=$('meeting-list');target.replaceChildren();
+ for(const room of meetings){
+  const item=make('button');item.className='meeting-item'+(room.id===currentRoomId?' active':'');
+  if(room.id===currentRoomId)item.setAttribute('aria-current','page');
+  const icon=make('span','▢');icon.setAttribute('aria-hidden','true');
+  item.append(icon,make('strong',room.title));item.title=room.title;
+  item.onclick=()=>switchMeeting(room.id);
+  target.append(item);
+ }
+}
+function setCurrentMeetingName(title){
+ currentMeetingTitle=title;
+ $('meeting-title').value=title;
+ if(currentScreen==='meetings')document.title='Cobble · '+title;
+ renderMeetingList();
+}
 $('meeting-title').oninput=()=>{
- currentMeetingTitle=$('meeting-title').value.trim().slice(0,100)||'Current meeting';
- $('meeting-sidebar-title').textContent=currentMeetingTitle;
- safeStorageSet('cobble.meeting.title',currentMeetingTitle);
+ currentMeetingTitle=$('meeting-title').value.trim().slice(0,100)||'New meeting';
  document.title='Cobble · '+currentMeetingTitle;
 };
-$('meeting-title').onblur=()=>{$('meeting-title').value=currentMeetingTitle};
+$('meeting-title').onblur=async()=>{
+ const roomId=currentRoomId,room=meetings.find(m=>m.id===roomId);
+ const title=$('meeting-title').value.trim().slice(0,100)||room?.title||'New meeting';
+ $('meeting-title').value=title;
+ if(room?.title===title)return;
+ try{
+  const renamed=await api('live/rooms/rename',{room_id:roomId,title});
+  Object.assign(room,renamed);
+  if(roomId==='default')safeStorageSet('cobble.meeting.title',title);
+  if(currentRoomId===roomId)setCurrentMeetingName(title);
+  else renderMeetingList();
+ }catch(error){status('Meeting rename failed: '+error.message,true);if(currentRoomId===roomId)setCurrentMeetingName(room.title)}
+};
 $('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
  if(!['senses','memories','intelligences','meetings','setup','help'].includes(name))return;
@@ -298,7 +332,47 @@ function setScreen(name){
  if(name==='intelligences')renderIntelligences();
 }
 for(const el of document.querySelectorAll('.nav-item'))el.onclick=()=>setScreen(el.dataset.screen);
-$('meeting-current').onclick=()=>setScreen('meetings');
+async function loadMeetings(){
+ const response=await fetch('/api/live/rooms',{cache:'no-store'});
+ if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
+ const data=await response.json();
+ meetings=data.rooms||[];
+ // Preserve the legacy default conversation and its browser-local title.
+ const oldLabel=safeStorageGet('cobble.meeting.title');
+ const original=meetings.find(m=>m.id==='default');
+ if(original&&original.title==='Current meeting'&&oldLabel&&oldLabel!=='Current meeting'){
+  const renamed=await api('live/rooms/rename',{room_id:'default',title:oldLabel});
+  Object.assign(original,renamed);
+ }
+ if(!meetings.some(m=>m.id===currentRoomId))currentRoomId='default';
+ safeStorageSet('cobble.meeting.active',currentRoomId);
+ setCurrentMeetingName(meetings.find(m=>m.id===currentRoomId)?.title||'Current meeting');
+}
+async function switchMeeting(roomId){
+ if(busy||roomId===currentRoomId)return;
+ const room=meetings.find(m=>m.id===roomId);if(!room)return;
+ roomDrafts.set(currentRoomId,$('question').value);
+ currentRoomId=roomId;
+ safeStorageSet('cobble.meeting.active',roomId);
+ setCurrentMeetingName(room.title);
+ $('question').value=roomDrafts.get(roomId)||'';
+ resizeComposer();
+ // Filename staging belongs to the active meeting only.
+ tabledFiles.length=0;drawTableFiles();
+ closeInspector();setScreen('meetings');updateSend();
+ try{await reload();status('')}catch(error){status('Meeting could not load: '+error.message,true)}
+}
+$('new-meeting').onclick=async()=>{
+ if(busy)return;
+ $('new-meeting').disabled=true;
+ try{
+  const created=await api('live/rooms/create',{title:'New meeting'});
+  meetings.splice(1,0,created);
+  await switchMeeting(created.id);
+  $('meeting-title').focus();$('meeting-title').select();
+ }catch(error){status('Could not create meeting: '+error.message,true)}
+ finally{$('new-meeting').disabled=false}
+};
 
 const sidebar=$('sidebar');
 const rememberedWidth=Number(safeStorageGet('cobble.sidebar.width'));
@@ -368,7 +442,6 @@ function renderIntelligences(){
 }
 function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
- if(!turns.length)return;
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
   const hb=make('div');hb.className='message';hb.append(titled('Joe',null),make('p',t.question||''));
@@ -414,9 +487,11 @@ async function api(route,data){
  return result;
 }
 async function reload(){
- const response=await fetch('/api/live/session',{cache:'no-store'});
+ const roomId=currentRoomId;
+ const response=await fetch('/api/live/session?room_id='+encodeURIComponent(roomId),{cache:'no-store'});
  if(!response.ok)throw Error('The local meeting is not available');
- const data=await response.json();turns=data.turns||[];
+ const data=await response.json();if(roomId!==currentRoomId)return;
+ turns=data.turns||[];
  const latest=turns.filter(t=>t.status==='completed').at(-1);
  if(latest)lastProvider=latest.provider;
  renderTurns();populateResponder();
@@ -424,6 +499,7 @@ async function reload(){
 async function send(){
  if(busy)return;
  const question=$('question').value.trim();if(!question)return;
+ const roomId=currentRoomId;
  let recipient;
  try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
  busy=true;updateSend();
@@ -431,7 +507,7 @@ async function send(){
   'Consulting '+providerName(recipient)+' · one call, no automatic retries…');
  try{
   if(recipient==='post-only'){
-   const result=await api('live/post',{text:question});
+   const result=await api('live/post',{text:question,room_id:roomId});
    if(result.turn.status!=='posted')throw Error('No verified local post retained');
    $('question').value='';resizeComposer();
    await reload();status('Posted locally · no supplier called.');$('question').focus();
@@ -439,8 +515,8 @@ async function send(){
   }
   // Preserve the exact one-use preflight and private server ledger. No
   // memory corpus passages are attached automatically in this version.
-  const preview=await api('live/preview',{question,provider:recipient});
-  const result=await api('live/send',{approval_token:preview.approval_token});
+  const preview=await api('live/preview',{question,provider:recipient,room_id:roomId});
+  const result=await api('live/send',{approval_token:preview.approval_token,room_id:roomId});
   if(result.turn.status!=='completed')throw Error('No verified supplier reply');
   lastProvider=recipient;$('question').value='';resizeComposer();
   await reload();status('Response recorded locally.');$('question').focus();
@@ -469,10 +545,9 @@ const tabledFiles=[];
 function drawTableFiles(){
  const tray=$('tabled-files');tray.replaceChildren();tray.hidden=!tabledFiles.length;
  if(!tabledFiles.length)return;
- const note=make('span','On table · names only · not shared');note.className='table-note';tray.append(note);
  tabledFiles.forEach((file,index)=>{
   const chip=make('span');chip.className='file-chip';
-  const name=make('span',file.name);name.className='file-name';name.title=file.name;
+  const name=make('span',file.name);name.className='file-name';name.title='Filename staged locally; contents not yet shared';
   const remove=make('button','×');remove.className='remove-tabled';
   remove.type='button';remove.setAttribute('aria-label','Remove '+file.name+' from table');
   remove.onclick=()=>{tabledFiles.splice(index,1);drawTableFiles()};
@@ -534,8 +609,8 @@ function renderInspector(){
  if(inspectorMode==='info'){
   $('inspector-tabs').replaceChildren();
   for(const msg of [
-   'This is a single, locally retained meeting. Multiple saved meetings and autonomous turn-taking are not yet implemented.',
-   'Each Send makes exactly one supplier call, even when the message is addressed to the room. Explicit vocatives (Claude, GPT, Mistral) override the selected responder.',
+   'Meetings are separate, locally retained conversations. The original 3D boardroom still displays the legacy default meeting.',
+   'A supplier-directed Send makes one supplier call. Post only makes none. Explicit vocatives (Claude, GPT, Mistral) override the selected supplier.',
    'Up to four completed earlier exchanges may be included in a new call, subject to payload limits. Use supplier details (···) to inspect the actual recorded request.',
    'Moving a supplier out of the room blocks future selection in this browser. It cannot revoke prior disclosures and is not enforced as server-side access control.',
    'The local corpus is not automatically searched or sent to a supplier. No new connector or memory permission has been granted.'
@@ -613,6 +688,7 @@ $('memory-form').onsubmit=async e=>{
   serverReady=true;
   $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
   renderSuppliers();populateResponder();
+  await loadMeetings();
   await reload();
   status('');
  }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}

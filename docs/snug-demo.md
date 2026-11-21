@@ -26,10 +26,15 @@ Meetings workspace**. It uses the Inky blue-grey palette, Cobble logo,
 resizable/collapsible left sidebar, persistent (browser-local) sidebar width,
 readable shared conversation, and supplier controls below the navigation.
 
-- **Meetings** opens to the single locally saved conversation. Click its
-  heading to rename the meeting. The title is browser-local (localStorage),
-  not yet stored in the server's durable conversation ledger. Multiple
-  meetings and autonomous chairing remain future work.
+- **Meetings** shows multiple durable local rooms. Use **+** beside
+  Recent meetings to create a new, empty room, and click a room to switch.
+  Click the title in the header to rename the active room; titles and each
+  conversation's events are now persisted on McKay (not merely in the browser).
+  The existing 3D boardroom remains the original **default** meeting; its
+  historical records have not been moved, deleted or relabelled. On the
+  first update, a title previously set for that original room in this browser
+  migrates into the new server-side title registry. Autonomous chairing
+  remains future work.
 - A message goes **to the room** as an operator utterance. When no
   supplier is enabled, **Send records the message locally without requiring
   a reply**, an API key or a network call. With suppliers enabled the
@@ -94,22 +99,37 @@ shows historical **outbound calls**, not a private context or private side room.
 
 #### Meetings
 
-One durable local conversation. Click the heading to edit its browser-local
-title; other browsers do not automatically receive that title. The
-convenor can **post their own message without any supplier present**.
-Those posts are durably recorded on McKay in the same private ledger,
-identified as operator-only contributions, and included among the up-to-four
-prior exchanges in later *reviewed* supplier requests. When a supplier is
-selected, each Send still calls only that supplier, with no automatic retry.
-A procedural Chair and standing orders are not implemented yet.
+The **+** beside Recent meetings creates another genuinely separate meeting;
+select any title in the sidebar to return to that room. Each meeting has its
+own ledger under `snug/live/rooms/<16-hex-digit-ID>/`, with a server-side
+`room.json` holding the editable title. The original conversation remains in
+`snug/live/default/` for the legacy boardroom; it is **not** renamed or
+moved on disk. Titles and membership of the meeting list survive server
+restarts. A browser remembers which meeting was selected, but not the
+authoritative list or titles.
+
+The convenor can **post their own message without any supplier present**.
+Posts are recorded inside only that meeting's private ledger. A new supplier
+request includes only up-to-four eligible previous exchanges **from the same
+meeting**, subject to explicit preflight review and payload limits. A supplier
+approval token cannot be used in another meeting. With a supplier selected,
+each Send still calls only that supplier, with no automatic retry. A
+procedural Chair and standing orders are not implemented yet.
 
 Drag a file anywhere onto the Meetings workspace to **stage its name on the
 table**, or click the paperclip next to the message box and choose local files.
 The small chips above the composer are removable and exist only until the page
 is reloaded. The browser reads no file contents, and the supplier receives no
 staged file data. The UI labels this honestly so files are never mistaken for
-shared context. The message box grows as the operator types (up to 38% of
-viewport height, capped at 360px), scrolling beyond that size.
+shared context. We now show file-name chips without a long caption;
+the paperclip tooltip, help and audit view still distinguish staged names
+from file contents, which are **not yet transmitted**. File staging is
+cleared on switching meetings so names do not leak between tables. The
+message box grows as the operator types (up to 38% of viewport height,
+capped at 360px), scrolling beyond that size.
+
+Speaker messages now align to the **same right margin**, regardless of
+whether the speaker is the operator or a supplier. Their left margins differ.
 
 #### Setup
 

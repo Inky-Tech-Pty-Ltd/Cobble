@@ -8,6 +8,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 import sys
+import threading
+from urllib.parse import parse_qs, urlsplit
 
 from cobble.openai_adapter import OpenAIAdapter
 from cobble.claude_adapter import ClaudeAdapter
@@ -16,6 +18,7 @@ from pathlib import Path
 
 from cobble.snug_demo import DemoService
 from cobble.snug_live import LiveChatService, OutcomeUnknown
+from cobble.meeting_rooms import MeetingCatalog
 
 STATIC = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static"
 HTML = STATIC / "workbench.html"
@@ -48,8 +51,18 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             adapters["claude"] = ClaudeAdapter(allow_network=True, output_tokens=2048)
         if live_mistral:
             adapters["mistral"] = MistralAdapter(allow_network=True, output_tokens=2048)
-    # Retain the same durable local meeting even with zero supplier adapters.
-    live = LiveChatService(store, adapters=adapters)
+    # The legacy boardroom retains the default room's original ledger.
+    catalog = MeetingCatalog(store)
+    live_sessions = {"default": LiveChatService(store, adapters=adapters)}
+    live_lock = threading.Lock()
+
+    def room_session(room_id="default"):
+        catalog.require(room_id)
+        with live_lock:
+            if room_id not in live_sessions:
+                live_sessions[room_id] = LiveChatService(
+                    store, adapters=adapters, meeting_id=room_id)
+            return live_sessions[room_id]
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
@@ -99,8 +112,20 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                  "live_providers": [p for p in ("openai", "claude", "mistral")
                                                     if p in requested],
                                  "source": "github"})
-            elif self.path == "/api/live/session":
-                self.reply(200, live.session())
+            elif self.path == "/api/live/rooms":
+                try:
+                    self.reply(200, {"rooms": catalog.list()})
+                except (ValueError, PermissionError, OSError) as error:
+                    self.reply(400, {"error": str(error)})
+            elif urlsplit(self.path).path == "/api/live/session":
+                try:
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query) - {"room_id"} or len(query.get("room_id", [])) > 1:
+                        raise ValueError("Invalid room selector")
+                    meeting_id = query.get("room_id", ["default"])[0]
+                    self.reply(200, room_session(meeting_id).session())
+                except (ValueError, PermissionError, OSError, TypeError) as error:
+                    self.reply(400, {"error": str(error)})
             else:
                 self.reply(404, {"error": "Not found"})
 
@@ -108,7 +133,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             if not self.trusted():
                 return
             if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange",
-                                 "/api/live/preview", "/api/live/send", "/api/live/post"):
+                                 "/api/live/preview", "/api/live/send", "/api/live/post",
+                                  "/api/live/rooms/create", "/api/live/rooms/rename"):
                 self.reply(404, {"error": "Not found"})
                 return
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
@@ -140,23 +166,35 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         raise PermissionError("Execute only a reviewed one-shot approval")
                     result = service.reviewed_exchange(
                         approval_token=data["approval_token"])
+                elif self.path == "/api/live/rooms/create":
+                    if set(data) != {"title"}:
+                        raise PermissionError("Only a new room title is accepted")
+                    result = catalog.create(title=data["title"])
+                elif self.path == "/api/live/rooms/rename":
+                    if set(data) != {"room_id", "title"}:
+                        raise PermissionError("Room ID and title required")
+                    result = catalog.rename(meeting_id=data["room_id"],
+                                            title=data["title"])
                 elif self.path == "/api/live/post":
-                    if set(data) != {"text"}:
-                        raise PermissionError("Only a local operator message may be posted")
-                    result = live.post_operator(text=data["text"])
+                    if set(data) not in ({"text"}, {"text", "room_id"}):
+                        raise PermissionError("Only a local operator message and room ID may be posted")
+                    result = room_session(data.get("room_id", "default")).post_operator(text=data["text"])
                 elif self.path == "/api/live/preview":
                     if not requested:
                         raise PermissionError("Live supplier access is disabled")
-                    if set(data) not in ({"question"}, {"question", "provider"}):
-                        raise PermissionError("Only a question and supplier may be reviewed")
-                    result = live.preview(question=data["question"],
-                                          provider=data.get("provider", "openai"))
+                    if ("question" not in data or
+                        set(data) - {"question", "provider", "room_id"}):
+                        raise PermissionError("Only question, supplier and room ID may be reviewed")
+                    result = room_session(data.get("room_id", "default")).preview(
+                        question=data["question"], provider=data.get("provider", "openai"))
                 else:
                     if not requested:
                         raise PermissionError("Live supplier access is disabled")
-                    if set(data) != {"approval_token"}:
+                    if ("approval_token" not in data or
+                        set(data) - {"approval_token", "room_id"}):
                         raise PermissionError("Only the exact one-time live approval is accepted")
-                    result = live.send(approval_token=data["approval_token"])
+                    result = room_session(data.get("room_id", "default")).send(
+                        approval_token=data["approval_token"])
                 self.reply(200, result)
             except OutcomeUnknown as error:
                 self.reply(502, {"error": str(error), "turn_id": error.turn_id,

@@ -31,6 +31,7 @@ from cobble.openai_adapter import (
 from cobble.snug_exchange import ExchangeRequest, request_context_digest
 
 TURN_ID = re.compile(r"[0-9]{20}-[0-9a-f]{12}\Z")
+ROOM_ID = re.compile(r"[0-9a-f]{16}\Z")
 TTL_SECONDS = 300
 MAX_PENDING = 16
 MAX_QUESTION = 2000
@@ -59,13 +60,18 @@ class OutcomeUnknown(RuntimeError):
 
 
 class LiveChatService:
-    def __init__(self, store, *, adapter=None, adapters=None):
+    def __init__(self, store, *, adapter=None, adapters=None, meeting_id="default"):
         self.store = Path(store).expanduser().resolve()
         if any((p / ".git").exists() for p in (self.store, *self.store.parents)):
             raise ValueError("Private conversations must stay outside Git")
-        self.root = self.store / "snug" / "live" / "default"
+        if meeting_id != "default" and (not isinstance(meeting_id, str) or
+                                        not ROOM_ID.fullmatch(meeting_id)):
+            raise ValueError("Invalid meeting ID")
+        self.meeting_id = meeting_id
+        base = self.store / "snug" / "live"
+        self.root = base / "default" if meeting_id == "default" else base / "rooms" / meeting_id
         # No redirected storage: keep the immutable private ledger on McKay.
-        for directory in (self.store / "snug", self.store / "snug" / "live", self.root):
+        for directory in (self.store / "snug", base, self.root.parent, self.root):
             if directory.is_symlink():
                 raise PermissionError("Private live storage must not use symlinks")
         self._lock = threading.Lock()
@@ -95,7 +101,7 @@ class LiveChatService:
         target = self._path(kind, turn_id)
         folder = target.parent
         for directory in (self.store / "snug", self.store / "snug" / "live",
-                          self.root, folder):
+                          self.root.parent, self.root, folder):
             if directory.is_symlink():
                 raise PermissionError("Private live storage must not use symlinks")
             directory.mkdir(mode=0o700, parents=True, exist_ok=True)
