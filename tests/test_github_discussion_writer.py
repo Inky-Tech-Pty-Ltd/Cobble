@@ -87,6 +87,21 @@ class DiscussionWriterTests(unittest.TestCase):
         self.assertEqual(calls[1][1], {"discussionId": "D_89", "body": "Thoughts on membranes"})
         self.assertEqual(calls[1][2], "fake-puck-token")
 
+    def test_graphql_permission_error_is_classified_without_echoing_text(self):
+        secret = "github_pat_should_never_appear"
+        response = json.dumps({"errors": [{"message":
+            "Resource not accessible by personal access token " + secret}]}).encode()
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *args): pass
+            def read(self, amount): return response
+        with patch.object(writer.urllib.request, "urlopen", return_value=FakeResponse()):
+            with self.assertRaisesRegex(PermissionError,
+                    "GitHub comment mutation rejected: token lacks the required repository permission") as caught:
+                writer._graphql(writer._POST, {}, secret)
+            self.assertNotIn(secret, str(caught.exception))
+
+
     def test_invalid_graphql_response_denied_without_echoing_secrets(self):
         response = json.dumps({"errors": [{"message": "a token might be echoed here"}]}).encode()
         class FakeResponse:
@@ -94,7 +109,7 @@ class DiscussionWriterTests(unittest.TestCase):
             def __exit__(self, *args): pass
             def read(self, amount): return response
         with patch.object(writer.urllib.request, "urlopen", return_value=FakeResponse()):
-            with self.assertRaisesRegex(PermissionError, "GraphQL request rejected") as caught:
+            with self.assertRaisesRegex(PermissionError, "GitHub discussion lookup rejected: unclassified GraphQL error") as caught:
                 writer._graphql(writer._LOOKUP, {}, "private-secret")
             self.assertNotIn("private-secret", str(caught.exception))
 
