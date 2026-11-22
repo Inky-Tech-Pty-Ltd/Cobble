@@ -22,6 +22,7 @@ from cobble.remote_ops import (
     lab_recent_notes as get_lab_notes,
 )
 from cobble.puck_github_writer import submit_write as dispatch_puck_write
+from cobble.github_discussion_writer import post_discussion_comment as post_puck_discussion
 from cobble.memory_access import (
     get_trace as read_trace,
     inspect_star as read_star,
@@ -168,6 +169,18 @@ def puck_submit_write(path: str, content: str, message: str) -> dict:
     Disabled unless COBBLE_MCP_ALLOW_PUCK_DISPATCH=1 is set.
     """
     return dispatch_puck_write(path, content, message)
+
+
+@mcp.tool()
+def puck_comment_on_discussion(repository: str, number: int, body: str) -> dict:
+    """Post a top-level GitHub Discussion comment as puck-inky, never Joe.
+
+    Only VillageLink Discussions are in scope. Requires a dedicated Puck
+    fine-grained GitHub token (private file), a matching GitHub viewer identity,
+    and COBBLE_MCP_ALLOW_PUCK_DISCUSSIONS=1 on McKay. No GH_TOKEN/gh fallback.
+    A successful response includes the actual new GitHub comment URL.
+    """
+    return post_puck_discussion(repository, number, body)
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
