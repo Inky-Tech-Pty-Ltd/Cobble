@@ -82,8 +82,31 @@ def _graphql(query, variables, token):
         result = json.loads(raw)
     except (ValueError, UnicodeDecodeError):
         raise RuntimeError("Invalid GitHub response") from None
-    if not isinstance(result, dict) or result.get("errors") or not isinstance(result.get("data"), dict):
-        raise PermissionError("GitHub GraphQL request rejected")
+    if not isinstance(result, dict):
+        raise PermissionError("GitHub GraphQL response malformed")
+    errors = result.get("errors")
+    if errors:
+        # Report an actionable *category*, never GitHub's free-form error text.
+        # Error messages could echo query parameters or credentials.
+        messages = " ".join(str(e.get("message", "")) for e in errors if isinstance(e, dict)).lower()
+        if "resource not accessible by personal access token" in messages:
+            category = "token lacks the required repository permission"
+        elif "forbidden" in messages or "insufficient" in messages or "permission" in messages:
+            category = "permission denied"
+        elif "locked" in messages:
+            category = "discussion locked"
+        elif "rate limit" in messages or "rate_limit" in messages:
+            category = "rate limited"
+        elif "could not resolve" in messages or "not found" in messages:
+            category = "resource not found"
+        elif "something went wrong" in messages:
+            category = "GitHub internal error"
+        else:
+            category = "unclassified GraphQL error"
+        operation = "comment mutation" if query == _POST else "discussion lookup"
+        raise PermissionError(f"GitHub {operation} rejected: {category}")
+    if not isinstance(result.get("data"), dict):
+        raise PermissionError("GitHub GraphQL response missing data")
     return result["data"]
 
 
