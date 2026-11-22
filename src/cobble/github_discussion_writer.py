@@ -1,6 +1,6 @@
 """Narrow GitHub Discussion comment writer for the dedicated Puck account.
 
-Independent of \`gh\` and \`GH_TOKEN\` on McKay: those may be logged in as Joe.
+Independent of `gh` and `GH_TOKEN` on McKay: those may be logged in as Joe.
 A separately provisioned, fine-grained Puck token is required. This interface
 never accepts arbitrary API paths, GraphQL, or token values.
 """
