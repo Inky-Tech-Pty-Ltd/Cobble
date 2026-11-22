@@ -1,0 +1,32 @@
+name: Puck GitHub Discussion comment writer
+on:
+  pull_request:
+    paths:
+      - 'src/cobble/github_discussion_writer.py'
+      - 'scripts/mcp_server.py'
+      - 'tests/test_github_discussion_writer.py'
+      - '.github/workflows/github-discussion-writer.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/cobble/github_discussion_writer.py'
+      - 'scripts/mcp_server.py'
+      - 'tests/test_github_discussion_writer.py'
+      - '.github/workflows/github-discussion-writer.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  puck-discussions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Offline identity and scope regression tests
+        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_github_discussion_writer.py' -v
