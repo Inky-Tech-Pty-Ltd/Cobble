@@ -201,13 +201,13 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                             raise ValueError("Contribution does not belong to this meeting")
                     result = catalog.configure(meeting_id=meeting_id, **data)
                 elif self.path == "/api/live/post":
-                    if next(r for r in catalog.list() if r["id"] == data.get("room_id", "default")).get("state") == "closed":
+                    if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
                         raise PermissionError("Reopen the meeting before contributing")
                     if set(data) not in ({"text"}, {"text", "room_id"}):
                         raise PermissionError("Only a local operator message and room ID may be posted")
                     result = room_session(data.get("room_id", "default")).post_operator(text=data["text"])
                 elif self.path == "/api/live/preview":
-                    if next(r for r in catalog.list() if r["id"] == data.get("room_id", "default")).get("state") == "closed":
+                    if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
                         raise PermissionError("Reopen the meeting before consulting a supplier")
                     if not requested:
                         raise PermissionError("Live supplier access is disabled")
@@ -217,7 +217,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     result = room_session(data.get("room_id", "default")).preview(
                         question=data["question"], provider=data.get("provider", "openai"))
                 else:
-                    if next(r for r in catalog.list() if r["id"] == data.get("room_id", "default")).get("state") == "closed":
+                    if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
                         raise PermissionError("Reopen the meeting before consulting a supplier")
                     if not requested:
                         raise PermissionError("Live supplier access is disabled")
