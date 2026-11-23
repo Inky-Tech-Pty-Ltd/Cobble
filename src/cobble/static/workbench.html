@@ -402,16 +402,7 @@ grip.onkeydown=e=>{
  }
 };
 
-function populateResponder(){return; /* retired responder dropdown */
- const select=$('next-responder'),chosen=select.value||lastProvider;
- select.replaceChildren();
- for(const p of PROVIDERS.filter(x=>states[x.id].active&&states[x.id].live)){
-  const opt=make('option',p.name);opt.value=p.id;select.append(opt);
- }
- const local=make('option','None · post only');local.value='post-only';select.append(local);
- select.value=Array.from(select.options).some(o=>o.value===chosen)?chosen:select.options[0].value;
- updateSend();
-}
+function populateResponder(){updateSend();}
 function renderSuppliers(){
  const list=$('supplier-list');list.replaceChildren();
  for(const id of providerOrder){
@@ -482,7 +473,6 @@ function updateSend(){
 function chooseRecipient(question){
  if(joeFloor)return 'post-only';
  if(roomFloor&&states[roomFloor]?.active)return roomFloor;
- if($('next-responder').value==='post-only')return 'post-only';
  const named=question.match(/^(?:(?:hey|hello|hi|dear|mr\.?)\s+)?(GPT|Claude|Mistral)\b[\s,.:!?-]*/i);
  if(named){
   const p=PROVIDERS.find(x=>x.name.toLowerCase()===named[1].toLowerCase());
