@@ -452,17 +452,18 @@ function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
-  const hb=make('div');hb.className='message';const hvoice=meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled(hvoice?'Joe (speaking for the room)':'Joe',null),make('p',t.question||''));
-  hb.lastChild.className='message-body';if(meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}human.append(hb);thread.append(human);
+  const hb=make('div');hb.className='message';const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled(hvoice?'Joe (speaking for the room)':'Joe',null),make('p',t.question||''));
+  hb.lastChild.className='message-body';if(t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}human.append(hb);thread.append(human);
+  if(i===0&&meetingInfo?.standing_orders){const chair=make('article');chair.className='exchange supplier';const cb=make('div');cb.className='message';cb.append(titled('Chair',null));const speech=make('p',meetingInfo.standing_orders+'\n\nParticipants: Joe (convenor), '+providerOrder.filter(id=>states[id]?.active).map(providerName).join(', '));speech.className='message-body';cb.append(speech);chair.append(cb);thread.append(chair)}
   if(t.status==='posted'&&t.provider==='operator')continue;
   const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
   const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');
-  const box=make('div');box.className='message';const voiced=meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(voiced)box.classList.add('room-voice');box.append(titled(p.name+(voiced?' (speaking for the room)':''),p));
+  const box=make('div');box.className='message';const voiced=t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(voiced)box.classList.add('room-voice');box.append(titled(p.name+(voiced?' (speaking for the room)':''),p));
   const body=make('p',t.status==='completed'?(t.answer||''):t.status==='outcome_unknown'?'Outcome unknown — do not automatically retry.':'No verified response retained.');
   body.className='message-body';box.append(body);
   const meta=make('div');meta.className='turn-meta';
   meta.textContent=[t.model||'',t.status==='completed'?money(t.usage?.estimated_provider_cost_usd)+' estimated':'',t.status!=='completed'?t.status:''].filter(Boolean).join(' · ');
-  box.append(meta);if(meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));box.append(b)}exchange.append(box);thread.append(exchange);
+  box.append(meta);if(t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));box.append(b)}exchange.append(box);thread.append(exchange);
  }
  $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;
  for(const p of PROVIDERS)states[p.id].cost=0;
