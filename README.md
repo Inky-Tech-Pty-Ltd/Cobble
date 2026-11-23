@@ -22,7 +22,7 @@ Cobble is an app designed to cobble together an entity from information sources 
 
 The centrepiece of the app is a 'room', which draws its inspiration and much of its language from a meeting room.
 
-A room is created by a convenor, who appoints a chair, tables an agenda, and invites participants. The chair is an 'expert system' intelligence that brings a set of standing orders. The convenor can accept those standing orders as-is, or make changes to them if required. The contributions of all participants are 'tabled'. The information on the table acts as context for the ongoing discussion. Note that the convenor controls the permissions and audience of the information that is tabled initially, but the intelligences have to use judgement about information that is tabled _subsequently_.
+A room is created by a convenor, who appoints a chair, tables an agenda, and invites participants. The chair is an 'expert system' intelligence that brings a set of standing orders. The convenor can accept those standing orders as-is, or make changes to them if required. The contributions of all participants are 'tabled'. The information on the table acts as context for the ongoing discussion. The convenor controls the permissions and audience of the information that is tabled initially, but the intelligences have to use judgement about information that is tabled _subsequently_.
 
 One of the functions of the standing orders is to create a process so that the meeting can speak with a single voice. In other words, the meeting can 'make decisions'. The process of achieving a single voice might enforce a strict hierarchy between the intelligences at the table, or it might implement something more democratic — different chairs can have different approaches.
 
@@ -51,7 +51,7 @@ The two projects together pose a hypothesis to be tested: Can we observe normati
 ## Value proposition
 
 1. Sovereignty. Reduced vulnerability to the loss of any single intelligence, AI or human.
-1. Context, ownership. Layered stores of information 'on the table' and 'in the senses', controlled by the user.
-1. Workspaces, coherence. Rooms where multiple humans can work together with 'coherent' AIs - that is to say, AIs that, from the perspective of the humans, have the same context and speak with a voice heard by all.
-1. Governance. Resource pressure as an organising principle. Rooms, chairs and intelligences selected on reputation. 'Natural' data permissions.
+1. Context, ownership. Layered stores of information 'on the table' and 'in the senses', all controlled by the user.
+1. Workspaces, coherence. Each AI voice available to two or more people, all with the shared context of a meeting room.
+1. Governance? Resource pressure as an organising principle. Rooms, chairs and intelligences selected on reputation. 'Natural' data permission _in the room_.
 
