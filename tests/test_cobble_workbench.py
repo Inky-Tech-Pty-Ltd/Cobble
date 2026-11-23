@@ -121,6 +121,11 @@ class WorkbenchTests(unittest.TestCase):
         self.assertNotIn("if(!turns.length)return;", self.page)
         self.assertNotIn("id=\"meeting-current\"", self.page)
 
+    def test_retired_responder_does_not_crash_offline_post(self):
+        self.assertNotIn("next-responder", self.page)
+        self.assertIn("return chosen||'post-only'", self.page)
+        self.assertIn("function populateResponder(){updateSend();}", self.page)
+
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
         self.assertEqual(len(ids), len(set(ids)))
