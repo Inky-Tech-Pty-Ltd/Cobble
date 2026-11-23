@@ -53,5 +53,6 @@ The two projects together pose a hypothesis to be tested: Can we observe normati
 1. Sovereignty. Reduced vulnerability to the loss of any single intelligence, AI or human.
 1. Context, ownership. Layered stores of information 'on the table' and 'in the senses', all controlled by the user.
 1. Workspaces, coherence. Each AI voice available to two or more people, all with the shared context of a meeting room.
+1. Evolvability, modularity. A mature Cobble will ship with a default set of rooms. Any of these may be swapped-out for something better.
 1. Governance? Resource pressure as an organising principle. Rooms, chairs and intelligences selected on reputation. 'Natural' data permission _in the room_.
 
