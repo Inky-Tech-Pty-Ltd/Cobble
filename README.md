@@ -22,11 +22,11 @@ Cobble is an app designed to cobble together an entity from information sources 
 
 The centrepiece of the app is a 'room', which draws its inspiration and much of its language from a meeting room.
 
-A room is created by a convenor, who appoints a chair, tables an agenda, and invites participants. The chair is an 'expert system' intelligence that brings a set of standing orders. The convenor can accept those standing orders as-is, or make changes to them if required. The contributions of all participants are 'tabled'. The information on the table acts as context for the ongoing discussion. Note that the convenor controls permission and audience of the information that is tabled initially, but the intelligences have to use judgement about information that is tabled _subsequently_.
+A room is created by a convenor, who appoints a chair, tables an agenda, and invites participants. The chair is an 'expert system' intelligence that brings a set of standing orders. The convenor can accept those standing orders as-is, or make changes to them if required. The contributions of all participants are 'tabled'. The information on the table acts as context for the ongoing discussion. Note that the convenor controls the permissions and audience of the information that is tabled initially, but the intelligences have to use judgement about information that is tabled _subsequently_.
 
 One of the functions of the standing orders is to create a process so that the meeting can speak with a single voice. In other words, the meeting can 'make decisions'. The process of achieving a single voice might enforce a strict hierarchy between the intelligences at the table, or it might implement something more democratic — different chairs can have different approaches.
 
-All seats at the table are occupied by intelligences. These can be human or AI ... but also a third possibility also emerges: A room can speak with a single voice 'through a chair'. That chair can be invited to a new room, bringing the expertise and decisions of the first room into the new room.
+All seats at the table are occupied by intelligences. These can be human or AI ... but a third possibility emerges: A room can speak with a single voice 'through a chair'. That chair can be invited to a new room, bringing the expertise and decisions of the first room into the new room.
 
 This creates a different view of the cobbled-together entity. In one sense the entity is cobbled together from intelligences and information sources. In a different sense it is cobbled together out of rooms.
 
@@ -40,7 +40,7 @@ Convenors care about the economics of a room. They want results *at a price*. Th
 
 As it stands in November 2026, the app can connect three LLM 'intelligences', Claude, ChatGPT and Mistral. On our test server, for information sources, the app is connected to two filesystems, six GitHub repos and an archive of chat with GPT.
 
-The app makes a distinction between this external data and the data that has been internalised into the entity. The external data is labelled 'sensory' ... it is a taste of the outside world. It is voluminous, multiply redundant, and much of it is not particularly salient. This information has to be ingested by expert system — rooms — that are under economic pressure to leave a salient representation of it 'on the table'. We are calling this internalised data *memory*. As the app matures, we hope to add 'sensory' sources — email, databases, social media ... and also a browser-and-search-engine so that the entity can turn its senses toward an object of interest.
+The app makes a distinction between this external data and the data that has been internalised into the entity. The external data is labelled 'sensory' ... it is a taste of the outside world. It is voluminous, multiply redundant, and much of it is not particularly salient. This information has to be ingested by expert systems — rooms — that are under economic pressure to leave a salient representation of it 'on the table'. We are calling this internalised data *memory*. As the app matures, we hope to add 'sensory' sources — email, databases, social media ... and also a browser and search engine so that the entity can turn its senses toward an object of interest.
 
 ## Sister project, governance
 
