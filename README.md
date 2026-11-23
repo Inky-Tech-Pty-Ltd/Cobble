@@ -26,7 +26,7 @@ A room is created by a convenor, who appoints a chair, tables an agenda, and inv
 
 One of the functions of the standing orders is to create a process so that the meeting can speak with a single voice. In other words, the meeting can 'make decisions'. The process of achieving a single voice might enforce a strict hierarchy between the intelligences at the table, or it might implement something more democratic — different chairs can have different approaches.
 
-All seats at the table are occupied by intelligences. These can be human or AI ... but a third possibility emerges: A room can speak with a single voice 'through a chair'. That chair can be invited to a new room, bringing the expertise and decisions of the first room into the new room.
+All seats at the table are occupied by intelligences. These can be human or AI ... but a third possibility emerges: Because a room speaks with a single voice, a room is _also_ an intelligence. A room (in the person of its chair) can be invited to take a seat in another room.
 
 This creates a different view of the cobbled-together entity. In one sense the entity is cobbled together from intelligences and information sources. In a different sense it is cobbled together out of rooms.
 
