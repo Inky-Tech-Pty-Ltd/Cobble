@@ -20,7 +20,7 @@ class WorkbenchTests(unittest.TestCase):
                      'id="sidebar"', 'id="resize-grip"', "ondblclick",
                      "cobble.sidebar.width", "cobble.sidebar.collapsed",
                      'id="thread"', 'id="chat-scroll"',
-                     'id="next-responder"', 'id="send"', 'id="question"',
+                     'id="grant-floor"', 'id="joe-floor"', 'id="send"', 'id="question"',
                      'id="inspector"', 'id="supplier-list"',
                      'id="memory-form"', 'id="memory-results"'):
             self.assertIn(item, self.page)
@@ -31,6 +31,10 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn('id="screen-senses"', self.page)
         self.assertIn('id="screen-memories"', self.page)
         self.assertIn('id="screen-help"', self.page)
+        self.assertIn('id="edit-orders"', self.page)
+        self.assertIn('id="meeting-state"', self.page)
+        self.assertIn('id="view-output"', self.page)
+        self.assertIn('id="total-cost"', self.page)
         self.assertNotIn('id="screen-graph"', self.page)
         self.assertNotIn("More meetings and meeting titles are not yet implemented", self.page)
         self.assertNotIn("A room for conversations.", self.page)
@@ -94,7 +98,7 @@ class WorkbenchTests(unittest.TestCase):
                 continue
             self.assertIn(required, self.page)
         self.assertIn("Room presence in the UI is not a security boundary", self.page)
-        self.assertIn("A supplier-directed Send makes one supplier call", self.page)
+        self.assertIn("one supplier call per Send", self.page)
         self.assertNotIn("To the room · one supplier responds per Send</span>", self.page)
         self.assertNotIn("No live intelligences connected.", self.page)
         # No remote assets or calls to vendor APIs in browser.
