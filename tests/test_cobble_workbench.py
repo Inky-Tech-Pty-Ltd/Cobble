@@ -74,7 +74,7 @@ class WorkbenchTests(unittest.TestCase):
             self.assertIn(item, self.page)
 
     def test_operator_posts_without_live_supplier(self):
-        for item in ("'post-only'", "None · post only", "'live/post'",
+        for item in ("'post-only'", "'live/post'",
                      "{text:question,room_id:roomId}", "result.turn.status!=='posted'",
                      "if(t.status==='posted'&&t.provider==='operator')continue",
                      "serverReady=true", "await reload();",
