@@ -18,7 +18,7 @@ from pathlib import Path
 
 from cobble.snug_demo import DemoService
 from cobble.snug_live import LiveChatService, OutcomeUnknown
-from cobble.meeting_rooms import MeetingCatalog
+from cobble.meeting_rooms import MeetingCatalog, DEFAULT_ORDERS
 
 STATIC = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static"
 HTML = STATIC / "workbench.html"
@@ -114,8 +114,21 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                  "source": "github"})
             elif self.path == "/api/live/rooms":
                 try:
-                    self.reply(200, {"rooms": catalog.list()})
+                    self.reply(200, {"rooms": catalog.list(), "default_standing_orders": DEFAULT_ORDERS})
                 except (ValueError, PermissionError, OSError) as error:
+                    self.reply(400, {"error": str(error)})
+            elif urlsplit(self.path).path == "/api/live/output":
+                try:
+                    query = parse_qs(urlsplit(self.path).query)
+                    meeting_id = query.get("room_id", ["default"])[0]
+                    item = next(r for r in catalog.list() if r["id"] == meeting_id)
+                    if item.get("state") == "closed":
+                        raise PermissionError("Closed meeting output is unavailable")
+                    events = room_session(meeting_id).session()["turns"]
+                    selected = set(item.get("room_voice", [])) - set(item.get("redacted", []))
+                    self.reply(200, {"agenda": next((e["question"] for e in events if e.get("question")), ""),
+                                     "contributions": [e for e in events if e["turn_id"] in selected]})
+                except (ValueError, PermissionError, OSError, StopIteration) as error:
                     self.reply(400, {"error": str(error)})
             elif urlsplit(self.path).path == "/api/live/session":
                 try:
@@ -134,7 +147,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                 return
             if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange",
                                  "/api/live/preview", "/api/live/send", "/api/live/post",
-                                  "/api/live/rooms/create", "/api/live/rooms/rename"):
+                                  "/api/live/rooms/create", "/api/live/rooms/rename",
+                                  "/api/live/rooms/configure"):
                 self.reply(404, {"error": "Not found"})
                 return
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
@@ -175,6 +189,17 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         raise PermissionError("Room ID and title required")
                     result = catalog.rename(meeting_id=data["room_id"],
                                             title=data["title"])
+                elif self.path == "/api/live/rooms/configure":
+                    permitted = {"room_id", "standing_orders", "state", "precedence",
+                                 "voice_event", "redact_event"}
+                    if "room_id" not in data or set(data) - permitted:
+                        raise PermissionError("Invalid meeting configuration")
+                    meeting_id = data.pop("room_id")
+                    if "voice_event" in data or "redact_event" in data:
+                        event_id = data.get("voice_event", data.get("redact_event"))
+                        if event_id not in {e["turn_id"] for e in room_session(meeting_id).session()["turns"]}:
+                            raise ValueError("Contribution does not belong to this meeting")
+                    result = catalog.configure(meeting_id=meeting_id, **data)
                 elif self.path == "/api/live/post":
                     if set(data) not in ({"text"}, {"text", "room_id"}):
                         raise PermissionError("Only a local operator message and room ID may be posted")
