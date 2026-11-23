@@ -34,7 +34,7 @@ A natural observation is that we can scale up this entity. We can create a depar
 
 It is the intention of the project that the 'room' concept should also scale down. The room has multiple input streams, code on the table, and a single output stream. The room is a program. It is modular.
 
-At even smaller scales we notice that the architecture of a room is uncannily similar to that of a neuron: a set of inputs, a tiny scrap of code and the occasional whack of electricity as an output.
+At even smaller scales we notice that the architecture of a room is uncannily similar to that of a neuron: a set of inputs, a tiny scrap of code and the occasional whack of electricity on a single channel output.
 
 Convenors care about the economics of a room. They want results *at a price*. This creates markets for intelligences, for chairs and for rooms (including their bootstrap code that is on the table at the creation of a new room). In the operation of a meeting, the intelligences continually table new code. A good chair will have rules to manage this code. These rules could be maximalist along the lines of Git, or they could be minimalist along the lines of a meeting output that is stripped back to agenda and minutes only. Or anything in between.
 
