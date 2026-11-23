@@ -16,6 +16,18 @@ import threading
 
 ROOM_ID = re.compile(r"[0-9a-f]{16}\Z")
 MAX_ROOMS = 128
+DEFAULT_ORDERS = (
+    "Welcome to this Cobble meeting. The convenor sets the agenda, invites participants "
+    "and controls who may speak for the room. Everyone at the table shares the tabled "
+    "material. The top-precedence AI at the table may be asked to summarise, propose or "
+    "record a decision for the room. Cobble itself marks that authority; participants "
+    "cannot claim it. The room's output is the convenor's opening agenda, together with "
+    "contributions explicitly attributed as speaking for the room, and their attachments. "
+    "Estimated AI costs are visible to the convenor. Rooms operate within finite "
+    "resources and may cooperate in larger networks. The convenor can adjourn, close, "
+    "reopen, or redact outward-facing contributions without erasing historical evidence."
+)
+
 
 
 class MeetingCatalog:
@@ -135,7 +147,10 @@ class MeetingCatalog:
             while (self.rooms / meeting_id).exists():
                 meeting_id = secrets.token_hex(8)
             item = {"id": meeting_id, "title": title,
-                    "created_utc": datetime.now(timezone.utc).isoformat()}
+                    "created_utc": datetime.now(timezone.utc).isoformat(),
+                    "standing_orders": DEFAULT_ORDERS, "state": "open",
+                    "precedence": ["openai", "claude", "mistral"],
+                    "room_voice": [], "redacted": []}
             self._write(meeting_id, item, new=True)
             return item
 
@@ -149,5 +164,49 @@ class MeetingCatalog:
                 current = {"id": "default", "title": "Current meeting",
                            "created_utc": datetime.now(timezone.utc).isoformat()}
             updated = {**current, "title": title}
+            self._write(meeting_id, updated)
+            return updated
+
+    def configure(self, *, meeting_id, standing_orders=None, state=None,
+                  precedence=None, voice_event=None, redact_event=None):
+        """Redaction withdraws publication, never deletes the conversation."""
+        with self._lock:
+            current = self._read(meeting_id)
+            if current is None:
+                if meeting_id != "default":
+                    raise ValueError("Unknown meeting")
+                current = {"id": "default", "title": "Current meeting",
+                           "created_utc": datetime.now(timezone.utc).isoformat()}
+            updated = dict(current)
+            if standing_orders is not None:
+                if (not isinstance(standing_orders, str) or
+                    not 1 <= len(standing_orders.strip()) <= 8000):
+                    raise ValueError("Standing orders must contain 1–8000 characters")
+                updated["standing_orders"] = standing_orders.strip()
+            if state is not None:
+                if state not in ("open", "adjourned", "closed"):
+                    raise ValueError("Invalid meeting state")
+                updated["state"] = state
+            if precedence is not None:
+                if (not isinstance(precedence, list) or
+                    len(precedence) != 3 or
+                    set(precedence) != {"openai", "claude", "mistral"}):
+                    raise ValueError("Invalid precedence")
+                updated["precedence"] = precedence
+            if voice_event is not None:
+                if (not isinstance(voice_event, str) or
+                    not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}", voice_event)):
+                    raise ValueError("Invalid contribution ID")
+                voice = list(updated.get("room_voice", []))
+                if voice_event not in voice:
+                    voice.append(voice_event)
+                updated["room_voice"] = voice
+                updated["redacted"] = [x for x in updated.get("redacted", [])
+                                       if x != voice_event]
+            if redact_event is not None:
+                if redact_event not in updated.get("room_voice", []):
+                    raise ValueError("Only room-voice contributions can be redacted")
+                updated["redacted"] = list(dict.fromkeys(
+                    [*updated.get("redacted", []), redact_event]))
             self._write(meeting_id, updated)
             return updated
