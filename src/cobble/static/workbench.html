@@ -44,7 +44,7 @@ button{color:inherit}
 .suppliers h2{margin:4px 8px 10px;font-weight:600;font-size:.77rem;color:var(--muted)}
 .supplier-list{display:grid;gap:7px;overflow-y:auto;max-height:34dvh}
 .supplier-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e1e6ea;border-radius:12px;padding:7px 8px;box-shadow:0 2px 7px #1d28330b}
-.supplier-card.off{background:#f8f9fa;opacity:.78}
+.supplier-card[draggable="true"]{cursor:grab}.supplier-card.drag-over{outline:2px solid #89a3bb}.supplier-card.floor{border-color:#3b5166;background:#e7f2fa}.meeting-cost{margin-left:auto;font-size:.7rem;color:#657386;font-variant-numeric:tabular-nums}.governance{padding:8px 20px;border-bottom:1px solid #e4e8eb;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem}.governance button,.governance select{border:1px solid #dce4eb;border-radius:7px;background:white;padding:6px}.room-voice{border-left:4px solid #3b718b!important}.supplier-card.off{background:#f8f9fa;opacity:.78}
 .supplier-main{border:0;background:transparent;display:flex;align-items:center;gap:9px;min-width:0;flex:1;text-align:left;padding:2px 1px}
 .supplier-main .supplier-name{font-weight:650;font-size:.85rem}
 .supplier-detail{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
@@ -165,7 +165,7 @@ button{color:inherit}
         <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
         <button class="nav-item" data-screen="memories"><span aria-hidden="true">◇</span><span class="nav-label">Memories</span></button>
         <button class="nav-item" data-screen="intelligences"><span aria-hidden="true">✦</span><span class="nav-label">Intelligences</span></button>
-        <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span></button>
+        <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span><span id="total-cost" class="meeting-cost"></span></button>
         <button class="nav-item" data-screen="setup"><span aria-hidden="true">⚙</span><span class="nav-label">Setup</span></button>
         <button class="nav-item" data-screen="help"><span aria-hidden="true">?</span><span class="nav-label">Help</span></button>
       </nav>
@@ -186,7 +186,7 @@ button{color:inherit}
         <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
         <div class="header-actions"><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
-      <section class="screen active" id="screen-meetings" aria-label="Meeting">
+      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="grant-floor">Give AI the floor</button><button id="joe-floor" aria-pressed="false">Joe: speak for room</button><button id="view-output">Room output</button><span id="floor-status"></span></div>
         <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
@@ -195,9 +195,7 @@ button{color:inherit}
           <div id="tabled-files" class="tabled-files" hidden aria-live="polite"></div>
           <div class="compose-box"><button id="add-table-file" class="attach" title="Stage filename (contents not shared yet)" aria-label="Place documents on the table"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 11.6l-8.9 8.9a6 6 0 0 1-8.5-8.5L13.6 2.4a4 4 0 0 1 5.7 5.7L9.6 17.8a2 2 0 0 1-2.8-2.8l8.2-8.2"/></svg></button><input id="table-file-input" type="file" multiple hidden aria-label="Choose local files to stage"><textarea id="question" rows="2" maxlength="2000" aria-label="Message to meeting" placeholder="Message the meeting…"></textarea>
             <button class="send" id="send" title="Send one supplier request" aria-label="Send message" disabled>➤</button></div>
-          <div class="compose-options">
-            <label>Next reply: <select id="next-responder" aria-label="Next responding intelligence"></select></label>
-          </div>
+          <div class="compose-options">Send addresses the meeting · one supplier call per Send</div>
           <p class="status" id="status" role="status" aria-live="polite"></p>
         </div></div>
       </section>
@@ -263,6 +261,7 @@ const PROVIDERS=[
 const states=Object.fromEntries(PROVIDERS.map(p=>[p.id,{active:false,live:false,cost:0}]));
 let turns=[],busy=false,lastProvider='openai',selectedProvider='openai',inspectorMode='model',inspectorTab='corpus',inspectionIndex=0;
 let serverReady=false,currentScreen='meetings',dragging=false;
+let meetingCosts={},meetingInfo=null,roomFloor=null,joeFloor=false,providerOrder=['openai','claude','mistral'],defaultOrders='';
 const make=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
 const money=v=>'US$'+Number(v||0).toFixed(5);
 const providerName=id=>PROVIDERS.find(p=>p.id===id)?.name||id;
@@ -287,7 +286,7 @@ function renderMeetingList(){
   const item=make('button');item.className='meeting-item'+(room.id===currentRoomId?' active':'');
   if(room.id===currentRoomId)item.setAttribute('aria-current','page');
   const icon=make('span','▢');icon.setAttribute('aria-hidden','true');
-  item.append(icon,make('strong',room.title));item.title=room.title;
+  item.append(icon,make('strong',room.title));const cost=make('small',money(meetingCosts[room.id]||0));cost.className='meeting-cost';item.append(cost);item.title=room.title;
   item.onclick=()=>switchMeeting(room.id);
   target.append(item);
  }
@@ -337,7 +336,7 @@ async function loadMeetings(){
  const response=await fetch('/api/live/rooms',{cache:'no-store'});
  if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
  const data=await response.json();
- meetings=data.rooms||[];
+ meetings=data.rooms||[];defaultOrders=data.default_standing_orders||'';
  // Preserve the legacy default conversation and its browser-local title.
  const oldLabel=safeStorageGet('cobble.meeting.title');
  const original=meetings.find(m=>m.id==='default');
@@ -356,6 +355,7 @@ async function switchMeeting(roomId){
  currentRoomId=roomId;
  safeStorageSet('cobble.meeting.active',roomId);
  setCurrentMeetingName(room.title);
+ roomFloor=null;joeFloor=false;
  $('question').value=roomDrafts.get(roomId)||'';
  resizeComposer();
  // Filename staging belongs to the active meeting only.
@@ -402,7 +402,7 @@ grip.onkeydown=e=>{
  }
 };
 
-function populateResponder(){
+function populateResponder(){return; /* retired responder dropdown */
  const select=$('next-responder'),chosen=select.value||lastProvider;
  select.replaceChildren();
  for(const p of PROVIDERS.filter(x=>states[x.id].active&&states[x.id].live)){
@@ -414,8 +414,15 @@ function populateResponder(){
 }
 function renderSuppliers(){
  const list=$('supplier-list');list.replaceChildren();
- for(const p of PROVIDERS){
+ for(const id of providerOrder){
+  const p=PROVIDERS.find(x=>x.id===id);
   const s=states[p.id],card=make('div');card.className='supplier-card'+(s.active?'':' off');
+  card.draggable=true;card.dataset.provider=p.id;
+  card.ondragstart=e=>e.dataTransfer.setData('text/plain',p.id);
+  card.ondragover=e=>{e.preventDefault();card.classList.add('drag-over')};
+  card.ondragleave=()=>card.classList.remove('drag-over');
+  card.ondrop=async e=>{e.preventDefault();card.classList.remove('drag-over');const from=e.dataTransfer.getData('text/plain');if(!providerOrder.includes(from)||from===p.id)return;providerOrder=providerOrder.filter(x=>x!==from);providerOrder.splice(providerOrder.indexOf(p.id),0,from);renderSuppliers();try{await saveRoom({precedence:providerOrder})}catch(err){status(err.message,true)}};
+  if(roomFloor===p.id)card.classList.add('floor');
   const toggle=make('button');toggle.className='supplier-main';toggle.disabled=!s.live;
   toggle.setAttribute('aria-pressed',String(s.active));
   toggle.title=s.live?(s.active?'Move '+p.name+' out of the meeting':'Invite '+p.name+' to the meeting'):p.name+' is not connected to this server';
@@ -424,7 +431,7 @@ function renderSuppliers(){
   const detail=make('span',s.live?money(s.cost)+' est. total':'Not connected');detail.className='supplier-detail';
   info.append(name,detail);toggle.append(providerMark(p),info);
   toggle.onclick=()=>{
-   s.active=!s.active;renderSuppliers();populateResponder();renderIntelligences();
+   s.active=!s.active;if(!s.active&&roomFloor===p.id)roomFloor=null;renderSuppliers();populateResponder();renderIntelligences();
    status(s.active?p.name+' invited for future calls.':p.name+' moved out for future calls.');
   };
   const model=make('button','···');model.className='supplier-model';model.title='Model and cost details for '+p.name;
@@ -445,17 +452,17 @@ function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
-  const hb=make('div');hb.className='message';hb.append(titled('Joe',null),make('p',t.question||''));
-  hb.lastChild.className='message-body';human.append(hb);thread.append(human);
+  const hb=make('div');hb.className='message';const hvoice=meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled(hvoice?'Joe (speaking for the room)':'Joe',null),make('p',t.question||''));
+  hb.lastChild.className='message-body';if(meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}human.append(hb);thread.append(human);
   if(t.status==='posted'&&t.provider==='operator')continue;
   const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
   const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');
-  const box=make('div');box.className='message';box.append(titled(p.name,p));
+  const box=make('div');box.className='message';const voiced=meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(voiced)box.classList.add('room-voice');box.append(titled(p.name+(voiced?' (speaking for the room)':''),p));
   const body=make('p',t.status==='completed'?(t.answer||''):t.status==='outcome_unknown'?'Outcome unknown — do not automatically retry.':'No verified response retained.');
   body.className='message-body';box.append(body);
   const meta=make('div');meta.className='turn-meta';
   meta.textContent=[t.model||'',t.status==='completed'?money(t.usage?.estimated_provider_cost_usd)+' estimated':'',t.status!=='completed'?t.status:''].filter(Boolean).join(' · ');
-  box.append(meta);exchange.append(box);thread.append(exchange);
+  box.append(meta);if(meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));box.append(b)}exchange.append(box);thread.append(exchange);
  }
  $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;
  for(const p of PROVIDERS)states[p.id].cost=0;
@@ -465,11 +472,15 @@ function renderTurns(){
  }
  renderSuppliers();
  renderIntelligences();
+ meetingCosts[currentRoomId]=turns.reduce((sum,t)=>sum+Number(t.usage?.estimated_provider_cost_usd||0),0);
+ $('total-cost').textContent=money(Object.values(meetingCosts).reduce((a,b)=>a+b,0));renderMeetingList();
 }
 function updateSend(){
  $('send').disabled=busy||!serverReady||!$('question').value.trim();
 }
 function chooseRecipient(question){
+ if(joeFloor)return 'post-only';
+ if(roomFloor&&states[roomFloor]?.active)return roomFloor;
  if($('next-responder').value==='post-only')return 'post-only';
  const named=question.match(/^(?:(?:hey|hello|hi|dear|mr\.?)\s+)?(GPT|Claude|Mistral)\b[\s,.:!?-]*/i);
  if(named){
@@ -477,9 +488,8 @@ function chooseRecipient(question){
   if(!p||!states[p.id].active||!states[p.id].live)throw Error((p?.name||named[1])+' is not currently in the meeting.');
   return p.id;
  }
- const chosen=$('next-responder').value;
- if(!states[chosen]?.active)throw Error('Invite an intelligence before sending.');
- return chosen;
+ const chosen=providerOrder.find(id=>states[id]?.active&&states[id]?.live);
+ return chosen||'post-only';
 }
 async function api(route,data){
  const response=await fetch('/api/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-Snug-Client':'demo-local'},body:JSON.stringify(data)});
@@ -493,6 +503,7 @@ async function reload(){
  if(!response.ok)throw Error('The local meeting is not available');
  const data=await response.json();if(roomId!==currentRoomId)return;
  turns=data.turns||[];
+ meetingInfo=meetings.find(x=>x.id===roomId)||null;providerOrder=[...(meetingInfo?.precedence||['openai','claude','mistral'])];$('meeting-state').value=meetingInfo?.state||'open';
  const latest=turns.filter(t=>t.status==='completed').at(-1);
  if(latest)lastProvider=latest.provider;
  renderTurns();populateResponder();
@@ -500,6 +511,7 @@ async function reload(){
 async function send(){
  if(busy)return;
  const question=$('question').value.trim();if(!question)return;
+ if(meetingInfo?.state==='closed'){status('Reopen the meeting before contributing.',true);return}
  const roomId=currentRoomId;
  let recipient;
  try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
@@ -509,6 +521,7 @@ async function send(){
  try{
   if(recipient==='post-only'){
    const result=await api('live/post',{text:question,room_id:roomId});
+   if(joeFloor)await setVoice(result.turn.turn_id,true);
    if(result.turn.status!=='posted')throw Error('No verified local post retained');
    $('question').value='';resizeComposer();
    await reload();status('Posted locally · no supplier called.');$('question').focus();
@@ -518,6 +531,7 @@ async function send(){
   // memory corpus passages are attached automatically in this version.
   const preview=await api('live/preview',{question,provider:recipient,room_id:roomId});
   const result=await api('live/send',{approval_token:preview.approval_token,room_id:roomId});
+  if(roomFloor===recipient)await setVoice(result.turn.turn_id,true);
   if(result.turn.status!=='completed')throw Error('No verified supplier reply');
   lastProvider=recipient;$('question').value='';resizeComposer();
   await reload();status('Response recorded locally.');$('question').focus();
@@ -527,6 +541,15 @@ async function send(){
   try{await reload()}catch(_){}
  }finally{busy=false;updateSend()}
 }
+
+async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId})}catch(e){status(e.message,true)}}
+async function saveRoom(changes){const updated=await api('live/rooms/configure',{room_id:currentRoomId,...changes});Object.assign(meetings.find(x=>x.id===currentRoomId),updated);meetingInfo=updated;renderTurns();return updated}
+$('joe-floor').onclick=()=>{joeFloor=!joeFloor;if(joeFloor)roomFloor=null;$('joe-floor').setAttribute('aria-pressed',String(joeFloor));$('joe-floor').textContent=joeFloor?'Joe has the floor ✓':'Joe: speak for room';renderSuppliers()};
+$('grant-floor').onclick=()=>{roomFloor=roomFloor?null:providerOrder.find(id=>states[id]?.active&&states[id]?.live)||null;joeFloor=false;$('joe-floor').setAttribute('aria-pressed','false');$('joe-floor').textContent='Joe: speak for room';$('floor-status').textContent=roomFloor?providerName(roomFloor)+' has the floor':'';renderSuppliers()};
+$('meeting-state').onchange=async()=>{try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
+$('edit-orders').onclick=async()=>{const value=prompt('Standing orders for this meeting',meetingInfo?.standing_orders||defaultOrders);if(value===null)return;try{await saveRoom({standing_orders:value})}catch(e){status(e.message,true)}};
+$('view-output').onclick=async()=>{try{const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId));const x=await r.json();if(!r.ok)throw Error(x.error);alert('Opening agenda:\\n'+x.agenda+'\\n\\nRoom-voice contributions: '+x.contributions.length)}catch(e){status(e.message,true)}};
+
 $('send').onclick=send;
 function resizeComposer(){
  const input=$('question');
@@ -584,7 +607,7 @@ meetingDrop.ondrop=e=>{
 document.addEventListener('dragover',e=>{if(isFileDrag(e))e.preventDefault()});
 document.addEventListener('drop',e=>{if(isFileDrag(e))e.preventDefault()});
 $('question').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}};
-$('next-responder').onchange=()=>{if($('next-responder').value!=='post-only')lastProvider=$('next-responder').value};
+// Responder selector retired.
 
 function inspectorTabs(tabs){
  const target=$('inspector-tabs');target.replaceChildren();
@@ -597,7 +620,7 @@ function inspectorTabs(tabs){
 }
 function openInspector(provider,mode='model'){
  selectedProvider=provider;inspectorMode=mode;
- inspectorTab=mode==='model'?'model':'corpus';inspectionIndex=0;
+ inspectorTab=mode==='model'?'model':'payload';inspectionIndex=0;
  $('inspector').classList.add('open');renderInspector();
 }
 function closeInspector(){$('inspector').classList.remove('open')}
@@ -619,9 +642,9 @@ function renderInspector(){
   return;
  }
  if(inspectorMode==='model'){
-  inspectorTabs([['model','Model & cost'],['corpus','Corpus'],['heard','Heard'],['payload','Payload']]);
+  inspectorTabs([['model','Model & cost'],['payload','Payload']]);
  }else{
-  inspectorTabs([['corpus','Corpus'],['heard','Heard'],['payload','Payload'],['model','Model & cost']]);
+  inspectorTabs([['payload','Payload'],['model','Model & cost']]);
  }
  const records=turns.filter(t=>t.provider===p.id);
  const nav=make('div');nav.className='inspector-nav';
