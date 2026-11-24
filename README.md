@@ -54,7 +54,7 @@ The room can have some or all of these features: A convenor, a chair, a table, s
 
 These features suggest a small set of primitives, from which many kinds of rooms might be assembled. We imagine a programming language called 'Room'. We are thinking of a future where the rooms themselves — and progressively much of Cobble is written in Room. Beneath this would sit a small kernel responsible for instantiating rooms, connecting them, accounting for resources and enforcing boundaries.
 
-Together, the 'Cobble' project and the 'Village Link' project pose a hypothesis for testing: Can we observe normative institutions as emergent structures arising from the interactions of markets and reputation? Can we observe *governance*?
+Taken together, the projects 'Cobble' and 'Village Link' pose a governance hypothesis. The project is interested in the possibility that intelligence is _necessarily_ social. That intelligence and governance are intertwined. They ship together.
 
 ## Value proposition
 
