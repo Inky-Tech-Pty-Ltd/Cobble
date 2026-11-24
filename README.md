@@ -60,7 +60,7 @@ The project intersects with its sister-repo [Village Link](https://github.com/In
 
 The room can have some or all of these features: A convenor, a chair, a table, seats at the table, a door, standing orders, tabled code, modular connections to other rooms, a unitary outbound 'voice', a reputation based on this voice, windows, reputational information posted on the windows, customers, suppliers, a balance sheet and an income statement.
 
-These features suggest a small set of primitives, from which many kinds of rooms might be assembled. We imagine a programming language called 'Room'. We are thinking of a future where rooms are _written in_ Room. Also, progressively, that Cobble is written in Room. Beneath this would sit a small kernel responsible for instantiating rooms, connecting them, accounting for resources and enforcing boundaries.
+These features suggest a small set of primitives, from which many kinds of rooms might be assembled. We imagine a programming language called 'Room'. We are thinking of a future where rooms are _written in_ Room. Also, progressively, that Cobble is written in Room.
 
 Taken together, the projects 'Cobble' and 'Village Link' pose a governance hypothesis. The project is interested in the possibility that intelligence is _necessarily_ social, normative. That intelligence and governance are intertwined. They ship together.
 
