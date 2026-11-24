@@ -64,6 +64,8 @@ As the app matures, we hope to add 'sensory' sources — email, databases, socia
   />
 </figure>
 
+[See the illustrated record of this early Cobble meeting, with GPT, Claude and Mistral at the table.](docs/early-meeting-2026-11-25.md)
+
 ## Sister project. Governance
 
 The project intersects with its sister-repo [Village Link](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) at the point of the *reputations* of the intelligences, chairs, convenors, and rooms. Village Link proposes a *star credential* as a way of bundling evidence about an entity. A star credential is a way of making an assertion about the things that have touched an entity, or that the entity has touched. The 'door' function of a room is guarded by a _trust engine_. The trust engine must assess opportunities and threats at the room's membrane. It is a consumer of star credentials. 
