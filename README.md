@@ -64,7 +64,7 @@ These features suggest a small set of primitives, from which many kinds of rooms
 
 Note that a room can be completely self-contained. A room does not need any central infrastructure. People are _already_ rooms. 
 
-Taken together, the projects 'Cobble' and 'Village Link' pose a governance hypothesis. The project is interested in the possibility that intelligence is _necessarily_ social, normative. That intelligence and governance are intertwined. They ship together.
+Taken together, the projects 'Cobble' and 'Village Link' pose a governance hypothesis. The project is interested in the possibility that intelligence is _necessarily_ social and normative. That intelligence and governance are intertwined. They ship together.
 
 ## Value proposition
 
