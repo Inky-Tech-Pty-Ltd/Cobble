@@ -321,6 +321,82 @@ class LiveTests(unittest.TestCase):
                 thread.join(timeout=5)
 
 
+    def test_room_output_complete_history_minimal_projection_and_lifecycle(self):
+        folder = self.store / "hosting" / "inkytech"
+        folder.mkdir(parents=True)
+        (folder / "notes.txt").write_text("private corpus marker")
+        index = self.store / "index" / "search.sqlite3"
+        build(self.store, index)
+        entry = Path(__file__).resolve().parents[1] / "scripts" / "snug_demo_web.py"
+        spec = importlib.util.spec_from_file_location("snug_demo_web", entry)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with module.create_server(self.store, index, port=0, live_gpt=True,
+                                  live_adapter=self.supplier) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            port = server.server_port
+
+            def call(route, data=None, expected=200):
+                conn = http.client.HTTPConnection("127.0.0.1", port, timeout=15)
+                try:
+                    conn.request("POST" if data is not None else "GET", route,
+                                 body=json.dumps(data) if data is not None else None,
+                                 headers={"Content-Type": "application/json",
+                                          "Origin": f"http://127.0.0.1:{port}",
+                                          "X-Snug-Client": "demo-local"})
+                    response = conn.getresponse()
+                    body = json.loads(response.read())
+                    self.assertEqual(response.status, expected, body)
+                    return body
+                finally:
+                    conn.close()
+
+            try:
+                prefix = "/api/live/"
+                call(prefix + "post", {"text": "Original agenda"})
+                preview = call(prefix + "preview", {"question": "Private supplier prompt"})
+                event = call(prefix + "send", {"approval_token": preview["approval_token"]})["turn"]
+                event_id = event["turn_id"]
+                call(prefix + "rooms/configure", {"room_id": "default",
+                                                   "voice_event": event_id,
+                                                   "standing_orders": "Private standing orders"})
+                for i in range(101):
+                    call(prefix + "post", {"text": f"Ordinary deliberation {i}"})
+                self.assertEqual(len(call(prefix + "session")["turns"]), 100)
+                output = call(prefix + "output")
+                self.assertEqual(output, {"agenda": "Original agenda",
+                    "contributions": [{"turn_id": event_id, "provider": "openai",
+                                       "text": event["answer"]}]})
+                self.assertNotIn("Private supplier prompt", json.dumps(output))
+                self.assertNotIn("Private standing orders", json.dumps(output))
+                call(prefix + "rooms/configure", {"room_id": "default", "redact_event": event_id})
+                self.assertEqual(call(prefix + "output")["contributions"], [])
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id})
+                self.assertEqual(call(prefix + "output"), output)
+                other = call(prefix + "rooms/create", {"title": "Other"})["id"]
+                call(prefix + "rooms/configure", {"room_id": other, "voice_event": event_id}, 400)
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id,
+                     "redact_event": event_id}, 400)
+                call(prefix + "output?room_id=default&room_id=" + other, expected=400)
+                pending = call(prefix + "preview", {"question": "Before closure"})
+                call(prefix + "rooms/configure", {"room_id": "default", "state": "closed"})
+                call(prefix + "output", expected=400)
+                call(prefix + "post", {"text": "Forbidden"}, 400)
+                call(prefix + "rooms/configure", {"room_id": "default", "state": "open"})
+                call(prefix + "send", {"approval_token": pending["approval_token"]}, 400)
+                self.assertEqual(len(self.supplier.calls), 1)
+                self.assertEqual(call(prefix + "output"), output)
+                self.supplier.fail = True
+                pending = call(prefix + "preview", {"question": "Unknown outcome"})
+                unknown = call(prefix + "send", {"approval_token": pending["approval_token"]}, 502)
+                call(prefix + "rooms/configure", {"room_id": "default",
+                     "voice_event": unknown["turn_id"]}, 400)
+                self.assertEqual(call(prefix + "output"), output)
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+
     def test_http_routes_live_supplier_selection_and_history(self):
         """Server routes only the specifically reviewed supplier into one ledger."""
         class Named(Supplier):
