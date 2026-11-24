@@ -54,6 +54,14 @@ Cobble allows connection to a range of information sources. On our test server, 
 
 The application makes a distinction between this external data and the data that has been internalised into the entity. The external data is labelled 'sensory' ... it is a taste of the outside world. It will tend to be voluminous, multiply redundant, and sometimes not particularly salient. We want to test whether this information can be ingested by expert systems — rooms — that are under economic pressure to leave a salient representation 'on the table'. We are calling this internalised, tabled data *memory*. As the app matures, we hope to add 'sensory' sources — email, databases, social media ... and also a browser and search engine so that the entity can turn its senses toward an object of interest.
 
+<figure>
+  <img
+    src="docs/assets/Cobble%20Joe-Puck%20test%20meeting.png"
+    alt="Early Cobble meeting with GPT, Claude and Mistral connected."
+    width="100%"
+  />
+</figure>
+
 ## Sister project. Governance
 
 The project intersects with its sister-repo [Village Link](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) at the point of the *reputations* of the intelligences, chairs, convenors, and rooms. Village Link proposes a *star credential* as a way of bundling evidence about an entity. A star credential is a way of making an assertion about the things that have touched an entity, or that the entity has touched. The 'door' function of a room is guarded by a trust engine. The trust engine must assess opportunities and threats at the membrane. It is a consumer of star credentials. Star credentials are like advertising. We are tempted to extend our metaphor by plastering star credentials onto the outward-facing windows of a room.
