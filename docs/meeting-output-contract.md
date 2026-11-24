@@ -24,7 +24,7 @@ The Room output control displays the actual projected agenda and selected contri
 
 - Select or redact one eligible event at a time through the existing configure endpoint. Posted operator utterances and completed supplier answers are eligible; failed/unknown or foreign-room events are not.
 - Redaction removes a contribution from the output projection but retains its underlying private ledger record; selection restores it.
-- An output referencing missing or ineligible active selections fails instead of silently returning a partial result.
+- An output referencing missing or ineligible active selections fails instead of silently returning a partial result. Explicit invalid lifecycle values, malformed selection lists and redactions of unselected events also fail; absent fields in pre-Candidate-2 records remain compatible. This validation is not tamper evidence.
 - Closed rooms reject output and new contributions; configuration remains available for reopening. Successful configuration invalidates outstanding supplier previews, including close/reopen transitions. Preview again before execution.
 - Governance mutations and live actions are serialized within one local server process. An already executing supplier call is not cancelled by a later close request. Multi-process enforcement, authenticated principals, durable floor events, document content tabling and external tool authority are outside this correction.
 
