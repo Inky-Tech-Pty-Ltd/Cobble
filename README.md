@@ -60,7 +60,7 @@ The project intersects with its sister-repo [Village Link](https://github.com/In
 
 The room can have some or all of these features: A convenor, a chair, a table, seats at the table, a door, standing orders, tabled code, modular connections to other rooms, a unitary outbound 'voice', a reputation based on this voice, windows, reputational information posted on the windows, customers, suppliers, a balance sheet and an income statement.
 
-These features suggest a small set of primitives, from which many kinds of rooms might be assembled. We imagine a programming language called 'Room'. We are thinking of a future where rooms are _written in_ Room. Also, progressively, that Cobble is written in Room.
+These features suggest a small set of primitives, from which many kinds of rooms might be assembled. We imagine a programming language called 'Room'. We are thinking of a future where rooms can be _written in_ Room. Also, progressively, that Cobble is written in Room.
 
 Note that a room can be completely self-contained. A room does not need any central infrastructure. People are _already_ rooms. 
 
