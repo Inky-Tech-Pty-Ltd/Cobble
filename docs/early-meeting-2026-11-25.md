@@ -1,8 +1,8 @@
-# Early Cobble meeting: three intelligences at the table
+# Early Cobble meeting: four intelligences at the table
 
 *25 November 2026 — a working prototype on McKay.*
 
-This is a visual record of an early meeting convened by Joe in Cobble, with a procedural Chair and three live intelligence suppliers: **GPT (OpenAI), Claude (Anthropic), and Mistral**. The screenshots show the actual local prototype, not a mock-up. The costs shown are **estimated API costs**, not invoices.
+This is a visual record of an early meeting with **four intelligences at the table**: **Joe**, the human convenor, alongside three live intelligence suppliers — **GPT (OpenAI), Claude (Anthropic), and Mistral**. A procedural Chair presents the standing orders. The screenshots show the actual local prototype, not a mock-up. The costs shown are **estimated API costs**, not invoices.
 
 ## 1. Convenor and Chair open the room
 
