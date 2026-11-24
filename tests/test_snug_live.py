@@ -34,7 +34,8 @@ class Supplier:
         folder = self.store / "snug" / "live" / "default"
         turns = list((folder / "turns").glob("*.json"))
         attempts = list((folder / "attempts").glob("*.json"))
-        assert len(turns) == len(attempts) > 0, "Provider called before durable attempt"
+        paid_turns = [p for p in turns if json.loads(p.read_text()).get("kind") != "operator_message"]
+        assert len(paid_turns) == len(attempts) > 0, "Provider called before durable attempt"
         self.calls.append(request)
         if self.fail:
             raise RuntimeError("Simulated ambiguous supplier failure")
