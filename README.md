@@ -70,8 +70,8 @@ Taken together, the projects 'Cobble' and 'Village Link' pose a governance hypot
 
 1. Sovereignty. Reduced vulnerability to the loss of any single intelligence, AI or human.
 1. Context, ownership. Layered stores of information 'on the table' and 'in the senses', all controlled by the user.
-1. Workspaces, coherence. Each AI voice available to two or more people, all with the shared context of a meeting room.
+1. Workspaces, coherence. Distinct AI voices available simultaneously to two or more people, all with the shared context of a meeting room.
 1. Learning. An entity capable of continual learning through real-world encounters.
-1. Evolvability, modularity. A mature Cobble will ship with a default set of rooms. (For example for the ingestion of email, the optimisation of tabled code, or the deployment of a trust engine.) Any of these may be swapped-out for something better.
-1. Governance? Resource scarcity as an organising principle. Rooms, chairs and intelligences selected on reputation. 'Natural' or possibly 'political' management of data permissions _in the room_.
+1. Evolvability, modularity. A mature Cobble will ship with a default set of rooms. (For example for the ingestion of email, the optimisation of tabled code, or the deployment of a trust engine at a door.) Any of these may be swapped-out for something better.
+1. Governance? Resource scarcity as an organising principle. Rooms, chairs and intelligences selected on reputation. 'Reputation' meaning emergent norms. 'Natural' or possibly 'political' management of data permission _in the room_.
 
