@@ -394,6 +394,17 @@ class LiveTests(unittest.TestCase):
                 call(prefix + "rooms/configure", {"room_id": "default",
                      "voice_event": unknown["turn_id"]}, 400)
                 self.assertEqual(call(prefix + "output"), output)
+                metadata = self.store / "snug" / "live" / "default" / "room.json"
+                original = json.loads(metadata.read_text())
+                for corrupt in ({"state": "unknown"}, {"state": None},
+                                {"room_voice": None}, {"room_voice": [event_id, event_id]},
+                                {"redacted": ["20261123142345678901-abcdef123456"]}):
+                    with self.subTest(corrupt=corrupt):
+                        metadata.write_text(json.dumps({**original, **corrupt}))
+                        call(prefix + "output", expected=400)
+                        call(prefix + "post", {"text": "Must not be accepted"}, 400)
+                metadata.write_text(json.dumps(original))
+                self.assertEqual(call(prefix + "output"), output)
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
