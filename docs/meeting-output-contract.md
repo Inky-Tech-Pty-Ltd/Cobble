@@ -20,6 +20,8 @@ An empty meeting has an empty agenda and no contributions. Selection does not va
 
 ## Editorial controls and failure handling
 
+The Room output control displays the actual projected agenda and selected contribution text, including older selected turns outside the display window. A successfully recorded post or supplier reply is distinct from a successfully selected room-voice contribution. If selection fails, the workbench reports the partial outcome and clears the recorded draft; do not resend it. The selection intent is captured at the start of Send. This is not an atomic record-and-publish transaction.
+
 - Select or redact one eligible event at a time through the existing configure endpoint. Posted operator utterances and completed supplier answers are eligible; failed/unknown or foreign-room events are not.
 - Redaction removes a contribution from the output projection but retains its underlying private ledger record; selection restores it.
 - An output referencing missing or ineligible active selections fails instead of silently returning a partial result.
