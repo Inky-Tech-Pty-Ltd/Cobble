@@ -20,7 +20,7 @@ Intelligence is paint._
 
 Cobble is an app designed to cobble together an entity from information sources and intelligence sources. One of its aims is sovereignty, so that the information is held and backed up in locations that are controlled by the user. The sources of intelligence are modular and pluggable, reducing the dependency on any single supplier.
 
-The centrepiece of the app is a 'room', which draws its inspiration and much of its language from a meeting room.
+The centrepiece of the app is a 'room', which draws its inspiration, and much of its language from a meeting room.
 
 A room is created by a convenor, who appoints a chair, tables an agenda, and invites participants. The chair brings a set of standing orders. The convenor can accept those standing orders as-is, or make changes to them if required. The contributions of all participants are 'tabled'. The information on the table acts as context for the ongoing discussion. To some extent the convenor can control the sensitivities of information by choosing what is on the table at the start of the meeting, and by choosing participants carefully. Once the other intelligences are in the room, the standing orders might allow them to table whatever information they see fit, but they have some pressure to 'show judgement' and guard their reputation, as will be seen further below.
 
