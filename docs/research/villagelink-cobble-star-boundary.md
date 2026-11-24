@@ -194,3 +194,23 @@ invalidate these recorded experiments nor inherit normative obligations from
 them. Future implementations should be compared against the evidence and
 capabilities at issue, not forced to reproduce a particular graph shape or
 synthetic benchmark outcome.
+
+## Reproduce the consumer boundary
+
+For a reproducible reference baseline, check out VillageLink at
+`4100856a300a6ce48192eca0dac467e92bac71db` beside Cobble, then from Cobble:
+
+```sh
+PYTHONPATH=src:../VillageLink/prototype python -m unittest discover -s tests -p 'test_memory_graph.py' -v
+```
+
+The consumer projection test reads actual locally persisted rays and passes
+them to VillageLink's Graph utility, using local file URIs as synthetic
+occurrence provenance (not public publication). It adds a reversed occurrence
+and a deliberately false bridge, checks structural reachability, and verifies
+that Cobble's hypothesis membership and unverified claim status do not change
+when source retrieval is recorded as unavailable. This tests the current
+experimental adapters, not a normative Star wire format. The ordinary CI
+workflow also exercises the current upstream checkout; record its actual
+revision separately when reporting compatibility. No real personal data,
+network lookup or supplier is required.
