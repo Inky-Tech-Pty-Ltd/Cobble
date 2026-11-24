@@ -40,11 +40,11 @@ At the smallest scale we notice a possible room architecture that is uncannily s
 
 ## Economics
 
-We can hazard a guess that convenors will care about the economics of a room. They want results *at a price*. This creates markets for intelligences, for chairs and for rooms. In the operation of a meeting, the standing orders might invite intelligences to table new material. In a high level room, this material might resemble something like 'ideas' or 'vibe code'. In a lower-level room we might expect something more structured and compact. Either way, a good, economical chair will have rules to manage this code. These rules could be maximalist along the lines of Git, but they will consume fewer resources if they are minimalist, perhaps as small as the rules of a meeting that strips back its output to just a set of minutes.
+We can hazard a guess that convenors will care about the economics of a room. They want results *at a price*. This creates markets for intelligences, for chairs and for rooms. In the operation of a meeting, the standing orders might invite intelligences to table new material. In a high level room, this material might resemble something like 'ideas' or 'vibe code'. In a lower-level room we might expect something more structured and compact. Either way, a good, economical chair will have rules to manage this code. These rules could be maximalist along the lines of Git; but they will consume fewer resources if they are minimalist, perhaps as small as the rules of a meeting that strips back its output to just a set of minutes.
 
 A room can employ intelligences, human or otherwise, chosen by the convenor in the hope of useful output. These intelligences might charge for their services. As it stands in November 2026, the prototype app can connect to three LLM 'intelligences', Claude, GPT and Mistral. The Cobble prototype displays the estimated cost of each LLM to date, and the total cost of the meeting. A future version of the app will allow intelligences to _pay_ to attend a meeting: A room might turn a profit. 
 
-A 'customer' intelligence might take a seat because they want to copy code from the table. This could be used to convene another room, or it could be used elsewhere, outside Cobble. A room can reproduce.
+A 'customer' intelligence might take a seat because they want to copy code from the table. This code could be used to convene another room, or it could be used elsewhere, outside Cobble. A room can reproduce.
 
 A participant might also be interested in the institutions and working habits of the room. This is also reproduction, but in the softer sense of transmission rather than replication. A room can transmit norms.
 
@@ -52,7 +52,9 @@ A participant might also be interested in the institutions and working habits of
 
 Cobble allows connection to a range of information sources. On our test server, we have connected two filesystems, six GitHub repos and an archive of chat with GPT.
 
-The application makes a distinction between this external data and the data that has been internalised into the entity. The external data is labelled 'sensory' ... it is a taste of the outside world. It will tend to be voluminous, multiply redundant, and sometimes not particularly salient. We want to test whether this information can be ingested by expert systems — rooms — that are under economic pressure to leave a salient representation 'on the table'. We are calling this internalised, tabled data *memory*. As the app matures, we hope to add 'sensory' sources — email, databases, social media ... and also a browser and search engine so that the entity can turn its senses toward an object of interest.
+The application makes a distinction between this external data and the data that has been internalised into the entity. The external data is labelled 'sensory' ... it is a taste of the outside world. It will tend to be voluminous, multiply redundant, and sometimes not particularly salient. We want to test whether this information can be ingested by expert systems — rooms — that are under economic pressure to leave a salient representation 'on the table'. We are calling this internalised, tabled data *memory*. 
+
+As the app matures, we hope to add 'sensory' sources — email, databases, social media ... and also a browser and search engine so that the entity can turn its senses toward an object of interest.
 
 <figure>
   <img
