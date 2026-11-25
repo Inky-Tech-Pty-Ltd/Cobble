@@ -93,7 +93,7 @@ class LiveTests(unittest.TestCase):
         selected = p["room_authorised_output"]
         self.assertEqual(selected["agenda"], "Do we agree?")
         self.assertEqual(selected["contributions"], output["contributions"])
-        self.assertEqual(selected["older_contributions_omitted"], 0)
+        self.assertNotIn("older_contributions_omitted", selected)
         turn = self.svc.send(approval_token=p["approval_token"])["turn"]
         self.assertEqual(turn["context"]["room_output"], selected)
         self.assertEqual(self.supplier.calls[-1].room_output, selected)
