@@ -188,7 +188,6 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             self.assertIn(required, self.page)
         self.assertNotIn("prompt('Standing orders", self.page)
         self.assertNotIn("alert('Opening agenda", self.page)
-        self.assertIn("room_output", self.page) if False else None
 
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
