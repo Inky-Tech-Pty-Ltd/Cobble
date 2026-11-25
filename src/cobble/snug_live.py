@@ -218,7 +218,8 @@ class LiveChatService:
             })
             return {"turn": self._turns_by_id(turn_id)}
 
-    def preview(self, *, question, provider="openai", room_standing_orders=""):
+    def preview(self, *, question, provider="openai", room_standing_orders="",
+                room_output=None):
         if not isinstance(question, str) or not 0 < len(question.strip()) <= MAX_QUESTION:
             raise ValueError("Question must contain 1–2000 characters")
         if not isinstance(provider, str) or provider not in self._adapters:
@@ -226,6 +227,23 @@ class LiveChatService:
         if (not isinstance(room_standing_orders, str) or
                 len(room_standing_orders) > 8000):
             raise ValueError("Invalid meeting standing orders")
+        if room_output is not None:
+            if (not isinstance(room_output, dict) or
+                    not isinstance(room_output.get("agenda"), str) or
+                    not isinstance(room_output.get("contributions"), list)):
+                raise ValueError("Invalid authorised room output")
+            for contribution in room_output["contributions"]:
+                if (not isinstance(contribution, dict)
+                        or not isinstance(contribution.get("text"), str)
+                        or not isinstance(contribution.get("provider"), str)
+                        or not isinstance(contribution.get("turn_id"), str)):
+                    raise ValueError("Invalid authorised contribution")
+            all_voice = room_output["contributions"]
+            voice = list(all_voice[-4:])
+            older_voice_omitted = len(all_voice) - len(voice)
+        else:
+            voice = []
+            older_voice_omitted = 0
         with self._lock:
             turns = self._turns()
             history = self._history(turns)
@@ -234,19 +252,32 @@ class LiveChatService:
             # oldest prior exchanges until the exact payload passes preflight.
             # The review shows precisely which exchanges survived.
             while True:
+                current_voice = None if room_output is None else {
+                    "agenda": room_output["agenda"],
+                    "contributions": list(voice),
+                    "older_contributions_omitted": older_voice_omitted,
+                }
                 request = ExchangeRequest(
                     participant="operator", question=question,
                     selected_memories=(), previous_exchanges=history,
-                    room_standing_orders=room_standing_orders)
+                    room_standing_orders=room_standing_orders,
+                    room_output=current_voice)
                 payload = BUILD_PAYLOAD[provider](
                     request, output_tokens=OUTPUT_TOKENS)
                 try:
                     budget = PREFLIGHTS[provider](payload)
                     break
                 except ValueError as error:
-                    if not history or "exceeds local" not in str(error):
+                    if "exceeds local" not in str(error):
                         raise
-                    history = history[1:]
+                    if history:
+                        history = history[1:]
+                    elif len(voice) > 1:
+                        # Preserve the newest authorised statement if possible.
+                        voice = voice[1:]
+                        older_voice_omitted += 1
+                    else:
+                        raise
             token = secrets.token_urlsafe(32)
             now = time.monotonic()
             self._pending = {
@@ -261,6 +292,7 @@ class LiveChatService:
                 "provider": provider, "question": question,
                 "selected_memories": [],
                 "room_standing_orders": room_standing_orders,
+                "room_authorised_output": current_voice,
                 "previous_exchanges": list(history),
                 "older_exchanges_omitted": originally_available - len(history),
                 "context_sha256": request_context_digest(request),
