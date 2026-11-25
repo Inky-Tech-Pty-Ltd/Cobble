@@ -189,6 +189,23 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         self.assertNotIn("prompt('Standing orders", self.page)
         self.assertNotIn("alert('Opening agenda", self.page)
 
+    def test_copy_controls_are_explicit_and_keep_text_local(self):
+        """Copy original contribution/payload text only on a human click."""
+        for required in (
+            'id="orders-copy"', 'id="output-copy"',
+            "function copyButton(text,label)", "async function copyText(text,label,button)",
+            "navigator.clipboard.writeText(text)",
+            "copyButton(t.question||'','Copy Joe contribution')",
+            "copyButton(body.textContent,'Copy '+p.name+' contribution')",
+            "copyButton(speech.textContent,'Copy Chair standing orders')",
+            "copyButton(exactPayload,'Copy exact outgoing API payload')",
+            "copyButton(c.text||'','Copy selected contribution')",
+            "formatRoomOutput(lastRoomOutput)",
+            "lastRoomOutput=x", "body.append(make('pre',exactPayload))",
+        ):
+            self.assertIn(required, self.page)
+        self.assertNotIn("execCommand('copy')", self.page)
+
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
         self.assertEqual(len(ids), len(set(ids)))
