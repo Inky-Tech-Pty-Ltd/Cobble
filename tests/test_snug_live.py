@@ -79,6 +79,51 @@ class LiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "standing orders"):
             self.svc.preview(question="Bad", room_standing_orders="x" * 8001)
 
+    def test_room_authorised_output_reaches_all_supplier_payloads(self):
+        """A decision is distinct from recent chat, and survives history trimming."""
+        output = {
+            "agenda": "Do we agree?",
+            "contributions": [
+                {"turn_id": "20261126000000000000-abc123abc123",
+                 "provider": "operator", "text": "The room has decided YES."},
+            ],
+        }
+        p = self.svc.preview(question="What did the room decide?",
+                             room_output=output)
+        selected = p["room_authorised_output"]
+        self.assertEqual(selected["agenda"], "Do we agree?")
+        self.assertEqual(selected["contributions"], output["contributions"])
+        self.assertEqual(selected["older_contributions_omitted"], 0)
+        turn = self.svc.send(approval_token=p["approval_token"])["turn"]
+        self.assertEqual(turn["context"]["room_output"], selected)
+        self.assertEqual(self.supplier.calls[-1].room_output, selected)
+        for prepared in (
+                prepare_message(self.supplier.calls[-1]),
+                prepare_claude(self.supplier.calls[-1]),
+                prepare_mistral(self.supplier.calls[-1])):
+            if "input" in prepared:
+                context = json.loads(prepared["input"])
+            else:
+                context = json.loads(prepared["messages"][-1]["content"])
+            self.assertEqual(context["room_authorised_output"], selected)
+        self.assertEqual(
+            json.loads(turn["payload"]["input"])["room_authorised_output"],
+            selected)
+
+    def test_room_voice_bounds_and_reports_omissions_without_erasing_recent_authority(self):
+        contributions = [
+            {"turn_id": f"2026112600000000000{i}-abc123abc123",
+             "provider": "operator", "text": f"Decision {i}"}
+            for i in range(7)
+        ]
+        p = self.svc.preview(question="Current position?",
+                             room_output={"agenda": "Consider decisions",
+                                          "contributions": contributions})
+        voice = p["room_authorised_output"]
+        self.assertEqual(len(voice["contributions"]), 4)
+        self.assertEqual(voice["older_contributions_omitted"], 3)
+        self.assertEqual(voice["contributions"][-1]["text"], "Decision 6")
+
     def test_acceptance_precedes_call_and_is_durable(self):
         first = self.send()
         self.assertEqual(first["status"], "completed")
@@ -396,6 +441,14 @@ class LiveTests(unittest.TestCase):
                     call(prefix + "post", {"text": f"Ordinary deliberation {i}"})
                 self.assertEqual(len(call(prefix + "session")["turns"]), 100)
                 output = call(prefix + "output")
+                decision_preview = call(prefix + "preview",
+                                        {"question": "What is our decision?"})
+                self.assertEqual(
+                    decision_preview["room_authorised_output"]["contributions"],
+                    [{"turn_id": event_id, "provider": "openai",
+                      "text": event["answer"]}])
+                self.assertEqual(decision_preview["room_authorised_output"]["agenda"],
+                                 "Original agenda")
                 self.assertEqual(output, {"agenda": "Original agenda",
                     "contributions": [{"turn_id": event_id, "provider": "openai",
                                        "text": event["answer"]}]})
@@ -403,7 +456,11 @@ class LiveTests(unittest.TestCase):
                 self.assertNotIn("Private standing orders", json.dumps(output))
                 call(prefix + "rooms/configure", {"room_id": "default", "redact_event": event_id})
                 self.assertEqual(call(prefix + "output")["contributions"], [])
+                withdrawn = call(prefix + "preview", {"question": "Still authorised?"})
+                self.assertEqual(withdrawn["room_authorised_output"]["contributions"], [])
                 call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id})
+                restored = call(prefix + "preview", {"question": "Now authorised?"})
+                self.assertEqual(len(restored["room_authorised_output"]["contributions"]), 1)
                 self.assertEqual(call(prefix + "output"), output)
                 other = call(prefix + "rooms/create", {"title": "Other"})["id"]
                 call(prefix + "rooms/configure", {"room_id": other, "voice_event": event_id}, 400)
