@@ -216,6 +216,7 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         for required in (
             'id="invite-human"', 'id="invite-dialog"', 'id="invite-open"',
             'id="invite-revoke"', 'id="invite-copy"',
+            "t.speaker==='Sankarshan'", "Authorise room voice",
             "api('live/rooms/invite',{room_id:currentRoomId})",
             "api('live/rooms/revoke',{room_id:currentRoomId})",
             "This one-room invitation permits its bearer",
