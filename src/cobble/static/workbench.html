@@ -311,7 +311,7 @@ button{color:inherit}
 <dialog id="invite-dialog" class="room-dialog" aria-labelledby="invite-heading">
   <div class="room-dialog-body">
     <h2 id="invite-heading">Room Door · Sankarshan</h2>
-    <p class="room-dialog-note">This one-room invitation permits its bearer to read this meeting's table and post as Sankarshan. It never opens the operator console, private memories or other meetings.</p>
+    <p class="room-dialog-note">This one-room invitation permits its bearer to read this meeting's entire discussion history and post as Sankarshan. It never opens the operator console, private memories or other meetings.</p>
     <p class="room-dialog-note"><strong>Local test only:</strong> this URL works on McKay. Do not share it remotely until we configure authenticated HTTPS for the separate guest port.</p>
     <label for="invite-url">Invitation URL (shown once when issued)</label>
     <textarea id="invite-url" readonly rows="3" placeholder="Open the Door to generate a link"></textarea>
@@ -691,7 +691,7 @@ $('view-output').onclick=async()=>{
    list.append(make('p','No contributions have been selected for the room\'s outward voice.'));
   }else for(const c of x.contributions){
    const item=make('section');item.className='room-output-item';
-   const speaker=make('strong',c.provider==='operator'?'Joe':providerName(c.provider));
+   const speaker=make('strong',c.speaker||(c.provider==='operator'?'Joe':providerName(c.provider)));
    const speech=make('p',c.text||'');
    item.append(speaker,speech,copyButton(c.text||'','Copy selected contribution'));list.append(item);
   }
