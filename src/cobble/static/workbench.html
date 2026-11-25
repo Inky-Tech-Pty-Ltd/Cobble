@@ -41,6 +41,12 @@ button{color:inherit}
 .identity{height:71px;display:flex;align-items:center;gap:6px;justify-content:space-between;padding:0 2px 6px}
 .brand{width:159px;height:70px;object-fit:contain;object-position:left center}
 .sidebar.collapsed .brand{width:40px;height:40px;object-fit:cover;object-position:left center}
+/* Keep the expand control reachable in the narrow rail. The logo and button
+   stack vertically instead of clipping the button beyond the 64px sidebar. */
+.sidebar.collapsed .identity{height:92px;flex:0 0 92px;flex-direction:column;justify-content:flex-start;align-items:center;gap:2px;padding:0}
+.sidebar.collapsed .identity .brand{width:34px;height:38px;flex:0 0 38px;object-fit:contain;object-position:center}
+.sidebar.collapsed #collapse{display:block;width:38px;height:34px;flex:0 0 34px;padding:5px}
+
 .icon-button{border:0;border-radius:9px;background:transparent;padding:7px 9px;color:var(--slate)}
 .icon-button:hover,.nav-item:hover,.meeting-item:hover{background:#edf2f6}
 .icon-button svg,.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
