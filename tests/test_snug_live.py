@@ -34,7 +34,8 @@ class Supplier:
         folder = self.store / "snug" / "live" / "default"
         turns = list((folder / "turns").glob("*.json"))
         attempts = list((folder / "attempts").glob("*.json"))
-        assert len(turns) == len(attempts) > 0, "Provider called before durable attempt"
+        paid_turns = [p for p in turns if json.loads(p.read_text()).get("kind") != "operator_message"]
+        assert len(paid_turns) == len(attempts) > 0, "Provider called before durable attempt"
         self.calls.append(request)
         if self.fail:
             raise RuntimeError("Simulated ambiguous supplier failure")
@@ -136,6 +137,50 @@ class LiveTests(unittest.TestCase):
         self.assertEqual(len(self.supplier.calls), 0)
         # Unknown responses do not get smuggled into subsequent model context.
         self.assertEqual(reloaded.preview(question="Next")["previous_exchanges"], [])
+
+    def test_supplier_replacement_preserves_corrections_and_excludes_other_room(self):
+        class Replacement:
+            name = "claude"
+
+            def __init__(self):
+                self.calls = []
+
+            def answer(self, request):
+                self.calls.append(request)
+                return ProviderReply(text="Fixture response, not a reasoning evaluation",
+                    model="claude-fixture", request_id="fixture-continuity",
+                    usage={"kind": "mock-claude-api", "network_calls": 0,
+                           "input_tokens": 30, "output_tokens": 10,
+                           "estimated_provider_cost_usd": "0.00001",
+                           "cost_is_estimate": True})
+
+        first = LiveChatService(self.store, adapter=self.supplier)
+        first.post_operator(text="Decision: budget 100 units.")
+        first.post_operator(text="Correction: current budget 80 units; 100 is superseded.")
+        p = first.preview(question="Acknowledge the correction.")
+        first.send(approval_token=p["approval_token"])
+        other = LiveChatService(self.store, adapter=self.supplier,
+                                meeting_id="0123456789abcdef")
+        other.post_operator(text="OTHER-ROOM-PRIVATE-MARKER")
+        replacement = Replacement()
+        second = LiveChatService(self.store, adapters={"claude": replacement})
+        with self.assertRaises(PermissionError):
+            second.preview(question="Unavailable supplier", provider="openai")
+        p = second.preview(question="What is the current budget?", provider="claude")
+        history = p["previous_exchanges"]
+        self.assertEqual([e["question"] for e in history][:2], [
+            "Decision: budget 100 units.",
+            "Correction: current budget 80 units; 100 is superseded."])
+        self.assertNotIn("OTHER-ROOM-PRIVATE-MARKER", json.dumps(p))
+        self.assertEqual(p["selected_memories"], [])
+        self.assertEqual(len(replacement.calls), 0)
+        result = second.send(approval_token=p["approval_token"])["turn"]
+        self.assertEqual(result["provider"], "claude")
+        self.assertEqual(len(replacement.calls), 1)
+        self.assertEqual(list(replacement.calls[0].previous_exchanges), history)
+        self.assertEqual(len(second.session()["turns"]), 4)
+        with self.assertRaises(PermissionError):
+            second.send(approval_token=p["approval_token"])
 
     def test_supplier_switch_preserves_shared_ledger_and_context(self):
         """GPT -> Claude -> Mistral use a single durable conversation."""

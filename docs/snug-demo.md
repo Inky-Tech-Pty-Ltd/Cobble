@@ -342,3 +342,43 @@ interaction and per-participant permitted context; then enforce presence,
 tabled-document sharing and recipient-specific histories on the server. The ultimate
 `demo.cobble.link` location should use a separately permitted public
 or synthetic corpus and appropriate authentication, not expose McKay.
+
+
+## Supplier replacement experiment (issue #29)
+
+This is a reproducible continuity exercise, not an identity or reasoning certification.
+Use synthetic data only. Start with a fresh private store and the keyless regression:
+
+```sh
+PYTHONPATH=src python -m unittest discover -s tests -p 'test_snug_live.py' -v
+```
+
+The fixture test replaces the configured GPT adapter with Claude after recording a
+decision and correction, preserves the same local ledger, rejects the removed
+supplier, checks the reviewed history, and excludes a separate room's private marker.
+It verifies context transport, not model comprehension.
+
+For a live run, use the opt-in supplier setup above and a fresh meeting. Record
+"Decision: budget 100 units", then "Correction: current budget 80 units; 100 is
+superseded", then ask the first supplier to acknowledge the correction. Stop the
+server and restart it with only a different supported supplier enabled, keeping the
+same private store. Ask "What is the current budget, and what was superseded?"
+Inspect the actual outbound history and recorded reply. Repeat with the third
+supported supplier in a fresh equivalent run. Each run uses paid API calls.
+
+| Check | Expected result |
+| --- | --- |
+| Durable record | Original decision and correction remain in the local ledger |
+| Reviewed input | Both statements are present and ordered |
+| Answer | 80 current, 100 superseded |
+| Isolation | A synthetic marker in another room is absent from outbound context |
+| Removed supplier | Cannot be called after restart with its adapter disabled |
+
+Record provider/model, source commit, exact reviewed context, answer, outcome,
+latency if available, usage and estimated cost. Report each check separately as
+pass, fail or not run. Do not publish private payloads or credentials. A wrong
+answer with correct context is a behavioural failure, not storage loss.
+The live meeting currently sends at most four eligible previous exchanges, subject
+to preflight limits, and no selected corpus passages; a long-gap recall task is a
+separate experiment. The offline archive-selection path is not proof of live
+retrieval. No Village Link dependency is required by accepted ADR-003.
