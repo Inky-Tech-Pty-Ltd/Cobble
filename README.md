@@ -68,7 +68,7 @@ As the app matures, we hope to add 'sensory' sources — email, databases, socia
 
 ## Sister project. Governance
 
-The project intersects with its sister-repo [Village Link](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) at the point of the *reputations* of the intelligences, chairs, convenors, and rooms. Village Link proposes a *star credential* as a way of bundling evidence about an entity. A star credential is a way of making an assertion about the things that have touched an entity, or that the entity has touched. The 'door' function of a room is guarded by a _trust engine_. The trust engine must assess opportunities and threats at the room's membrane. It is a consumer of star credentials. 
+The project intersects with its sister-repo [Village Link](https://github.com/Inky-Tech-Pty-Ltd/VillageLink) at the point of the *reputations* of the intelligences, chairs, convenors, and rooms. Village Link proposes a *star credential* as a way of bundling evidence about an entity. A star credential is a way of making an assertion about the things that have touched an entity, or that an entity has touched. The 'door' function of a room is guarded by a _trust engine_. The trust engine must assess opportunities and threats at the room's membrane. It is a consumer of star credentials. 
 
 Star credentials are like advertising. We are tempted to extend our metaphor by plastering star credentials onto the outward-facing windows of a room.
 
@@ -76,7 +76,7 @@ The room can have some or all of these features: A convenor, a chair, a table, s
 
 These features suggest a small set of primitives, from which many kinds of rooms might be assembled. We imagine a programming language called 'Room'. We are thinking of a future where rooms can be _written in_ Room. Also, progressively, that Cobble is written in Room.
 
-Note that a room can be completely self-contained. A room does not need any central infrastructure. People are _already_ rooms. Interoperability is in natural language.
+Note that a room can be completely self-contained. A room does not need any central infrastructure. People are _already_ rooms. Interoperability is available in natural language.
 
 Taken together, the projects 'Cobble' and 'Village Link' pose a governance hypothesis. We are interested in the possibility that 'higher' intelligence is _necessarily_ social and normative. That intelligence and governance are intertwined. They ship together.
 
