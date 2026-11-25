@@ -18,7 +18,7 @@ from pathlib import Path
 
 from cobble.snug_demo import DemoService
 from cobble.snug_live import LiveChatService, OutcomeUnknown
-from cobble.meeting_rooms import MeetingCatalog
+from cobble.meeting_rooms import MeetingCatalog, DEFAULT_ORDERS
 
 STATIC = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static"
 HTML = STATIC / "workbench.html"
@@ -63,6 +63,30 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                 live_sessions[room_id] = LiveChatService(
                     store, adapters=adapters, meeting_id=room_id)
             return live_sessions[room_id]
+
+    # Serialize governance transitions and live actions in this single local server.
+    # This is not a multi-process or multi-user authorization mechanism.
+    governance_lock = threading.RLock()
+
+    def eligible(event):
+        return ((event["status"] == "posted" and event["provider"] == "operator")
+                or (event["status"] == "completed"
+                    and isinstance(event["answer"], str) and bool(event["answer"].strip())))
+
+    def room_output(meeting_id):
+        item = next(r for r in catalog.list() if r["id"] == catalog.require(meeting_id))
+        if item.get("state") == "closed":
+            raise PermissionError("Closed meeting output is unavailable")
+        events = room_session(meeting_id).complete_history()
+        selected = set(item.get("room_voice", [])) - set(item.get("redacted", []))
+        by_id = {e["turn_id"]: e for e in events}
+        if any(i not in by_id or not eligible(by_id[i]) for i in selected):
+            raise ValueError("Room voice contains unavailable or ineligible evidence")
+        return {"agenda": events[0]["question"] if events else "",
+                "contributions": [
+                    {"turn_id": e["turn_id"], "provider": e["provider"],
+                     "text": e["question"] if e["status"] == "posted" else e["answer"]}
+                    for e in events if e["turn_id"] in selected]}
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
@@ -114,8 +138,19 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                  "source": "github"})
             elif self.path == "/api/live/rooms":
                 try:
-                    self.reply(200, {"rooms": catalog.list()})
+                    self.reply(200, {"rooms": catalog.list(), "default_standing_orders": DEFAULT_ORDERS})
                 except (ValueError, PermissionError, OSError) as error:
+                    self.reply(400, {"error": str(error)})
+            elif urlsplit(self.path).path == "/api/live/output":
+                try:
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query) - {"room_id"} or len(query.get("room_id", [])) > 1:
+                        raise ValueError("Invalid room selector")
+                    meeting_id = query.get("room_id", ["default"])[0]
+                    with governance_lock:
+                        output = room_output(meeting_id)
+                    self.reply(200, output)
+                except (ValueError, PermissionError, OSError, StopIteration) as error:
                     self.reply(400, {"error": str(error)})
             elif urlsplit(self.path).path == "/api/live/session":
                 try:
@@ -130,11 +165,18 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                 self.reply(404, {"error": "Not found"})
 
         def do_POST(self):
+            if self.path.startswith('/api/live/'):
+                with governance_lock:
+                    return self._post()
+            return self._post()
+
+        def _post(self):
             if not self.trusted():
                 return
             if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange",
                                  "/api/live/preview", "/api/live/send", "/api/live/post",
-                                  "/api/live/rooms/create", "/api/live/rooms/rename"):
+                                  "/api/live/rooms/create", "/api/live/rooms/rename",
+                                  "/api/live/rooms/configure"):
                 self.reply(404, {"error": "Not found"})
                 return
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
@@ -175,19 +217,46 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         raise PermissionError("Room ID and title required")
                     result = catalog.rename(meeting_id=data["room_id"],
                                             title=data["title"])
+                elif self.path == "/api/live/rooms/configure":
+                    permitted = {"room_id", "standing_orders", "state", "precedence",
+                                 "voice_event", "redact_event"}
+                    if "room_id" not in data or set(data) - permitted:
+                        raise PermissionError("Invalid meeting configuration")
+                    meeting_id = data.pop("room_id")
+                    if "voice_event" in data and "redact_event" in data:
+                        raise ValueError("Select or redact one contribution at a time")
+                    session = room_session(meeting_id)
+                    if "voice_event" in data or "redact_event" in data:
+                        event_id = data.get("voice_event", data.get("redact_event"))
+                        if not any(e["turn_id"] == event_id and eligible(e)
+                                   for e in session.complete_history()):
+                            raise ValueError("Contribution is not eligible in this meeting")
+                    result = catalog.configure(meeting_id=meeting_id, **data)
+                    session.invalidate_previews()
                 elif self.path == "/api/live/post":
+                    if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
+                        raise PermissionError("Reopen the meeting before contributing")
                     if set(data) not in ({"text"}, {"text", "room_id"}):
                         raise PermissionError("Only a local operator message and room ID may be posted")
                     result = room_session(data.get("room_id", "default")).post_operator(text=data["text"])
                 elif self.path == "/api/live/preview":
+                    if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
+                        raise PermissionError("Reopen the meeting before consulting a supplier")
                     if not requested:
                         raise PermissionError("Live supplier access is disabled")
                     if ("question" not in data or
                         set(data) - {"question", "provider", "room_id"}):
                         raise PermissionError("Only question, supplier and room ID may be reviewed")
-                    result = room_session(data.get("room_id", "default")).preview(
-                        question=data["question"], provider=data.get("provider", "openai"))
+                    meeting_id = data.get("room_id", "default")
+                    room_info = next(r for r in catalog.list()
+                                     if r["id"] == catalog.require(meeting_id))
+                    result = room_session(meeting_id).preview(
+                        question=data["question"], provider=data.get("provider", "openai"),
+                        room_standing_orders=room_info.get("standing_orders", DEFAULT_ORDERS),
+                        room_output=room_output(meeting_id))
                 else:
+                    if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
+                        raise PermissionError("Reopen the meeting before consulting a supplier")
                     if not requested:
                         raise PermissionError("Live supplier access is disabled")
                     if ("approval_token" not in data or

@@ -168,6 +168,15 @@ class LiveChatService:
             })
         return turns
 
+    def complete_history(self):
+        """Internal operator ledger snapshot; never expose directly as room output."""
+        with self._lock:
+            return self._turns()
+
+    def invalidate_previews(self):
+        with self._lock:
+            self._pending.clear()
+
     def session(self):
         with self._lock:
             return {"turns": self._turns()[-100:],
@@ -209,31 +218,66 @@ class LiveChatService:
             })
             return {"turn": self._turns_by_id(turn_id)}
 
-    def preview(self, *, question, provider="openai"):
+    def preview(self, *, question, provider="openai", room_standing_orders="",
+                room_output=None):
         if not isinstance(question, str) or not 0 < len(question.strip()) <= MAX_QUESTION:
             raise ValueError("Question must contain 1–2000 characters")
         if not isinstance(provider, str) or provider not in self._adapters:
             raise PermissionError("Supplier unavailable in this local session")
+        if (not isinstance(room_standing_orders, str) or
+                len(room_standing_orders) > 8000):
+            raise ValueError("Invalid meeting standing orders")
+        if room_output is not None:
+            if (not isinstance(room_output, dict) or
+                    not isinstance(room_output.get("agenda"), str) or
+                    not isinstance(room_output.get("contributions"), list)):
+                raise ValueError("Invalid authorised room output")
+            for contribution in room_output["contributions"]:
+                if (not isinstance(contribution, dict)
+                        or not isinstance(contribution.get("text"), str)
+                        or not isinstance(contribution.get("provider"), str)
+                        or not isinstance(contribution.get("turn_id"), str)):
+                    raise ValueError("Invalid authorised contribution")
+            # The room's entire current authorised position is tabled context.
+            # Never silently trim a convenor-approved contribution.
+            voice = list(room_output["contributions"])
+        else:
+            voice = []
         with self._lock:
             turns = self._turns()
             history = self._history(turns)
-            originally_available = len(history)
+            originally_available = sum(t["status"] in ("completed", "posted")
+                                       for t in turns)
             # Keep a conversation viable after long answers: discard the
             # oldest prior exchanges until the exact payload passes preflight.
             # The review shows precisely which exchanges survived.
             while True:
+                current_voice = None if room_output is None else {
+                    "agenda": room_output["agenda"],
+                    "contributions": list(voice),
+                }
                 request = ExchangeRequest(
                     participant="operator", question=question,
-                    selected_memories=(), previous_exchanges=history)
+                    selected_memories=(), previous_exchanges=history,
+                    room_standing_orders=room_standing_orders,
+                    room_output=current_voice)
                 payload = BUILD_PAYLOAD[provider](
                     request, output_tokens=OUTPUT_TOKENS)
                 try:
                     budget = PREFLIGHTS[provider](payload)
                     break
                 except ValueError as error:
-                    if not history or "exceeds local" not in str(error):
+                    if "exceeds local" not in str(error):
                         raise
-                    history = history[1:]
+                    if history:
+                        history = history[1:]
+                    else:
+                        # A smaller conversational window is tolerable; a partial
+                        # authorised position masquerading as complete is not.
+                        raise ValueError(
+                            "The room's complete authorised output exceeds the local "
+                            "request budget. No supplier call made."
+                        ) from error
             token = secrets.token_urlsafe(32)
             now = time.monotonic()
             self._pending = {
@@ -247,6 +291,8 @@ class LiveChatService:
                 "approval_token": token,
                 "provider": provider, "question": question,
                 "selected_memories": [],
+                "room_standing_orders": room_standing_orders,
+                "room_authorised_output": current_voice,
                 "previous_exchanges": list(history),
                 "older_exchanges_omitted": originally_available - len(history),
                 "context_sha256": request_context_digest(request),

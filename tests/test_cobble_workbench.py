@@ -20,7 +20,7 @@ class WorkbenchTests(unittest.TestCase):
                      'id="sidebar"', 'id="resize-grip"', "ondblclick",
                      "cobble.sidebar.width", "cobble.sidebar.collapsed",
                      'id="thread"', 'id="chat-scroll"',
-                     'id="next-responder"', 'id="send"', 'id="question"',
+                     'id="grant-floor"', 'id="joe-floor"', 'id="send"', 'id="question"',
                      'id="inspector"', 'id="supplier-list"',
                      'id="memory-form"', 'id="memory-results"'):
             self.assertIn(item, self.page)
@@ -31,6 +31,10 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn('id="screen-senses"', self.page)
         self.assertIn('id="screen-memories"', self.page)
         self.assertIn('id="screen-help"', self.page)
+        self.assertIn('id="edit-orders"', self.page)
+        self.assertIn('id="meeting-state"', self.page)
+        self.assertIn('id="view-output"', self.page)
+        self.assertIn('id="total-cost"', self.page)
         self.assertNotIn('id="screen-graph"', self.page)
         self.assertNotIn("More meetings and meeting titles are not yet implemented", self.page)
         self.assertNotIn("A room for conversations.", self.page)
@@ -70,7 +74,7 @@ class WorkbenchTests(unittest.TestCase):
             self.assertIn(item, self.page)
 
     def test_operator_posts_without_live_supplier(self):
-        for item in ("'post-only'", "None · post only", "'live/post'",
+        for item in ("'post-only'", "'live/post'",
                      "{text:question,room_id:roomId}", "result.turn.status!=='posted'",
                      "if(t.status==='posted'&&t.provider==='operator')continue",
                      "serverReady=true", "await reload();",
@@ -94,7 +98,7 @@ class WorkbenchTests(unittest.TestCase):
                 continue
             self.assertIn(required, self.page)
         self.assertIn("Room presence in the UI is not a security boundary", self.page)
-        self.assertIn("A supplier-directed Send makes one supplier call", self.page)
+        self.assertIn("one supplier call per Send", self.page)
         self.assertNotIn("To the room · one supplier responds per Send</span>", self.page)
         self.assertNotIn("No live intelligences connected.", self.page)
         # No remote assets or calls to vendor APIs in browser.
@@ -116,6 +120,97 @@ class WorkbenchTests(unittest.TestCase):
         self.assertNotIn("On table · names only · not shared", self.page)
         self.assertNotIn("if(!turns.length)return;", self.page)
         self.assertNotIn("id=\"meeting-current\"", self.page)
+
+    def test_retired_responder_does_not_crash_offline_post(self):
+        self.assertNotIn("next-responder", self.page)
+        self.assertIn("return chosen||'post-only'", self.page)
+        self.assertIn("function populateResponder(){updateSend();}", self.page)
+
+    def test_room_voice_failure_is_not_reported_as_publication_success(self):
+        """Run the actual send and selection functions with a rejecting configure API."""
+        if not shutil.which("node"):
+            self.skipTest("Node.js required for the browser-function regression")
+        begin = self.page.index("async function send(){")
+        end = self.page.index("async function saveRoom(", begin)
+        functions = self.page[begin:end]
+        harness = r"""
+let busy=false, meetingInfo={state:'open'}, currentRoomId='default';
+let joeFloor=true, roomFloor=null, recipient='post-only', lastProvider=null;
+let messages=[], calls=[], failed=true;
+let field={value:'Synthetic agenda',focus(){}};
+const $=()=>field;
+const chooseRecipient=()=>recipient;
+const updateSend=()=>{};
+const resizeComposer=()=>{};
+const reload=async()=>{};
+const providerName=x=>x;
+const status=(message,error=false)=>messages.push({message,error});
+async function api(route,data){
+  calls.push(route);
+  if(route==='live/post')return {turn:{turn_id:'fixture',status:'posted'}};
+  if(route==='live/preview')return {approval_token:'fixture'};
+  if(route==='live/send')return {turn:{turn_id:'fixture',status:'completed'}};
+  throw Error(route);
+}
+async function saveRoom(){
+  calls.push('configure');
+  if(failed)throw Error('Selection rejected');
+}
+async function check(){
+  await send();
+  if(!messages.at(-1).error||!messages.at(-1).message.includes('Do not resend')||
+     field.value!==''||calls.join(',')!=='live/post,configure')throw Error('Local false success');
+  messages=[];calls=[];field.value='Question';recipient='openai';joeFloor=false;roomFloor='openai';
+  await send();
+  if(!messages.at(-1).error||!messages.at(-1).message.includes('Do not resend')||
+     field.value!==''||calls.join(',')!=='live/preview,live/send,configure')throw Error('Supplier false success');
+  messages=[];calls=[];field.value='Question';failed=false;
+  await send();
+  if(messages.at(-1).error||calls.join(',')!=='live/preview,live/send,configure')throw Error('Successful selection not reported');
+}
+check().catch(e=>{console.error(e);process.exitCode=1});
+"""
+        result = subprocess.run(["node", "-"], input=functions + "\n" + harness,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_room_governance_editors_are_readable_and_do_not_publish(self):
+        """Standing orders and output use scrollable in-app dialogs, not browser prompts."""
+        for required in (
+                'id="orders-dialog"', 'id="orders-text"',
+                'id="orders-save"', 'id="orders-cancel"',
+                'id="room-output-dialog"', 'id="output-agenda"',
+                'id="output-contributions"', 'id="output-contribution-count"',
+                'class="room-output-scroll"', "x.contributions.length",
+                "list.replaceChildren()", "make('p',c.text||'')",
+                "await saveRoom({standing_orders:$('orders-text').value})",
+                "Room output", "does not transmit it to another room"):
+            self.assertIn(required, self.page)
+        self.assertNotIn("prompt('Standing orders", self.page)
+        self.assertNotIn("alert('Opening agenda", self.page)
+
+    def test_collapsed_sidebar_keeps_expand_button_accessible(self):
+        self.assertIn(".sidebar.collapsed .identity{height:92px;", self.page)
+        self.assertIn(".sidebar.collapsed #collapse{display:block;", self.page)
+        self.assertIn("value?'Expand sidebar':'Collapse sidebar'", self.page)
+        self.assertIn("$('collapse').onclick=()=>collapse(", self.page)
+
+    def test_copy_controls_are_explicit_and_keep_text_local(self):
+        """Copy original contribution/payload text only on a human click."""
+        for required in (
+            'id="orders-copy"', 'id="output-copy"',
+            "function copyButton(text,label)", "async function copyText(text,label,button)",
+            "navigator.clipboard.writeText(text)",
+            "copyButton(t.question||'','Copy Joe contribution')",
+            "copyButton(body.textContent,'Copy '+p.name+' contribution')",
+            "copyButton(speech.textContent,'Copy Chair standing orders')",
+            "copyButton(exactPayload,'Copy exact outgoing API payload')",
+            "copyButton(c.text||'','Copy selected contribution')",
+            "formatRoomOutput(lastRoomOutput)",
+            "lastRoomOutput=x", "body.append(make('pre',exactPayload))",
+        ):
+            self.assertIn(required, self.page)
+        self.assertNotIn("execCommand('copy')", self.page)
 
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)

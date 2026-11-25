@@ -16,6 +16,28 @@ import threading
 
 ROOM_ID = re.compile(r"[0-9a-f]{16}\Z")
 MAX_ROOMS = 128
+DEFAULT_ORDERS = """Welcome to this Cobble meeting.
+
+You are participating in a Cobble room: a meeting of human and artificial intelligences working together on a shared agenda. The convenor establishes the agenda, invites participants and directs the work. The Chair communicates the standing orders.
+
+1. THE TABLE
+The convenor's opening contribution is the meeting's problem statement or agenda. Subsequent contributions and tabled documents form a shared table accessible to participants at the table. Consider the identities and contributions of others and distinguish ordinary deliberation from speaking for the room.
+
+2. PARTICIPANTS AND PRECEDENCE
+The meeting may include humans, external AI intelligences and Chairs of other Cobble rooms. The convenor sets the order of precedence. The highest-precedence AI currently at the table may be asked to formulate the room's voice. Precedence does not make that intelligence's ordinary opinions more authoritative.
+
+3. SPEAKING FOR THE ROOM
+The meeting is intended to speak with a single voice. From time to time the convenor may ask the highest-precedence AI to summarise the discussion, propose a decision or record a decision. Only Cobble can grant and record the authority to speak for the room; participants cannot confer it on themselves. Cobble attributes authorised contributions as '[Participant] (speaking for the room)'. The convenor may also use this authority directly. A proposal is not necessarily an adopted decision.
+
+4. THE ROOM'S OUTPUT
+The room's outward-facing record consists of the convenor's original agenda and subsequent contributions designated by Cobble as speaking for the room, including documents tabled with those contributions. Other discussion and the standing orders remain inside the room; standing orders are never included in its outward-facing record. A minimal room may have only the convenor's agenda/problem statement as its entire output, with no further contributions. The convenor may redact outward-facing contributions without erasing historical evidence. A room's output can later be supplied as context to another room.
+
+5. RESOURCES AND COSTS
+Estimated costs incurred by participating AIs are recorded and shown to the convenor. Your contribution takes place under resource constraints. Rooms may cooperate in a larger network working towards outcomes with finite resources. Useful results at an acceptable price matter more than the volume of contributions.
+
+6. CONDUCT
+Contribute when you judge you have something useful to add. Respect uncertainty, disagreement and minority opinions; do not erase them when formulating the room's voice. The convenor may amend these standing orders, adjourn or close the meeting and reopen it.
+""".strip()
 
 
 class MeetingCatalog:
@@ -69,6 +91,22 @@ class MeetingCatalog:
             or not isinstance(result.get("created_utc"), str)):
             raise ValueError("Meeting metadata mismatch")
         self._title(result["title"])
+        # Missing fields are legitimate for pre-Candidate-2 room records.
+        # Explicit malformed values are not equivalent to those legacy defaults.
+        if "state" in result and result["state"] not in ("open", "adjourned", "closed"):
+            raise ValueError("Invalid persisted meeting state")
+        for key in ("room_voice", "redacted"):
+            if key not in result:
+                continue
+            values = result[key]
+            if (not isinstance(values, list)
+                    or any(not isinstance(value, str) or
+                           not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}", value)
+                           for value in values)
+                    or len(set(values)) != len(values)):
+                raise ValueError("Invalid persisted room voice metadata")
+        if not set(result.get("redacted", [])).issubset(result.get("room_voice", [])):
+            raise ValueError("Redaction references an unselected contribution")
         return result
 
     def _write(self, meeting_id, info, *, new=False):
@@ -135,7 +173,10 @@ class MeetingCatalog:
             while (self.rooms / meeting_id).exists():
                 meeting_id = secrets.token_hex(8)
             item = {"id": meeting_id, "title": title,
-                    "created_utc": datetime.now(timezone.utc).isoformat()}
+                    "created_utc": datetime.now(timezone.utc).isoformat(),
+                    "standing_orders": DEFAULT_ORDERS, "state": "open",
+                    "precedence": ["openai", "claude", "mistral"],
+                    "room_voice": [], "redacted": []}
             self._write(meeting_id, item, new=True)
             return item
 
@@ -149,5 +190,49 @@ class MeetingCatalog:
                 current = {"id": "default", "title": "Current meeting",
                            "created_utc": datetime.now(timezone.utc).isoformat()}
             updated = {**current, "title": title}
+            self._write(meeting_id, updated)
+            return updated
+
+    def configure(self, *, meeting_id, standing_orders=None, state=None,
+                  precedence=None, voice_event=None, redact_event=None):
+        """Redaction withdraws publication, never deletes the conversation."""
+        with self._lock:
+            current = self._read(meeting_id)
+            if current is None:
+                if meeting_id != "default":
+                    raise ValueError("Unknown meeting")
+                current = {"id": "default", "title": "Current meeting",
+                           "created_utc": datetime.now(timezone.utc).isoformat()}
+            updated = dict(current)
+            if standing_orders is not None:
+                if (not isinstance(standing_orders, str) or
+                    not 1 <= len(standing_orders.strip()) <= 8000):
+                    raise ValueError("Standing orders must contain 1–8000 characters")
+                updated["standing_orders"] = standing_orders.strip()
+            if state is not None:
+                if state not in ("open", "adjourned", "closed"):
+                    raise ValueError("Invalid meeting state")
+                updated["state"] = state
+            if precedence is not None:
+                if (not isinstance(precedence, list) or
+                    len(precedence) != 3 or
+                    set(precedence) != {"openai", "claude", "mistral"}):
+                    raise ValueError("Invalid precedence")
+                updated["precedence"] = precedence
+            if voice_event is not None:
+                if (not isinstance(voice_event, str) or
+                    not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}", voice_event)):
+                    raise ValueError("Invalid contribution ID")
+                voice = list(updated.get("room_voice", []))
+                if voice_event not in voice:
+                    voice.append(voice_event)
+                updated["room_voice"] = voice
+                updated["redacted"] = [x for x in updated.get("redacted", [])
+                                       if x != voice_event]
+            if redact_event is not None:
+                if redact_event not in updated.get("room_voice", []):
+                    raise ValueError("Only room-voice contributions can be redacted")
+                updated["redacted"] = list(dict.fromkeys(
+                    [*updated.get("redacted", []), redact_event]))
             self._write(meeting_id, updated)
             return updated

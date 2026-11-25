@@ -7,7 +7,8 @@ import tempfile
 import threading
 import unittest
 
-from cobble.claude_adapter import ProviderReply
+from cobble.claude_adapter import ProviderReply, prepare_message as prepare_claude
+from cobble.mistral_adapter import prepare_message as prepare_mistral
 from cobble.local_search import build
 from cobble.openai_adapter import OpenAIAdapter, MODEL, prepare_message
 from cobble.snug_live import LiveChatService, OutcomeUnknown
@@ -54,6 +55,93 @@ class LiveTests(unittest.TestCase):
     def send(self, question="Hello"):
         p = self.svc.preview(question=question)
         return self.svc.send(approval_token=p["approval_token"])["turn"]
+
+    def test_standing_orders_are_distinct_and_in_exact_payload_for_all_suppliers(self):
+        orders = "Convenor rule: listen before speaking."
+        request = ExchangeRequest(
+            participant="operator", question="What is the agenda?",
+            selected_memories=(), previous_exchanges=(), room_standing_orders=orders)
+        outputs = (
+            json.loads(prepare_message(request)["input"]),
+            json.loads(prepare_claude(request)["messages"][0]["content"]),
+            json.loads(prepare_mistral(request)["messages"][1]["content"]),
+        )
+        for output in outputs:
+            self.assertEqual(output["room_standing_orders"], orders)
+            self.assertEqual(output["question"], "What is the agenda?")
+            self.assertEqual(output["selected_previous_exchanges"], [])
+        before = self.svc.preview(question="Hello", room_standing_orders=orders)
+        self.assertEqual(before["room_standing_orders"], orders)
+        event = self.svc.send(approval_token=before["approval_token"])["turn"]
+        self.assertEqual(event["context"]["room_standing_orders"], orders)
+        self.assertEqual(json.loads(event["payload"]["input"])["room_standing_orders"], orders)
+        self.assertEqual(self.supplier.calls[-1].room_standing_orders, orders)
+        with self.assertRaisesRegex(ValueError, "standing orders"):
+            self.svc.preview(question="Bad", room_standing_orders="x" * 8001)
+
+    def test_room_authorised_output_reaches_all_supplier_payloads(self):
+        """A decision is distinct from recent chat, and survives history trimming."""
+        output = {
+            "agenda": "Do we agree?",
+            "contributions": [
+                {"turn_id": "20261126000000000000-abc123abc123",
+                 "provider": "operator", "text": "The room has decided YES."},
+            ],
+        }
+        p = self.svc.preview(question="What did the room decide?",
+                             room_output=output)
+        selected = p["room_authorised_output"]
+        self.assertEqual(selected["agenda"], "Do we agree?")
+        self.assertEqual(selected["contributions"], output["contributions"])
+        self.assertNotIn("older_contributions_omitted", selected)
+        turn = self.svc.send(approval_token=p["approval_token"])["turn"]
+        self.assertEqual(turn["context"]["room_output"], selected)
+        self.assertEqual(self.supplier.calls[-1].room_output, selected)
+        for prepared in (
+                prepare_message(self.supplier.calls[-1]),
+                prepare_claude(self.supplier.calls[-1]),
+                prepare_mistral(self.supplier.calls[-1])):
+            if "input" in prepared:
+                context = json.loads(prepared["input"])
+            else:
+                context = json.loads(prepared["messages"][-1]["content"])
+            self.assertEqual(context["room_authorised_output"], selected)
+        self.assertEqual(
+            json.loads(turn["payload"]["input"])["room_authorised_output"],
+            selected)
+
+    def test_full_authorised_voice_plus_recent_conversation(self):
+        """Whole adopted position is visible even after remarks fall off the window."""
+        contributions = [
+            {"turn_id": f"2026112600000000000{i}-abc123abc123",
+             "provider": "operator", "text": f"Decision {i}"}
+            for i in range(7)
+        ]
+        for i in range(6):
+            self.svc.post_operator(text=f"Aside {i}")
+        p = self.svc.preview(question="Current position?",
+                             room_output={"agenda": "Consider decisions",
+                                          "contributions": contributions})
+        voice = p["room_authorised_output"]
+        self.assertEqual(voice["contributions"], contributions)
+        self.assertEqual(voice["agenda"], "Consider decisions")
+        self.assertNotIn("older_contributions_omitted", voice)
+        self.assertEqual([x["question"] for x in p["previous_exchanges"]],
+                         [f"Aside {i}" for i in range(2, 6)])
+        self.assertEqual(p["older_exchanges_omitted"], 2)
+
+    def test_oversized_authorised_voice_fails_closed_instead_of_silently_truncating(self):
+        contributions = [
+            {"turn_id": f"2026112600000000000{i}-abc123abc123",
+             "provider": "operator", "text": "confidential decision " + ("x" * 2000)}
+            for i in range(12)
+        ]
+        with self.assertRaisesRegex(ValueError, "complete authorised output exceeds"):
+            self.svc.preview(question="Report our whole position.",
+                             room_output={"agenda": "Oversized agenda",
+                                          "contributions": contributions})
+        self.assertEqual(self.supplier.calls, [])
+        self.assertFalse((self.store / "snug" / "live" / "default" / "attempts").exists())
 
     def test_acceptance_precedes_call_and_is_durable(self):
         first = self.send()
@@ -365,6 +453,116 @@ class LiveTests(unittest.TestCase):
                 server.shutdown()
                 thread.join(timeout=5)
 
+
+    def test_room_output_complete_history_minimal_projection_and_lifecycle(self):
+        folder = self.store / "hosting" / "inkytech"
+        folder.mkdir(parents=True)
+        (folder / "notes.txt").write_text("private corpus marker")
+        index = self.store / "index" / "search.sqlite3"
+        build(self.store, index)
+        entry = Path(__file__).resolve().parents[1] / "scripts" / "snug_demo_web.py"
+        spec = importlib.util.spec_from_file_location("snug_demo_web", entry)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with module.create_server(self.store, index, port=0, live_gpt=True,
+                                  live_adapter=self.supplier) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            port = server.server_port
+
+            def call(route, data=None, expected=200):
+                conn = http.client.HTTPConnection("127.0.0.1", port, timeout=15)
+                try:
+                    conn.request("POST" if data is not None else "GET", route,
+                                 body=json.dumps(data) if data is not None else None,
+                                 headers={"Content-Type": "application/json",
+                                          "Origin": f"http://127.0.0.1:{port}",
+                                          "X-Snug-Client": "demo-local"})
+                    response = conn.getresponse()
+                    body = json.loads(response.read())
+                    self.assertEqual(response.status, expected, body)
+                    return body
+                finally:
+                    conn.close()
+
+            try:
+                prefix = "/api/live/"
+                call(prefix + "post", {"text": "Original agenda"})
+                call(prefix + "rooms/configure", {"room_id": "default",
+                     "standing_orders": "Private standing orders"})
+                preview = call(prefix + "preview", {"question": "Private supplier prompt"})
+                self.assertEqual(preview["room_standing_orders"], "Private standing orders")
+                event = call(prefix + "send", {"approval_token": preview["approval_token"]})["turn"]
+                event_id = event["turn_id"]
+                self.assertEqual(event["context"]["room_standing_orders"],
+                                 "Private standing orders")
+                self.assertEqual(json.loads(event["payload"]["input"])["room_standing_orders"],
+                                 "Private standing orders")
+                call(prefix + "rooms/configure", {"room_id": "default",
+                                                   "voice_event": event_id})
+                for i in range(101):
+                    call(prefix + "post", {"text": f"Ordinary deliberation {i}"})
+                self.assertEqual(len(call(prefix + "session")["turns"]), 100)
+                output = call(prefix + "output")
+                decision_preview = call(prefix + "preview",
+                                        {"question": "What is our decision?"})
+                self.assertEqual(
+                    decision_preview["room_authorised_output"]["contributions"],
+                    [{"turn_id": event_id, "provider": "openai",
+                      "text": event["answer"]}])
+                self.assertEqual(decision_preview["room_authorised_output"]["agenda"],
+                                 "Original agenda")
+                self.assertEqual(output, {"agenda": "Original agenda",
+                    "contributions": [{"turn_id": event_id, "provider": "openai",
+                                       "text": event["answer"]}]})
+                self.assertNotIn("Private supplier prompt", json.dumps(output))
+                self.assertNotIn("Private standing orders", json.dumps(output))
+                call(prefix + "rooms/configure", {"room_id": "default", "redact_event": event_id})
+                self.assertEqual(call(prefix + "output")["contributions"], [])
+                withdrawn = call(prefix + "preview", {"question": "Still authorised?"})
+                self.assertEqual(withdrawn["room_authorised_output"]["contributions"], [])
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id})
+                restored = call(prefix + "preview", {"question": "Now authorised?"})
+                self.assertEqual(len(restored["room_authorised_output"]["contributions"]), 1)
+                self.assertEqual(call(prefix + "output"), output)
+                other = call(prefix + "rooms/create", {"title": "Other"})["id"]
+                call(prefix + "rooms/configure", {"room_id": other, "voice_event": event_id}, 400)
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id,
+                     "redact_event": event_id}, 400)
+                call(prefix + "output?room_id=default&room_id=" + other, expected=400)
+                pending = call(prefix + "preview", {"question": "Before orders change"})
+                call(prefix + "rooms/configure", {"room_id": "default",
+                     "standing_orders": "Updated meeting rules"})
+                call(prefix + "send", {"approval_token": pending["approval_token"]}, 400)
+                pending = call(prefix + "preview", {"question": "Before closure"})
+                self.assertEqual(pending["room_standing_orders"], "Updated meeting rules")
+                call(prefix + "rooms/configure", {"room_id": "default", "state": "closed"})
+                call(prefix + "output", expected=400)
+                call(prefix + "post", {"text": "Forbidden"}, 400)
+                call(prefix + "rooms/configure", {"room_id": "default", "state": "open"})
+                call(prefix + "send", {"approval_token": pending["approval_token"]}, 400)
+                self.assertEqual(len(self.supplier.calls), 1)
+                self.assertEqual(call(prefix + "output"), output)
+                self.supplier.fail = True
+                pending = call(prefix + "preview", {"question": "Unknown outcome"})
+                unknown = call(prefix + "send", {"approval_token": pending["approval_token"]}, 502)
+                call(prefix + "rooms/configure", {"room_id": "default",
+                     "voice_event": unknown["turn_id"]}, 400)
+                self.assertEqual(call(prefix + "output"), output)
+                metadata = self.store / "snug" / "live" / "default" / "room.json"
+                original = json.loads(metadata.read_text())
+                for corrupt in ({"state": "unknown"}, {"state": None},
+                                {"room_voice": None}, {"room_voice": [event_id, event_id]},
+                                {"redacted": ["20261123142345678901-abcdef123456"]}):
+                    with self.subTest(corrupt=corrupt):
+                        metadata.write_text(json.dumps({**original, **corrupt}))
+                        call(prefix + "output", expected=400)
+                        call(prefix + "post", {"text": "Must not be accepted"}, 400)
+                metadata.write_text(json.dumps(original))
+                self.assertEqual(call(prefix + "output"), output)
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
 
     def test_http_routes_live_supplier_selection_and_history(self):
         """Server routes only the specifically reviewed supplier into one ledger."""
