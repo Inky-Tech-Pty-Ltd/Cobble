@@ -246,7 +246,8 @@ class LiveChatService:
         with self._lock:
             turns = self._turns()
             history = self._history(turns)
-            originally_available = len(history)
+            originally_available = sum(t["status"] in ("completed", "posted")
+                                       for t in turns)
             # Keep a conversation viable after long answers: discard the
             # oldest prior exchanges until the exact payload passes preflight.
             # The review shows precisely which exchanges survived.
