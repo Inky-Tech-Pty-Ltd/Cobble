@@ -252,7 +252,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                      if r["id"] == catalog.require(meeting_id))
                     result = room_session(meeting_id).preview(
                         question=data["question"], provider=data.get("provider", "openai"),
-                        room_standing_orders=room_info.get("standing_orders", DEFAULT_ORDERS))
+                        room_standing_orders=room_info.get("standing_orders", DEFAULT_ORDERS),
+                        room_output=room_output(meeting_id))
                 else:
                     if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
                         raise PermissionError("Reopen the meeting before consulting a supplier")
