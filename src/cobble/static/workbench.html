@@ -52,6 +52,16 @@ button{color:inherit}
 .icon-button svg,.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .primary-nav{display:flex;flex-direction:column;gap:3px;margin-top:9px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding-bottom:8px}
 .membrane-boundary{display:flex;align-items:center;gap:9px;margin:11px 4px 9px;padding:10px 11px;border-top:2px solid var(--membrane-orange);border-bottom:2px solid var(--membrane-orange);border-radius:5px;background:var(--membrane-pale);color:var(--membrane-ink);font-weight:750;letter-spacing:.045em;font-size:.84rem}
+.membrane-boundary.nav-item{width:calc(100% - 8px);text-align:left}
+.membrane-boundary.nav-item:hover,.membrane-boundary.nav-item.active{background:#ffe6cf;color:var(--membrane-ink);box-shadow:inset 3px 0 0 var(--membrane-orange)}
+.instance-membrane-panel{border-left:4px solid var(--membrane-orange);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5}
+.instance-membrane-panel strong{color:var(--membrane-ink)}
+.instance-membrane-panel p{margin:7px 0 0}
+.furniture-doors{border-left:4px solid var(--membrane-orange);background:var(--membrane-pale);border-radius:12px;margin:8px 0;padding:12px 15px}
+.furniture-doors summary{cursor:pointer;color:var(--membrane-ink);font-weight:700}
+.furniture-doors .door-detail{margin-top:12px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
+.furniture-doors button{color:var(--membrane-ink);border:1px solid var(--membrane-orange);border-radius:9px;background:#fff8f0;padding:8px 12px;font-weight:600}
+.furniture-doors button:hover{background:#ffe6cf}
 .membrane-symbol{display:inline-grid;place-items:center;border:2px solid var(--membrane-orange);border-radius:50%;width:20px;height:20px;font-size:.7rem;line-height:1;flex-shrink:0}
 .membrane-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .membrane-rule{height:1px;background:var(--membrane-border);flex:1;min-width:8px}
@@ -219,9 +229,9 @@ button{color:inherit}
         <button class="nav-item" data-screen="intelligences"><span aria-hidden="true">✦</span><span class="nav-label">Intelligences</span></button>
         <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span><span id="total-cost" class="meeting-cost"></span></button>
         <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
-        <div class="membrane-boundary" role="separator" aria-label="Membrane: the boundary between external encounters and internal rooms" title="Membrane · admission across the boundary">
+        <button class="nav-item membrane-boundary" data-screen="membrane" aria-label="Membrane of this Cobble instance" title="This Cobble's membrane · instance boundary">
           <span class="membrane-symbol" aria-hidden="true">·</span><span class="membrane-title">Membrane</span><span class="membrane-rule" aria-hidden="true"></span>
-        </div>
+        </button>
         <button class="nav-item" data-screen="furniture"><span aria-hidden="true">▥</span><span class="nav-label">Furniture</span></button>
         <div class="tree" id="my-meetings-menu">
           <div class="tree-heading my-meetings-row">
@@ -278,10 +288,26 @@ button{color:inherit}
           <div id="intelligence-list"></div>
         </div></div>
       </section>
+      <section class="screen" id="screen-membrane" aria-label="This Cobble instance's membrane">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">The boundary of <strong>this Cobble instance</strong>, not the entrance to an individual meeting. Orange marks membranes at every scale.</p>
+          <div class="instance-membrane-panel">
+            <strong>Instance membrane · McKay</strong>
+            <p>This membrane separates this instance's private memories and tools from what it encounters through Senses. A Door at this scale would govern admission to the instance itself, rather than to any one meeting.</p>
+          </div>
+          <div class="info-row"><span>Current operator access</span><small>Localhost-only console · no instance-level remote Door is configured here</small></div>
+          <div class="info-row"><span>Instance Door and trust policy</span><small>Not yet implemented · no controls exposed</small></div>
+          <p class="pane-intro">Doors for individual meetings and other smaller Rooms are found under <strong>Furniture → Doors</strong>. Opening a meeting Door does not open this instance's membrane.</p>
+        </div></div>
+      </section>
       <section class="screen" id="screen-furniture" aria-label="Furniture">
         <div class="content-pane"><div class="reading">
-          <p class="pane-intro">Furniture describes what a Room does. Doors govern admission at membranes; the other fittings govern how a Room operates. These are not yet a general furniture marketplace.</p>
-          <div class="info-row furniture-door"><strong>Door</strong><small>Admission through a membrane · the first room-specific invitation Door is in Meetings</small></div>
+          <p class="pane-intro">Furniture describes the roles of smaller Rooms within Cobble. Doors govern admission at the membrane of their own Room. These are not yet a general furniture marketplace.</p>
+          <details class="furniture-doors" id="furniture-doors">
+            <summary>Doors · admission to smaller Rooms</summary>
+            <div class="door-detail"><span>Meeting Door · admit Sankarshan into the currently selected meeting, without admitting him into McKay's Cobble instance.</span><button type="button" id="furniture-open-meeting-door">Open selected meeting Door</button></div>
+            <p class="pane-intro">Other Door rooms and reusable Door templates remain future work.</p>
+          </details>
           <div class="info-row"><strong>Chair</strong><small>Conduct and standing orders · meeting controls already exist</small></div>
           <div class="info-row"><strong>Seat</strong><small>Participation · more general seats are planned</small></div>
           <div class="info-row"><strong>Table</strong><small>What participants share within a Room</small></div>
@@ -450,14 +476,14 @@ $('meeting-title').onblur=async()=>{
 };
 $('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
- if(!['senses','memories','intelligences','meetings','furniture','setup','help'].includes(name))return;
+ if(!['senses','memories','intelligences','meetings','membrane','furniture','setup','help'].includes(name))return;
  currentScreen=name;
  for(const el of document.querySelectorAll('.screen'))el.classList.toggle('active',el.id==='screen-'+name);
  for(const el of document.querySelectorAll('.nav-item')){
   const on=el.dataset.screen===name;el.classList.toggle('active',on);
   if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
  }
- const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,furniture:'Furniture',setup:'Setup',help:'Help'};
+ const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,membrane:'Membrane',furniture:'Furniture',setup:'Setup',help:'Help'};
  $('meeting-title').hidden=name!=='meetings';
  $('page-title').hidden=name==='meetings';
  $('page-title').textContent=titles[name];
@@ -466,6 +492,10 @@ function setScreen(name){
  if(name==='intelligences')renderIntelligences();
 }
 for(const el of document.querySelectorAll('.nav-item[data-screen]'))el.onclick=()=>setScreen(el.dataset.screen);
+$('furniture-open-meeting-door').onclick=()=>{
+  setScreen('meetings');
+  $('invite-human').click();
+};
 async function loadMeetings(){
  const response=await fetch('/api/live/rooms',{cache:'no-store'});
  if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
