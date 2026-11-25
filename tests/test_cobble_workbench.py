@@ -189,6 +189,12 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         self.assertNotIn("prompt('Standing orders", self.page)
         self.assertNotIn("alert('Opening agenda", self.page)
 
+    def test_collapsed_sidebar_keeps_expand_button_accessible(self):
+        self.assertIn(".sidebar.collapsed .identity{height:92px;", self.page)
+        self.assertIn(".sidebar.collapsed #collapse{display:block;", self.page)
+        self.assertIn("value?'Expand sidebar':'Collapse sidebar'", self.page)
+        self.assertIn("$('collapse').onclick=()=>collapse(", self.page)
+
     def test_copy_controls_are_explicit_and_keep_text_local(self):
         """Copy original contribution/payload text only on a human click."""
         for required in (
