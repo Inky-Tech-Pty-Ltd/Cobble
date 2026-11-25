@@ -9,6 +9,7 @@ import unittest
 
 from cobble.claude_adapter import ProviderReply, prepare_message as prepare_claude
 from cobble.mistral_adapter import prepare_message as prepare_mistral
+from cobble.meeting_door import MeetingDoor
 from cobble.local_search import build
 from cobble.openai_adapter import OpenAIAdapter, MODEL, prepare_message
 from cobble.snug_live import LiveChatService, OutcomeUnknown
@@ -453,6 +454,28 @@ class LiveTests(unittest.TestCase):
                 server.shutdown()
                 thread.join(timeout=5)
 
+
+    def test_room_door_token_hash_persistence_expiry_and_replacement(self):
+        door = MeetingDoor(self.store)
+        first = door.issue(room_id="default")
+        self.assertEqual(door.require(first["token"]),
+                         {"room_id": "default", "speaker": "Sankarshan"})
+        saved = self.store / "snug" / "doors" / "invitations.json"
+        self.assertEqual(saved.stat().st_mode & 0o777, 0o600)
+        self.assertNotIn(first["token"], saved.read_text())
+        again = MeetingDoor(self.store)
+        self.assertEqual(again.require(first["token"])["room_id"], "default")
+        second = again.issue(room_id="default")
+        with self.assertRaises(PermissionError):
+            door.require(first["token"])
+        self.assertEqual(door.require(second["token"])["speaker"], "Sankarshan")
+        again.revoke(room_id="default")
+        with self.assertRaises(PermissionError):
+            door.require(second["token"])
+        with self.assertRaises(ValueError):
+            door.issue(room_id="../unsafe")
+        with self.assertRaises(PermissionError):
+            door.require("not-a-valid-token")
 
     def test_one_meeting_door_is_separate_from_operator_console(self):
         """Sankarshan can speak at this table, not access McKay or other rooms."""
