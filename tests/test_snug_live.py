@@ -7,7 +7,8 @@ import tempfile
 import threading
 import unittest
 
-from cobble.claude_adapter import ProviderReply
+from cobble.claude_adapter import ProviderReply, prepare_message as prepare_claude
+from cobble.mistral_adapter import prepare_message as prepare_mistral
 from cobble.local_search import build
 from cobble.openai_adapter import OpenAIAdapter, MODEL, prepare_message
 from cobble.snug_live import LiveChatService, OutcomeUnknown
@@ -54,6 +55,29 @@ class LiveTests(unittest.TestCase):
     def send(self, question="Hello"):
         p = self.svc.preview(question=question)
         return self.svc.send(approval_token=p["approval_token"])["turn"]
+
+    def test_standing_orders_are_distinct_and_in_exact_payload_for_all_suppliers(self):
+        orders = "Convenor rule: listen before speaking."
+        request = ExchangeRequest(
+            participant="operator", question="What is the agenda?",
+            selected_memories=(), previous_exchanges=(), room_standing_orders=orders)
+        outputs = (
+            json.loads(prepare_message(request)["input"]),
+            json.loads(prepare_claude(request)["messages"][0]["content"]),
+            json.loads(prepare_mistral(request)["messages"][1]["content"]),
+        )
+        for output in outputs:
+            self.assertEqual(output["room_standing_orders"], orders)
+            self.assertEqual(output["question"], "What is the agenda?")
+            self.assertEqual(output["selected_previous_exchanges"], [])
+        before = self.svc.preview(question="Hello", room_standing_orders=orders)
+        self.assertEqual(before["room_standing_orders"], orders)
+        event = self.svc.send(approval_token=before["approval_token"])["turn"]
+        self.assertEqual(event["context"]["room_standing_orders"], orders)
+        self.assertEqual(json.loads(event["payload"]["input"])["room_standing_orders"], orders)
+        self.assertEqual(self.supplier.calls[-1].room_standing_orders, orders)
+        with self.assertRaisesRegex(ValueError, "standing orders"):
+            self.svc.preview(question="Bad", room_standing_orders="x" * 8001)
 
     def test_acceptance_precedes_call_and_is_durable(self):
         first = self.send()
@@ -356,12 +380,18 @@ class LiveTests(unittest.TestCase):
             try:
                 prefix = "/api/live/"
                 call(prefix + "post", {"text": "Original agenda"})
+                call(prefix + "rooms/configure", {"room_id": "default",
+                     "standing_orders": "Private standing orders"})
                 preview = call(prefix + "preview", {"question": "Private supplier prompt"})
+                self.assertEqual(preview["room_standing_orders"], "Private standing orders")
                 event = call(prefix + "send", {"approval_token": preview["approval_token"]})["turn"]
                 event_id = event["turn_id"]
+                self.assertEqual(event["context"]["room_standing_orders"],
+                                 "Private standing orders")
+                self.assertEqual(json.loads(event["payload"]["input"])["room_standing_orders"],
+                                 "Private standing orders")
                 call(prefix + "rooms/configure", {"room_id": "default",
-                                                   "voice_event": event_id,
-                                                   "standing_orders": "Private standing orders"})
+                                                   "voice_event": event_id})
                 for i in range(101):
                     call(prefix + "post", {"text": f"Ordinary deliberation {i}"})
                 self.assertEqual(len(call(prefix + "session")["turns"]), 100)
@@ -380,7 +410,12 @@ class LiveTests(unittest.TestCase):
                 call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id,
                      "redact_event": event_id}, 400)
                 call(prefix + "output?room_id=default&room_id=" + other, expected=400)
+                pending = call(prefix + "preview", {"question": "Before orders change"})
+                call(prefix + "rooms/configure", {"room_id": "default",
+                     "standing_orders": "Updated meeting rules"})
+                call(prefix + "send", {"approval_token": pending["approval_token"]}, 400)
                 pending = call(prefix + "preview", {"question": "Before closure"})
+                self.assertEqual(pending["room_standing_orders"], "Updated meeting rules")
                 call(prefix + "rooms/configure", {"room_id": "default", "state": "closed"})
                 call(prefix + "output", expected=400)
                 call(prefix + "post", {"text": "Forbidden"}, 400)
