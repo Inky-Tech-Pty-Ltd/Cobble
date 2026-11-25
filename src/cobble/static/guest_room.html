@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cobble · Invited meeting</title>
 <style>
-:root{font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#203040;background:#f4f7f9}
+:root{font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#203040;background:#f4f7f9;--membrane-orange:#c95e21;--membrane-ink:#a34612;--membrane-pale:#fff4e7}
 *{box-sizing:border-box}body{margin:0}main{width:min(850px,100%);margin:auto;padding:18px 18px 90px}
-header{background:white;border-bottom:1px solid #dbe5ed;padding:14px max(18px,calc((100% - 850px)/2))}
-header b{font-size:1.3rem;color:#244d66}h1{font-size:1.45rem;line-height:1.2}
+header{background:white;border-bottom:3px solid var(--membrane-orange);padding:14px max(18px,calc((100% - 850px)/2))}
+header b{font-size:1.3rem;color:#244d66}.door-label{color:var(--membrane-ink);font-weight:700}.door-status{border-left:4px solid var(--membrane-orange);background:var(--membrane-pale);padding:10px 14px;border-radius:6px}h1{font-size:1.45rem;line-height:1.2}
 small,.muted{color:#637b8b}button{cursor:pointer;border:1px solid #c7d5de;background:#fff;border-radius:9px;padding:9px 12px;color:#254e65}
 button:disabled{opacity:.5;cursor:default}.body{background:white;border:1px solid #dce4ea;border-radius:15px;padding:20px;margin:15px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .message{margin:15px 0;padding:14px 17px;border:1px solid #dce5eb;background:white;border-radius:13px}
@@ -22,10 +22,10 @@ summary{cursor:pointer;font-weight:650}.error{color:#a32222}
 </style>
 </head>
 <body>
-<header><b>COBBLE</b> <span class="muted">· Room invitation</span></header>
+<header><b>COBBLE</b> <span class="door-label">· Door · Room invitation</span></header>
 <main>
 <h1 id="meeting-title">Admitting participant…</h1>
-<p id="identity" class="muted">This Door admits a bearer of the invitation to one room only.</p>
+<p id="identity" class="door-status">This Door admits a bearer of the invitation to one room only.</p>
 <p id="status" role="status"></p>
 <details><summary>Chair's standing orders</summary><div id="orders" class="body"></div></details>
 <section><h2>At the table</h2><div id="conversation"></div></section>
