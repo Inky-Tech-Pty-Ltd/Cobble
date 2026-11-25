@@ -31,6 +31,8 @@ class ExchangeRequest:
     question: str
     selected_memories: tuple
     previous_exchanges: tuple
+    # Convenor-authored room governance; separate from historical evidence.
+    room_standing_orders: str = ""
 
 
 class FixtureIntelligence:
