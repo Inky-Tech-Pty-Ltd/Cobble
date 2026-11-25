@@ -110,19 +110,38 @@ class LiveTests(unittest.TestCase):
             json.loads(turn["payload"]["input"])["room_authorised_output"],
             selected)
 
-    def test_room_voice_bounds_and_reports_omissions_without_erasing_recent_authority(self):
+    def test_full_authorised_voice_plus_recent_conversation(self):
+        """Whole adopted position is visible even after remarks fall off the window."""
         contributions = [
             {"turn_id": f"2026112600000000000{i}-abc123abc123",
              "provider": "operator", "text": f"Decision {i}"}
             for i in range(7)
         ]
+        for i in range(6):
+            self.svc.post_operator(text=f"Aside {i}")
         p = self.svc.preview(question="Current position?",
                              room_output={"agenda": "Consider decisions",
                                           "contributions": contributions})
         voice = p["room_authorised_output"]
-        self.assertEqual(len(voice["contributions"]), 4)
-        self.assertEqual(voice["older_contributions_omitted"], 3)
-        self.assertEqual(voice["contributions"][-1]["text"], "Decision 6")
+        self.assertEqual(voice["contributions"], contributions)
+        self.assertEqual(voice["agenda"], "Consider decisions")
+        self.assertNotIn("older_contributions_omitted", voice)
+        self.assertEqual([x["question"] for x in p["previous_exchanges"]],
+                         [f"Aside {i}" for i in range(2, 6)])
+        self.assertEqual(p["older_exchanges_omitted"], 0)
+
+    def test_oversized_authorised_voice_fails_closed_instead_of_silently_truncating(self):
+        contributions = [
+            {"turn_id": f"2026112600000000000{i}-abc123abc123",
+             "provider": "operator", "text": "confidential decision " + ("x" * 2000)}
+            for i in range(12)
+        ]
+        with self.assertRaisesRegex(ValueError, "complete authorised output exceeds"):
+            self.svc.preview(question="Report our whole position.",
+                             room_output={"agenda": "Oversized agenda",
+                                          "contributions": contributions})
+        self.assertEqual(self.supplier.calls, [])
+        self.assertFalse((self.store / "snug" / "live" / "default" / "attempts").exists())
 
     def test_acceptance_precedes_call_and_is_durable(self):
         first = self.send()
