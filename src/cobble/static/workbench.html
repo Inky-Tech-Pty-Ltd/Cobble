@@ -13,6 +13,24 @@ button:disabled{opacity:.42;cursor:not-allowed}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #89a3bb;outline-offset:2px}
 [hidden]{display:none!important}
 button{color:inherit}
+
+/* Institutional documents are readable, editable surfaces, not browser prompts. */
+.room-dialog{width:min(780px,calc(100vw - 32px));max-height:min(88dvh,900px);padding:0;border:1px solid #d4dfe7;border-radius:16px;box-shadow:0 20px 70px #172b3c38;color:var(--ink);background:#fff}
+.room-dialog::backdrop{background:#12253770}
+.room-dialog-body{display:flex;flex-direction:column;gap:12px;padding:22px;min-height:0;max-height:88dvh}
+.room-dialog h2{font-size:1.25rem;margin:0}
+.room-dialog h3{font-size:.96rem;margin:0 0 8px}
+.room-dialog .room-dialog-note{font-size:.82rem;line-height:1.4;color:var(--muted);margin:0}
+.room-dialog textarea{display:block;width:100%;height:min(55dvh,520px);min-height:230px;line-height:1.5;padding:14px;border:1px solid #bfcdd8;border-radius:10px;resize:vertical;background:#fbfcfd;color:var(--ink);font-size:.91rem;white-space:pre-wrap}
+.room-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:4px}
+.room-dialog-actions button{border:1px solid #cbd8e1;border-radius:9px;background:white;padding:9px 17px}
+.room-dialog-actions .room-dialog-primary{background:var(--slate);color:white;border-color:var(--slate)}
+.room-dialog-error{font-size:.85rem;color:#a92f24;margin:0}
+.room-output-scroll{overflow:auto;min-height:0;max-height:58dvh;display:flex;flex-direction:column;gap:14px}
+.room-output-item{border:1px solid #dae3eb;border-radius:10px;padding:12px 14px}
+.room-output-item p,.room-output-agenda{white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 0;line-height:1.5;font:inherit}
+.room-output-agenda{background:#f7f9fb;border:1px solid #e1e7ec;border-radius:10px;padding:12px 14px;max-height:25dvh;overflow:auto}
+.room-output-item strong{font-size:.83rem;color:var(--slate)}
 .app{height:100dvh;display:flex;overflow:hidden}
 .sidebar{position:relative;flex:0 0 var(--sidebar-width);width:var(--sidebar-width);min-width:0;border-right:1px solid #dce4eb;background:#fbfcfd;display:flex;flex-direction:column;overflow:hidden}
 .sidebar.collapsed{flex-basis:64px;width:64px}
@@ -250,6 +268,36 @@ button{color:inherit}
     </aside>
   </main>
 </div>
+
+<dialog id="orders-dialog" class="room-dialog" aria-labelledby="orders-heading" aria-describedby="orders-note">
+  <div class="room-dialog-body">
+    <h2 id="orders-heading">Standing orders</h2>
+    <p class="room-dialog-note" id="orders-note">Instructions governing this meeting. They remain inside the room and are not part of its outward-facing record.</p>
+    <textarea id="orders-text" maxlength="8000" aria-label="Edit standing orders" spellcheck="true"></textarea>
+    <p id="orders-error" class="room-dialog-error" role="alert"></p>
+    <div class="room-dialog-actions">
+      <button type="button" id="orders-cancel">Cancel</button>
+      <button type="button" id="orders-save" class="room-dialog-primary">Save standing orders</button>
+    </div>
+  </div>
+</dialog>
+<dialog id="room-output-dialog" class="room-dialog" aria-labelledby="room-output-heading">
+  <div class="room-dialog-body">
+    <h2 id="room-output-heading">Room output</h2>
+    <p class="room-dialog-note">This is the room's selected outward-facing record. Inspecting it does not transmit it to another room.</p>
+    <div class="room-output-scroll">
+      <section>
+        <h3>Opening agenda</h3>
+        <div id="output-agenda" class="room-output-agenda"></div>
+      </section>
+      <section>
+        <h3 id="output-contribution-count">Selected contributions</h3>
+        <div id="output-contributions"></div>
+      </section>
+    </div>
+    <div class="room-dialog-actions"><button type="button" id="output-close" class="room-dialog-primary">Close</button></div>
+  </div>
+</dialog>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
@@ -539,8 +587,43 @@ async function saveRoom(changes){const updated=await api('live/rooms/configure',
 $('joe-floor').onclick=()=>{joeFloor=!joeFloor;if(joeFloor)roomFloor=null;$('joe-floor').setAttribute('aria-pressed',String(joeFloor));$('joe-floor').textContent=joeFloor?'Joe has the floor ✓':'Joe: speak for room';renderSuppliers()};
 $('grant-floor').onclick=()=>{roomFloor=roomFloor?null:providerOrder.find(id=>states[id]?.active&&states[id]?.live)||null;joeFloor=false;$('joe-floor').setAttribute('aria-pressed','false');$('joe-floor').textContent='Joe: speak for room';$('floor-status').textContent=roomFloor?providerName(roomFloor)+' has the floor':'';renderSuppliers()};
 $('meeting-state').onchange=async()=>{try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
-$('edit-orders').onclick=async()=>{const value=prompt('Standing orders for this meeting',meetingInfo?.standing_orders||defaultOrders);if(value===null)return;try{await saveRoom({standing_orders:value})}catch(e){status(e.message,true)}};
-$('view-output').onclick=async()=>{try{const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId));const x=await r.json();if(!r.ok)throw Error(x.error);alert('Opening agenda:\n'+x.agenda+'\n\n'+x.contributions.map(c=>c.provider+': '+c.text).join('\n\n'))}catch(e){status(e.message,true)}};
+$('edit-orders').onclick=()=>{
+ $('orders-text').value=meetingInfo?.standing_orders||defaultOrders;
+ $('orders-error').textContent='';
+ $('orders-dialog').showModal();
+ $('orders-text').focus();
+};
+$('orders-cancel').onclick=()=>$('orders-dialog').close();
+$('orders-save').onclick=async()=>{
+ const save=$('orders-save');save.disabled=true;
+ try{
+  await saveRoom({standing_orders:$('orders-text').value});
+  $('orders-dialog').close();
+  status('Standing orders saved.');
+ }catch(e){$('orders-error').textContent=e.message}
+ finally{save.disabled=false}
+};
+$('output-close').onclick=()=>$('room-output-dialog').close();
+$('view-output').onclick=async()=>{
+ try{
+  const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId),{cache:'no-store'});
+  const x=await r.json();
+  if(!r.ok)throw Error(x.error||'Room output unavailable');
+  if(!Array.isArray(x.contributions))throw Error('Invalid room-output response');
+  $('output-agenda').textContent=x.agenda||'No opening agenda recorded.';
+  const list=$('output-contributions');list.replaceChildren();
+  $('output-contribution-count').textContent='Selected contributions ('+x.contributions.length+')';
+  if(!x.contributions.length){
+   list.append(make('p','No contributions have been selected for the room\'s outward voice.'));
+  }else for(const c of x.contributions){
+   const item=make('section');item.className='room-output-item';
+   const speaker=make('strong',c.provider==='operator'?'Joe':providerName(c.provider));
+   const speech=make('p',c.text||'');
+   item.append(speaker,speech);list.append(item);
+  }
+  $('room-output-dialog').showModal();
+ }catch(e){status(e.message,true)}
+};
 
 $('send').onclick=send;
 function resizeComposer(){
