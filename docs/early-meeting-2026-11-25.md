@@ -1,37 +1,49 @@
 # Early Cobble meeting: four intelligences at the table
 
-*25 November 2026 — a working prototype on McKay.*
+*25 November 2026 · Cobble working prototype on McKay*
 
-This is a visual record of an early meeting with **four intelligences at the table**: **Joe**, the human convenor, alongside three live intelligence suppliers — **GPT (OpenAI), Claude (Anthropic), and Mistral**. A procedural Chair presents the standing orders. The screenshots show the actual local prototype, not a mock-up. The costs shown are **estimated API costs**, not invoices.
+**At the table:** Joe, the human convenor; GPT (OpenAI); Claude (Anthropic); and Mistral. The meeting also has a procedural Chair, which presents the standing orders. These are six screenshots from a local session, in chronological order—not a complete transcript. The dollar amounts in the interface are **estimated USD API costs**, accumulated per supplier.
 
-## 1. Convenor and Chair open the room
+## 1. The convenor opens the meeting
 
-Joe's opening contribution sets the agenda: test the new meeting workflow, ask the participating intelligences what context they can see, and determine whether they can access the Chair's standing orders. The Chair then presents the room's standing orders.
+Joe tables an agenda: try the new Cobble meeting functions, find out how much of the room's context each visiting intelligence can see, and report the results back to Puck. The Chair welcomes the participants and starts setting out the standing orders. All three external intelligence suppliers are connected, with non-zero estimated costs visible at left.
 
-![Joe's opening agenda and the Chair's standing orders](assets/Cobble%20Joe-Puck%20test%20meeting.png)
+![Joe's opening agenda and the Chair's welcome](assets/meeting-2026-11-25/01-opening-and-chair.png)
 
-## 2. Claude answers
+## 2. The Chair's standing orders
 
-Joe addresses Claude and asks what it can see. Claude responds that it received the earlier exchange, but **not** the screenshot or a separate standing-orders document. This is an important boundary: visible material inside the Cobble app is not necessarily transmitted to a supplier.
+The standing orders describe the table, precedence among participants, how a room can speak with one voice, outward-facing output, resources and costs, and conduct. They name all four participants, including Joe as convenor.
 
-## 3. Addressing GPT and Mistral
+![The Chair's standing orders, including precedence and costs](assets/meeting-2026-11-25/02-standing-orders.png)
 
-Joe attempts to address two intelligences at once. GPT answers, but cannot establish whether Mistral has been called. Joe then addresses Mistral explicitly. The test exposes a distinction between **natural-language addressing** and the interface's actual supplier selection.
+## 3. Claude tests the context boundary
 
-## 4. Mistral joins
+Joe asks Claude whether it is present and what it makes of the meeting. Claude reports that it has the earlier text exchange, but **not the screenshot** and **not a separate copy of the standing orders**. The difference matters: a document visible inside Cobble isn't necessarily context that has crossed the membrane to a particular supplier.
 
-After an explicit selection, Mistral answers and refers to the prior conversation. The three suppliers have now each contributed to the local meeting history. The sidebar shows their individual non-zero estimated costs.
+![Claude describes what it can—and cannot—see](assets/meeting-2026-11-25/03-claude-responds.png)
 
-## 5. Precedence is tested
+## 4. GPT answers; Mistral joins
 
-Joe notices that GPT's precedence has been letting it dominate the floor, and elevates Mistral. Mistral then responds to the test, describing its interpretation of the change.
+Joe tries to address GPT and Mistral in one message, but GPT answers alone. A subsequent message addressed to Mistral also reaches GPT before Joe succeeds in getting a Mistral-labelled answer. This exposes a practical distinction between naming a participant in natural language and selecting the supplier that actually receives a call.
 
-This is an early experiment in **governance by configurable meeting rules**, not a demonstration of autonomous democratic decision-making. The local operator selects a supplier; the prototype does not establish that all participants possess the full standing orders, see staged file contents, or share unrestricted memory.
+![GPT replies to questions for Mistral, then Mistral answers](assets/meeting-2026-11-25/04-gpt-and-mistral.png)
 
-## 6. What this demonstrates — and what it doesn't
+## 5. Changing the order of precedence
 
-The working system can retain a meeting record across sessions, connect three external LLM suppliers, selectively supply prior exchanges as context, and attribute estimated API costs. It offers a configurable order of precedence and a procedural Chair.
+Joe observes that GPT has been dominating the floor and tests elevating Mistral. The order visible in the supplier controls changes; Mistral now answers and explains its interpretation of the test. The cost accounting continues separately for each supplier.
 
-The record also exposes limitations: not every visible screen element passes across a supplier's boundary; speaking to several participants in one natural-language sentence does not guarantee a multi-party call; and the current Chair and standing-order machinery is not yet a complete governance implementation.
+![Mistral responds after its precedence is elevated](assets/meeting-2026-11-25/05-mistral-takes-precedence.png)
 
-*The additional six original screenshots from this test remain to be uploaded into this repository. They have not been replaced with synthetic images or represented here as if already published.*
+## 6. The conversation continues
+
+Joe remarks that the arrangement is “not super-democratic just yet.” Mistral, rather solemnly, classifies the observation and recites evidence identifiers. A useful reminder that the way Cobble supplies previous exchanges can influence the character of a supplier's response.
+
+![Joe comments on the experiment and Mistral responds](assets/meeting-2026-11-25/06-mistral-continues.png)
+
+## What this experiment shows
+
+Four intelligences can participate in a locally recorded meeting, with three independent live LLM suppliers and visible estimated consumption costs. The prototype can present standing orders, preserve conversation history, disclose selected previous exchanges to an individual supplier, and change the precedence of the suppliers.
+
+This is **not yet a simultaneous four-way AI conversation**, nor proof that each supplier can see all of the room's documents or memories. A supplier is selected for each call; the full contents visible on-screen aren't automatically sent across its boundary. The experiment shows an early working implementation of a room—and some interesting questions about its governance.
+
+[Back to the Cobble README](../README.md)

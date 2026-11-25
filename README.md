@@ -58,13 +58,13 @@ As the app matures, we hope to add 'sensory' sources — email, databases, socia
 
 <figure>
   <img
-    src="docs/assets/Cobble%20Joe-Puck%20test%20meeting.png"
-    alt="Early Cobble meeting with Joe as convenor and GPT, Claude and Mistral connected."
+    src="docs/assets/meeting-2026-11-25/01-opening-and-chair.png"
+    alt="Joe convenes an early Cobble meeting; the Chair presents standing orders and all three intelligence suppliers show non-zero estimated costs."
     width="100%"
   />
 </figure>
 
-[See the record of this early Cobble meeting: four intelligences at the table — Joe, GPT, Claude and Mistral.](docs/early-meeting-2026-11-25.md)
+[See six screenshots from this early Cobble meeting: Joe, GPT, Claude and Mistral at the table.](docs/early-meeting-2026-11-25.md)
 
 ## Sister project. Governance
 
