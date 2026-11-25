@@ -126,6 +126,54 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("return chosen||'post-only'", self.page)
         self.assertIn("function populateResponder(){updateSend();}", self.page)
 
+    def test_room_voice_failure_is_not_reported_as_publication_success(self):
+        """Run the actual send and selection functions with a rejecting configure API."""
+        if not shutil.which("node"):
+            self.skipTest("Node.js required for the browser-function regression")
+        begin = self.page.index("async function send(){")
+        end = self.page.index("async function saveRoom(", begin)
+        functions = self.page[begin:end]
+        harness = r"""
+let busy=false, meetingInfo={state:'open'}, currentRoomId='default';
+let joeFloor=true, roomFloor=null, recipient='post-only', lastProvider=null;
+let messages=[], calls=[], failed=true;
+let field={value:'Synthetic agenda',focus(){}};
+const $=()=>field;
+const chooseRecipient=()=>recipient;
+const updateSend=()=>{};
+const resizeComposer=()=>{};
+const reload=async()=>{};
+const providerName=x=>x;
+const status=(message,error=false)=>messages.push({message,error});
+async function api(route,data){
+  calls.push(route);
+  if(route==='live/post')return {turn:{turn_id:'fixture',status:'posted'}};
+  if(route==='live/preview')return {approval_token:'fixture'};
+  if(route==='live/send')return {turn:{turn_id:'fixture',status:'completed'}};
+  throw Error(route);
+}
+async function saveRoom(){
+  calls.push('configure');
+  if(failed)throw Error('Selection rejected');
+}
+async function check(){
+  await send();
+  if(!messages.at(-1).error||!messages.at(-1).message.includes('Do not resend')||
+     field.value!==''||calls.join(',')!=='live/post,configure')throw Error('Local false success');
+  messages=[];calls=[];field.value='Question';recipient='openai';joeFloor=false;roomFloor='openai';
+  await send();
+  if(!messages.at(-1).error||!messages.at(-1).message.includes('Do not resend')||
+     field.value!==''||calls.join(',')!=='live/preview,live/send,configure')throw Error('Supplier false success');
+  messages=[];calls=[];field.value='Question';failed=false;
+  await send();
+  if(messages.at(-1).error||calls.join(',')!=='live/preview,live/send,configure')throw Error('Successful selection not reported');
+}
+check().catch(e=>{console.error(e);process.exitCode=1});
+"""
+        result = subprocess.run(["node", "-"], input=functions + "\n" + harness,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
         self.assertEqual(len(ids), len(set(ids)))

@@ -91,6 +91,22 @@ class MeetingCatalog:
             or not isinstance(result.get("created_utc"), str)):
             raise ValueError("Meeting metadata mismatch")
         self._title(result["title"])
+        # Missing fields are legitimate for pre-Candidate-2 room records.
+        # Explicit malformed values are not equivalent to those legacy defaults.
+        if "state" in result and result["state"] not in ("open", "adjourned", "closed"):
+            raise ValueError("Invalid persisted meeting state")
+        for key in ("room_voice", "redacted"):
+            if key not in result:
+                continue
+            values = result[key]
+            if (not isinstance(values, list)
+                    or any(not isinstance(value, str) or
+                           not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}", value)
+                           for value in values)
+                    or len(set(values)) != len(values)):
+                raise ValueError("Invalid persisted room voice metadata")
+        if not set(result.get("redacted", [])).issubset(result.get("room_voice", [])):
+            raise ValueError("Redaction references an unselected contribution")
         return result
 
     def _write(self, meeting_id, info, *, new=False):

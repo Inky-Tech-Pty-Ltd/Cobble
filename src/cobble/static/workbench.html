@@ -506,26 +506,27 @@ async function send(){
  const roomId=currentRoomId;
  let recipient;
  try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
+ const publish=recipient==='post-only'?joeFloor:roomFloor===recipient;
  busy=true;updateSend();
  status(recipient==='post-only'?'Recording a local meeting contribution…':
   'Consulting '+providerName(recipient)+' · one call, no automatic retries…');
  try{
   if(recipient==='post-only'){
    const result=await api('live/post',{text:question,room_id:roomId});
-   if(joeFloor)await setVoice(result.turn.turn_id,true);
    if(result.turn.status!=='posted')throw Error('No verified local post retained');
    $('question').value='';resizeComposer();
-   await reload();status('Posted locally · no supplier called.');$('question').focus();
+   const published=!publish||await setVoice(result.turn.turn_id,true);
+   await reload();status(published?'Posted locally · no supplier called.':'Posted locally, but room-voice selection failed. Do not resend.',!published);$('question').focus();
    return;
   }
   // Preserve the exact one-use preflight and private server ledger. No
   // memory corpus passages are attached automatically in this version.
   const preview=await api('live/preview',{question,provider:recipient,room_id:roomId});
   const result=await api('live/send',{approval_token:preview.approval_token,room_id:roomId});
-  if(roomFloor===recipient)await setVoice(result.turn.turn_id,true);
   if(result.turn.status!=='completed')throw Error('No verified supplier reply');
   lastProvider=recipient;$('question').value='';resizeComposer();
-  await reload();status('Response recorded locally.');$('question').focus();
+  const published=!publish||await setVoice(result.turn.turn_id,true);
+  await reload();status(published?'Response recorded locally.':'Response recorded, but room-voice selection failed. Do not resend.',!published);$('question').focus();
  }catch(error){
   // Unknown upstream outcomes must never be retried automatically.
   status(error.message,true);
@@ -533,13 +534,13 @@ async function send(){
  }finally{busy=false;updateSend()}
 }
 
-async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId})}catch(e){status(e.message,true)}}
+async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId});return true}catch(e){status(e.message,true);return false}}
 async function saveRoom(changes){const updated=await api('live/rooms/configure',{room_id:currentRoomId,...changes});Object.assign(meetings.find(x=>x.id===currentRoomId),updated);meetingInfo=updated;renderTurns();return updated}
 $('joe-floor').onclick=()=>{joeFloor=!joeFloor;if(joeFloor)roomFloor=null;$('joe-floor').setAttribute('aria-pressed',String(joeFloor));$('joe-floor').textContent=joeFloor?'Joe has the floor ✓':'Joe: speak for room';renderSuppliers()};
 $('grant-floor').onclick=()=>{roomFloor=roomFloor?null:providerOrder.find(id=>states[id]?.active&&states[id]?.live)||null;joeFloor=false;$('joe-floor').setAttribute('aria-pressed','false');$('joe-floor').textContent='Joe: speak for room';$('floor-status').textContent=roomFloor?providerName(roomFloor)+' has the floor':'';renderSuppliers()};
 $('meeting-state').onchange=async()=>{try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
 $('edit-orders').onclick=async()=>{const value=prompt('Standing orders for this meeting',meetingInfo?.standing_orders||defaultOrders);if(value===null)return;try{await saveRoom({standing_orders:value})}catch(e){status(e.message,true)}};
-$('view-output').onclick=async()=>{try{const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId));const x=await r.json();if(!r.ok)throw Error(x.error);alert('Opening agenda:\\n'+x.agenda+'\\n\\nRoom-voice contributions: '+x.contributions.length)}catch(e){status(e.message,true)}};
+$('view-output').onclick=async()=>{try{const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId));const x=await r.json();if(!r.ok)throw Error(x.error);alert('Opening agenda:\n'+x.agenda+'\n\n'+x.contributions.map(c=>c.provider+': '+c.text).join('\n\n'))}catch(e){status(e.message,true)}};
 
 $('send').onclick=send;
 function resizeComposer(){

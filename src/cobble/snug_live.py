@@ -168,6 +168,15 @@ class LiveChatService:
             })
         return turns
 
+    def complete_history(self):
+        """Internal operator ledger snapshot; never expose directly as room output."""
+        with self._lock:
+            return self._turns()
+
+    def invalidate_previews(self):
+        with self._lock:
+            self._pending.clear()
+
     def session(self):
         with self._lock:
             return {"turns": self._turns()[-100:],

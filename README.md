@@ -56,3 +56,7 @@ The two projects together pose a hypothesis to be tested: Can we observe normati
 1. Evolvability, modularity. A mature Cobble will ship with a default set of rooms. (For example for the ingestion of email, the optimisation of tabled code, or the deployment of a trust engine.) Any of these may be swapped-out for something better.
 1. Governance? Resource pressure as an organising principle. Rooms, chairs and intelligences selected on reputation. 'Natural' data permission _in the room_.
 
+
+## Candidate 2 review
+
+See [meeting output and local validation](docs/meeting-output-contract.md) for the proposed governance correction and a keyless regression exercise.

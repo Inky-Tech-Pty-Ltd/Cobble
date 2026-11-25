@@ -64,6 +64,30 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     store, adapters=adapters, meeting_id=room_id)
             return live_sessions[room_id]
 
+    # Serialize governance transitions and live actions in this single local server.
+    # This is not a multi-process or multi-user authorization mechanism.
+    governance_lock = threading.RLock()
+
+    def eligible(event):
+        return ((event["status"] == "posted" and event["provider"] == "operator")
+                or (event["status"] == "completed"
+                    and isinstance(event["answer"], str) and bool(event["answer"].strip())))
+
+    def room_output(meeting_id):
+        item = next(r for r in catalog.list() if r["id"] == catalog.require(meeting_id))
+        if item.get("state") == "closed":
+            raise PermissionError("Closed meeting output is unavailable")
+        events = room_session(meeting_id).complete_history()
+        selected = set(item.get("room_voice", [])) - set(item.get("redacted", []))
+        by_id = {e["turn_id"]: e for e in events}
+        if any(i not in by_id or not eligible(by_id[i]) for i in selected):
+            raise ValueError("Room voice contains unavailable or ineligible evidence")
+        return {"agenda": events[0]["question"] if events else "",
+                "contributions": [
+                    {"turn_id": e["turn_id"], "provider": e["provider"],
+                     "text": e["question"] if e["status"] == "posted" else e["answer"]}
+                    for e in events if e["turn_id"] in selected]}
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
             pass  # Never log user prompts or selected memories.
@@ -119,15 +143,13 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     self.reply(400, {"error": str(error)})
             elif urlsplit(self.path).path == "/api/live/output":
                 try:
-                    query = parse_qs(urlsplit(self.path).query)
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query) - {"room_id"} or len(query.get("room_id", [])) > 1:
+                        raise ValueError("Invalid room selector")
                     meeting_id = query.get("room_id", ["default"])[0]
-                    item = next(r for r in catalog.list() if r["id"] == meeting_id)
-                    if item.get("state") == "closed":
-                        raise PermissionError("Closed meeting output is unavailable")
-                    events = room_session(meeting_id).session()["turns"]
-                    selected = set(item.get("room_voice", [])) - set(item.get("redacted", []))
-                    self.reply(200, {"agenda": next((e["question"] for e in events if e.get("question")), ""),
-                                     "contributions": [e for e in events if e["turn_id"] in selected]})
+                    with governance_lock:
+                        output = room_output(meeting_id)
+                    self.reply(200, output)
                 except (ValueError, PermissionError, OSError, StopIteration) as error:
                     self.reply(400, {"error": str(error)})
             elif urlsplit(self.path).path == "/api/live/session":
@@ -143,6 +165,12 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                 self.reply(404, {"error": "Not found"})
 
         def do_POST(self):
+            if self.path.startswith('/api/live/'):
+                with governance_lock:
+                    return self._post()
+            return self._post()
+
+        def _post(self):
             if not self.trusted():
                 return
             if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange",
@@ -195,11 +223,16 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     if "room_id" not in data or set(data) - permitted:
                         raise PermissionError("Invalid meeting configuration")
                     meeting_id = data.pop("room_id")
+                    if "voice_event" in data and "redact_event" in data:
+                        raise ValueError("Select or redact one contribution at a time")
+                    session = room_session(meeting_id)
                     if "voice_event" in data or "redact_event" in data:
                         event_id = data.get("voice_event", data.get("redact_event"))
-                        if event_id not in {e["turn_id"] for e in room_session(meeting_id).session()["turns"]}:
-                            raise ValueError("Contribution does not belong to this meeting")
+                        if not any(e["turn_id"] == event_id and eligible(e)
+                                   for e in session.complete_history()):
+                            raise ValueError("Contribution is not eligible in this meeting")
                     result = catalog.configure(meeting_id=meeting_id, **data)
+                    session.invalidate_previews()
                 elif self.path == "/api/live/post":
                     if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
                         raise PermissionError("Reopen the meeting before contributing")
