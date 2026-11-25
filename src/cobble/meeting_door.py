@@ -15,8 +15,8 @@ import tempfile
 import threading
 
 
-ROOM_ID = re.compile(r"(?:default|[0-9a-f]{16})\\Z")
-TOKEN = re.compile(r"[A-Za-z0-9_-]{32,128}\\Z")
+ROOM_ID = re.compile(r"(?:default|[0-9a-f]{16})\Z")
+TOKEN = re.compile(r"[A-Za-z0-9_-]{32,128}\Z")
 VALID_DAYS = 7
 MAX_INVITES = 128
 
