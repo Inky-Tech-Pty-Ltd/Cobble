@@ -213,7 +213,7 @@ button{color:inherit}
         <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
         <div class="header-actions"><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
-      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="grant-floor">Give AI the floor</button><button id="joe-floor" aria-pressed="false">Joe: speak for room</button><button id="view-output">Room output</button><span id="floor-status"></span></div>
+      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="grant-floor">Give AI the floor</button><button id="joe-floor" aria-pressed="false">Joe: speak for room</button><button id="view-output">Room output</button><button id="invite-human">Door: invite Sankarshan</button><span id="floor-status"></span></div>
         <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
@@ -306,6 +306,22 @@ button{color:inherit}
       </section>
     </div>
     <div class="room-dialog-actions"><button type="button" id="output-copy">Copy output</button><button type="button" id="output-close" class="room-dialog-primary">Close</button></div>
+  </div>
+</dialog>
+<dialog id="invite-dialog" class="room-dialog" aria-labelledby="invite-heading">
+  <div class="room-dialog-body">
+    <h2 id="invite-heading">Room Door · Sankarshan</h2>
+    <p class="room-dialog-note">This one-room invitation permits its bearer to read this meeting's table and post as Sankarshan. It never opens the operator console, private memories or other meetings.</p>
+    <p class="room-dialog-note"><strong>Local test only:</strong> this URL works on McKay. Do not share it remotely until we configure authenticated HTTPS for the separate guest port.</p>
+    <label for="invite-url">Invitation URL (shown once when issued)</label>
+    <textarea id="invite-url" readonly rows="3" placeholder="Open the Door to generate a link"></textarea>
+    <p id="invite-status" class="room-dialog-note" role="status"></p>
+    <div class="room-dialog-actions">
+      <button type="button" id="invite-open">Open Door</button>
+      <button type="button" id="invite-copy">Copy link</button>
+      <button type="button" id="invite-revoke">Close Door</button>
+      <button type="button" id="invite-close" class="room-dialog-primary">Close</button>
+    </div>
   </div>
 </dialog>
 <script>
@@ -515,8 +531,8 @@ function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
-  const hb=make('div');hb.className='message';const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled(hvoice?'Joe (speaking for the room)':'Joe',null),make('p',t.question||''));
-  hb.lastChild.className='message-body';if(t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}hb.append(copyButton(t.question||'','Copy Joe contribution'));human.append(hb);thread.append(human);
+  const hb=make('div');hb.className='message';const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled((t.speaker||'Joe')+(hvoice?' (speaking for the room)':''),null),make('p',t.question||''));
+  hb.lastChild.className='message-body';if(t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}hb.append(copyButton(t.question||'','Copy '+(t.speaker||'Joe')+' contribution'));human.append(hb);thread.append(human);
   if(i===0&&meetingInfo?.standing_orders){const chair=make('article');chair.className='exchange supplier';const cb=make('div');cb.className='message';cb.append(titled('Chair',null));const speech=make('p',meetingInfo.standing_orders+'\n\nParticipants: Joe (convenor), '+providerOrder.filter(id=>states[id]?.active).map(providerName).join(', '));speech.className='message-body';cb.append(speech,copyButton(speech.textContent,'Copy Chair standing orders'));chair.append(cb);thread.append(chair)}
   if(t.status==='posted'&&t.provider==='operator')continue;
   const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
@@ -632,12 +648,35 @@ $('orders-save').onclick=async()=>{
 let lastRoomOutput=null;
 function formatRoomOutput(x){
  return 'Opening agenda:\n'+(x.agenda||'')+'\n\nSelected contributions:\n'+
-  x.contributions.map(c=>(c.provider==='operator'?'Joe':providerName(c.provider))+': '+c.text).join('\n\n');
+  x.contributions.map(c=>(c.speaker||((c.provider==='operator')?'Joe':providerName(c.provider)))+': '+c.text).join('\n\n');
 }
 $('output-copy').onclick=()=>{
  if(lastRoomOutput)copyText(formatRoomOutput(lastRoomOutput),'Room output',$('output-copy'));
 };
 $('output-close').onclick=()=>$('room-output-dialog').close();
+$('invite-human').onclick=()=>{
+ $('invite-url').value='';
+ $('invite-status').textContent='Opening the Door replaces any earlier invitation for this room.';
+ $('invite-dialog').showModal();
+};
+$('invite-open').onclick=async()=>{
+ try{
+  const result=await api('live/rooms/invite',{room_id:currentRoomId});
+  $('invite-url').value=result.guest_url;
+  $('invite-status').textContent='Door open for Sankarshan until '+result.expires_utc+'. This local URL must not be published.';
+ }catch(error){$('invite-status').textContent=error.message}
+};
+$('invite-copy').onclick=()=>{
+ if($('invite-url').value)copyText($('invite-url').value,'Room invitation',$('invite-copy'));
+};
+$('invite-revoke').onclick=async()=>{
+ try{
+  const result=await api('live/rooms/revoke',{room_id:currentRoomId});
+  $('invite-url').value='';
+  $('invite-status').textContent='Door closed · '+result.revoked_count+' active invitation(s) revoked.';
+ }catch(error){$('invite-status').textContent=error.message}
+};
+$('invite-close').onclick=()=>$('invite-dialog').close();
 $('view-output').onclick=async()=>{
  try{
   const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId),{cache:'no-store'});
