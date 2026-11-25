@@ -33,6 +33,8 @@ class ExchangeRequest:
     previous_exchanges: tuple
     # Convenor-authored room governance; separate from historical evidence.
     room_standing_orders: str = ""
+    # Current authorised outward voice, distinct from ordinary conversation.
+    room_output: dict | None = None
 
 
 class FixtureIntelligence:
