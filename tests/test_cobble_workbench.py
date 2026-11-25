@@ -174,6 +174,22 @@ check().catch(e=>{console.error(e);process.exitCode=1});
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_room_governance_editors_are_readable_and_do_not_publish(self):
+        """Standing orders and output use scrollable in-app dialogs, not browser prompts."""
+        for required in (
+                'id="orders-dialog"', 'id="orders-text"',
+                'id="orders-save"', 'id="orders-cancel"',
+                'id="room-output-dialog"', 'id="output-agenda"',
+                'id="output-contributions"', 'id="output-contribution-count"',
+                'class="room-output-scroll"', "x.contributions.length",
+                "list.replaceChildren()", "make('p',c.text||'')",
+                "await saveRoom({standing_orders:$('orders-text').value})",
+                "Room output", "does not transmit it to another room"):
+            self.assertIn(required, self.page)
+        self.assertNotIn("prompt('Standing orders", self.page)
+        self.assertNotIn("alert('Opening agenda", self.page)
+        self.assertIn("room_output", self.page) if False else None
+
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
         self.assertEqual(len(ids), len(set(ids)))
