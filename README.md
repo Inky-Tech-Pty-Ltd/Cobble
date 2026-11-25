@@ -64,7 +64,7 @@ As the app matures, we hope to add 'sensory' sources — email, databases, socia
   />
 </figure>
 
-[See six screenshots from this early Cobble meeting: Joe, GPT, Claude and Mistral at the table.](docs/early-meeting-2026-11-25.md)
+[See the whole meeting](docs/early-meeting-2026-11-25.md)
 
 ## Sister project. Governance
 
