@@ -128,7 +128,7 @@ class LiveTests(unittest.TestCase):
         self.assertNotIn("older_contributions_omitted", voice)
         self.assertEqual([x["question"] for x in p["previous_exchanges"]],
                          [f"Aside {i}" for i in range(2, 6)])
-        self.assertEqual(p["older_exchanges_omitted"], 0)
+        self.assertEqual(p["older_exchanges_omitted"], 2)
 
     def test_oversized_authorised_voice_fails_closed_instead_of_silently_truncating(self):
         contributions = [
