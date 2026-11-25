@@ -486,8 +486,14 @@ class LiveTests(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("snug_demo_web", entry)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
+        class RoomSupplier:
+            name = "openai"
+
+            def answer(self, request):
+                return fake_reply("Visible reply; private payload stays private")
+
         with module.create_server(self.store, index, port=0, guest_port=0,
-                                  live_gpt=True, live_adapter=self.supplier) as server:
+                                  live_gpt=True, live_adapter=RoomSupplier()) as server:
             guest_server = server.guest_server
             self.assertIsNotNone(guest_server)
             self.assertEqual(server.server_address[0], "127.0.0.1")
@@ -528,6 +534,12 @@ class LiveTests(unittest.TestCase):
                      {"room_id": a, "text": "Shared agenda"})
                 call(operator_port, "/api/live/post",
                      {"room_id": b, "text": "SECRET OTHER ROOM"})
+                p = call(operator_port, "/api/live/preview",
+                         {"room_id": a, "question": "What do you think of the agenda?"})
+                sent = call(operator_port, "/api/live/send",
+                            {"room_id": a, "approval_token": p["approval_token"]})["turn"]
+                self.assertEqual(sent["status"], "completed")
+                self.assertIn("payload", sent)  # Operator audit only.
                 invited = call(operator_port, "/api/live/rooms/invite", {"room_id": a})
                 self.assertEqual(invited["room_id"], a)
                 self.assertNotIn("SECRET OTHER ROOM", json.dumps(invited))
@@ -552,6 +564,11 @@ class LiveTests(unittest.TestCase):
                 self.assertEqual(data["meeting"]["id"], a)
                 self.assertEqual(data["speaker"], "Sankarshan")
                 self.assertEqual(data["turns"][0]["question"], "Shared agenda")
+                supplier_turn = next(t for t in data["turns"] if t["provider"] == "openai")
+                self.assertEqual(supplier_turn["answer"],
+                                 "Visible reply; private payload stays private")
+                self.assertNotIn("payload", supplier_turn)
+                self.assertNotIn("context", supplier_turn)
                 self.assertNotIn("payload", json.dumps(data))
                 self.assertNotIn("context_sha256", json.dumps(data))
                 self.assertNotIn("SECRET OTHER ROOM", json.dumps(data))
