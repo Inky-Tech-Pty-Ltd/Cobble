@@ -15,6 +15,31 @@ class WorkbenchTests(unittest.TestCase):
     def setUpClass(cls):
         cls.page = HTML.read_text(encoding="utf-8")
 
+    def test_distance_navigation_membrane_and_room_list_remain_functional(self):
+        spine = self.page.split('<nav class="primary-nav"', 1)[1].split('</nav>', 1)[0]
+        expected = ("Intelligences", "Meetings", "Senses", "Membrane",
+                    "Furniture", "My meetings", "Memories")
+        positions = [spine.index('>' + name + '<') for name in expected]
+        self.assertEqual(positions, sorted(positions))
+        self.assertNotIn("Recent meetings", spine)
+        self.assertIn('role="separator"', spine)
+        self.assertIn('class="membrane-boundary"', spine)
+        self.assertIn('id="my-meetings-toggle"', spine)
+        self.assertIn('id="new-meeting"', spine)
+        self.assertIn('id="meeting-list"', spine)
+        self.assertIn('data-screen="furniture"', spine)
+        self.assertIn('<nav class="utility-nav" aria-label="Workspace utilities">',
+                      self.page)
+        self.assertIn("showMyMeetings(", self.page)
+        self.assertIn("cobble.meetings.expanded", self.page)
+        self.assertIn("collapse(false);showMyMeetings(true)", self.page)
+        self.assertIn('id="screen-furniture"', self.page)
+        self.assertIn("--membrane-orange:#c95e21", self.page)
+        self.assertIn("--membrane-pale:#fff4e7", self.page)
+        self.assertIn('class="membrane-cue"', self.page)
+        self.assertIn("#invite-human.membrane-cue", self.page)
+        self.assertIn('class="info-row furniture-door"', self.page)
+
     def test_navigation_sidebar_and_meeting_layout(self):
         for item in ("Senses", "Memories", "Intelligences", "Meetings", "Setup", "Help",
                      'id="sidebar"', 'id="resize-grip"', "ondblclick",
