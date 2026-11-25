@@ -218,11 +218,14 @@ class LiveChatService:
             })
             return {"turn": self._turns_by_id(turn_id)}
 
-    def preview(self, *, question, provider="openai"):
+    def preview(self, *, question, provider="openai", room_standing_orders=""):
         if not isinstance(question, str) or not 0 < len(question.strip()) <= MAX_QUESTION:
             raise ValueError("Question must contain 1–2000 characters")
         if not isinstance(provider, str) or provider not in self._adapters:
             raise PermissionError("Supplier unavailable in this local session")
+        if (not isinstance(room_standing_orders, str) or
+                len(room_standing_orders) > 8000):
+            raise ValueError("Invalid meeting standing orders")
         with self._lock:
             turns = self._turns()
             history = self._history(turns)
@@ -233,7 +236,8 @@ class LiveChatService:
             while True:
                 request = ExchangeRequest(
                     participant="operator", question=question,
-                    selected_memories=(), previous_exchanges=history)
+                    selected_memories=(), previous_exchanges=history,
+                    room_standing_orders=room_standing_orders)
                 payload = BUILD_PAYLOAD[provider](
                     request, output_tokens=OUTPUT_TOKENS)
                 try:
@@ -256,6 +260,7 @@ class LiveChatService:
                 "approval_token": token,
                 "provider": provider, "question": question,
                 "selected_memories": [],
+                "room_standing_orders": room_standing_orders,
                 "previous_exchanges": list(history),
                 "older_exchanges_omitted": originally_available - len(history),
                 "context_sha256": request_context_digest(request),
