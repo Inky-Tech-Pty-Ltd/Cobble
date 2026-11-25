@@ -47,7 +47,7 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("--membrane-pale:#fff4e7", self.page)
         self.assertIn('class="membrane-cue"', self.page)
         self.assertIn("#invite-human.membrane-cue", self.page)
-        self.assertIn('class="info-row furniture-door"', self.page)
+        self.assertIn('class="furniture-doors"', self.page)
 
     def test_navigation_sidebar_and_meeting_layout(self):
         for item in ("Senses", "Memories", "Intelligences", "Meetings", "Setup", "Help",
