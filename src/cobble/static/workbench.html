@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cobble · Meetings</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-orange:#c95e21;--membrane-ink:#a34612;--membrane-pale:#fff4e7;--membrane-border:#efc59e}
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden}
 button,input,textarea,select{font:inherit}
@@ -50,17 +50,44 @@ button{color:inherit}
 .icon-button{border:0;border-radius:9px;background:transparent;padding:7px 9px;color:var(--slate)}
 .icon-button:hover,.nav-item:hover,.meeting-item:hover{background:#edf2f6}
 .icon-button svg,.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.primary-nav{display:grid;gap:3px;margin-top:9px}
+.primary-nav{display:flex;flex-direction:column;gap:3px;margin-top:9px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding-bottom:8px}
+.membrane-boundary{display:flex;align-items:center;gap:9px;margin:11px 4px 9px;padding:10px 11px;border-top:2px solid var(--membrane-orange);border-bottom:2px solid var(--membrane-orange);border-radius:5px;background:var(--membrane-pale);color:var(--membrane-ink);font-weight:750;letter-spacing:.045em;font-size:.84rem}
+.membrane-symbol{display:inline-grid;place-items:center;border:2px solid var(--membrane-orange);border-radius:50%;width:20px;height:20px;font-size:.7rem;line-height:1;flex-shrink:0}
+.membrane-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.membrane-rule{height:1px;background:var(--membrane-border);flex:1;min-width:8px}
+.membrane-cue{color:var(--membrane-ink)!important;border-color:var(--membrane-border)!important;background:var(--membrane-pale)!important}
+#invite-human.membrane-cue{font-weight:750}
+#invite-human.membrane-cue:hover{background:#ffe8d2!important}
+#invite-dialog{border:2px solid var(--membrane-orange)}
+#invite-dialog #invite-heading{color:var(--membrane-ink)}
+#invite-dialog #invite-open{border-color:var(--membrane-orange);background:var(--membrane-orange);color:white;font-weight:700}
+#invite-dialog #invite-revoke{color:var(--membrane-ink);border-color:var(--membrane-orange)}
+.furniture-door{border-left:4px solid var(--membrane-orange);background:var(--membrane-pale)}
+.furniture-door strong{color:var(--membrane-ink)}
+.utility-nav{display:flex;gap:4px;padding-top:6px;margin-top:5px;border-top:1px solid var(--line);flex-shrink:0}
+.utility-nav .nav-item{justify-content:center;gap:7px;padding:7px 5px;font-size:.76rem}
+.utility-nav .nav-item.active{background:#e2ebf3}
+.sidebar.collapsed .utility-nav{flex-direction:column;align-items:stretch}
+.sidebar.collapsed .membrane-boundary{justify-content:center;margin:9px 0;padding:8px 0}
+.sidebar.collapsed .membrane-title,.sidebar.collapsed .membrane-rule{display:none}
+.sidebar.collapsed .tree{display:block}
+.sidebar.collapsed .my-meetings-row .new-meeting,.sidebar.collapsed #meeting-list{display:none}
+.sidebar.collapsed .my-meetings-row .nav-item{justify-content:center;padding:11px}
+
 .nav-item{display:flex;align-items:center;gap:13px;text-align:left;width:100%;background:transparent;border:0;border-radius:10px;padding:12px 13px;white-space:nowrap;color:#344354}
 .nav-item.active{background:#e2ebf3;color:#23475d;font-weight:650}
 .nav-label{overflow:hidden;text-overflow:ellipsis}
 .sidebar.collapsed .nav-item{padding:11px;justify-content:center}
 .separator{height:1px;background:var(--line);margin:18px 3px 12px}
-.tree{flex:1;min-height:80px;overflow-y:auto}
-.tree-heading{color:var(--muted);font-size:.78rem;letter-spacing:.01em;margin:8px 7px;display:flex;justify-content:space-between;align-items:center}
+.tree{flex:none;min-height:0;overflow:visible}
+.tree-heading{color:var(--muted);font-size:.85rem;letter-spacing:.01em;margin:3px 0;display:flex;justify-content:space-between;align-items:center}
+.my-meetings-row{gap:3px}
+.my-meetings-row .nav-item{flex:1;min-width:0}
+.my-meetings-row .new-meeting{flex-shrink:0;margin-right:4px}
+#my-meetings-toggle[aria-expanded="false"]{color:var(--muted)}
 .new-meeting{border:0;background:transparent;font-size:1.32rem;line-height:1;border-radius:7px;color:var(--slate);padding:2px 7px;cursor:pointer}
 .new-meeting:hover{background:#e2ebf3}
-#meeting-list{display:grid;gap:4px}
+#meeting-list{display:grid;gap:4px;max-height:min(28dvh,280px);overflow-y:auto;padding:0 4px 2px 22px;scrollbar-width:thin}
 .meeting-item{background:transparent;cursor:pointer}
 .meeting-item.active{background:#eaf1f6}
 .meeting-item:hover{background:#e7eef4}
@@ -85,7 +112,7 @@ button{color:inherit}
 .supplier-main[aria-pressed="true"] .mark{box-shadow:0 0 0 2px #8db3ce}
 .grip{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;touch-action:none;z-index:5}
 .grip:hover,.grip.dragging{background:#bfd3e0}
-.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .tree,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-model{display:none}
+.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-model{display:none}
 .sidebar.collapsed .suppliers .supplier-card{padding:5px;justify-content:center}
 .sidebar.collapsed .suppliers .supplier-main{justify-content:center}
 .sidebar.collapsed .suppliers{margin-top:auto}
@@ -176,7 +203,7 @@ button{color:inherit}
 .link{color:#2b5e79;text-decoration:none}
 .link:hover{text-decoration:underline}
 @media(max-width:900px){.inspector.open{position:absolute;right:0;top:0;bottom:0;width:min(395px,90vw);box-shadow:-6px 0 26px #283b4e2b;z-index:15}.reading{padding:0 15px}.exchange{max-width:100%!important}}
-@media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}.exchange.human .message{width:90%}}
+@media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.membrane-boundary{padding:8px 9px;margin-block:8px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}.exchange.human .message{width:90%}}
 @media(prefers-reduced-motion:no-preference){.supplier-card,.nav-item,.secondary{transition:background-color .12s ease}}
 </style>
 </head>
@@ -188,19 +215,27 @@ button{color:inherit}
         <img class="brand" src="/assets/cobble-logo.png" alt="Cobble">
         <button class="icon-button" id="collapse" title="Collapse or expand sidebar" aria-label="Collapse sidebar">☰</button>
       </div>
-      <nav class="primary-nav" aria-label="Sections">
-        <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
-        <button class="nav-item" data-screen="memories"><span aria-hidden="true">◇</span><span class="nav-label">Memories</span></button>
+      <nav class="primary-nav" aria-label="Cobble navigation, from outside to inside">
         <button class="nav-item" data-screen="intelligences"><span aria-hidden="true">✦</span><span class="nav-label">Intelligences</span></button>
         <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span><span id="total-cost" class="meeting-cost"></span></button>
+        <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
+        <div class="membrane-boundary" role="separator" aria-label="Membrane: the boundary between external encounters and internal rooms" title="Membrane · admission across the boundary">
+          <span class="membrane-symbol" aria-hidden="true">·</span><span class="membrane-title">Membrane</span><span class="membrane-rule" aria-hidden="true"></span>
+        </div>
+        <button class="nav-item" data-screen="furniture"><span aria-hidden="true">▥</span><span class="nav-label">Furniture</span></button>
+        <div class="tree" id="my-meetings-menu">
+          <div class="tree-heading my-meetings-row">
+            <button class="nav-item" type="button" id="my-meetings-toggle" aria-expanded="true" aria-controls="meeting-list" title="Show or hide my meetings"><span aria-hidden="true">▣</span><span class="nav-label">My meetings</span></button>
+            <button id="new-meeting" class="new-meeting" aria-label="Create new meeting" title="New meeting">+</button>
+          </div>
+          <div id="meeting-list" aria-label="My meetings"></div>
+        </div>
+        <button class="nav-item" data-screen="memories"><span aria-hidden="true">◇</span><span class="nav-label">Memories</span></button>
+      </nav>
+      <nav class="utility-nav" aria-label="Workspace utilities">
         <button class="nav-item" data-screen="setup"><span aria-hidden="true">⚙</span><span class="nav-label">Setup</span></button>
         <button class="nav-item" data-screen="help"><span aria-hidden="true">?</span><span class="nav-label">Help</span></button>
       </nav>
-      <div class="tree">
-        <div class="separator"></div>
-        <div class="tree-heading"><span>Recent meetings</span><button id="new-meeting" class="new-meeting" aria-label="Create new meeting" title="New meeting">+</button></div>
-        <div id="meeting-list" aria-label="Saved meetings"></div>
-      </div>
       <section class="suppliers" aria-label="Intelligences">
         <div id="supplier-list" class="supplier-list"></div>
       </section>
@@ -213,7 +248,7 @@ button{color:inherit}
         <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
         <div class="header-actions"><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
-      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="grant-floor">Give AI the floor</button><button id="joe-floor" aria-pressed="false">Joe: speak for room</button><button id="view-output">Room output</button><button id="invite-human">Door: invite Sankarshan</button><span id="floor-status"></span></div>
+      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="grant-floor">Give AI the floor</button><button id="joe-floor" aria-pressed="false">Joe: speak for room</button><button id="view-output">Room output</button><button id="invite-human" class="membrane-cue">Door: invite Sankarshan</button><span id="floor-status"></span></div>
         <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
@@ -241,6 +276,17 @@ button{color:inherit}
         <div class="content-pane"><div class="reading">
           <p class="pane-intro">The configured suppliers are shown here. Credentials, model selection and connection settings remain on McKay; changing the meeting controls below does not change server permissions.</p>
           <div id="intelligence-list"></div>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-furniture" aria-label="Furniture">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">Furniture describes what a Room does. Doors govern admission at membranes; the other fittings govern how a Room operates. These are not yet a general furniture marketplace.</p>
+          <div class="info-row furniture-door"><strong>Door</strong><small>Admission through a membrane · the first room-specific invitation Door is in Meetings</small></div>
+          <div class="info-row"><strong>Chair</strong><small>Conduct and standing orders · meeting controls already exist</small></div>
+          <div class="info-row"><strong>Seat</strong><small>Participation · more general seats are planned</small></div>
+          <div class="info-row"><strong>Table</strong><small>What participants share within a Room</small></div>
+          <div class="info-row"><strong>Window</strong><small>What a Room chooses to show beyond itself · planned</small></div>
+          <div class="info-row"><strong>Socket</strong><small>Connections between Rooms · planned</small></div>
         </div></div>
       </section>
       <section class="screen" id="screen-memories" aria-label="Memories">
@@ -404,14 +450,14 @@ $('meeting-title').onblur=async()=>{
 };
 $('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
- if(!['senses','memories','intelligences','meetings','setup','help'].includes(name))return;
+ if(!['senses','memories','intelligences','meetings','furniture','setup','help'].includes(name))return;
  currentScreen=name;
  for(const el of document.querySelectorAll('.screen'))el.classList.toggle('active',el.id==='screen-'+name);
  for(const el of document.querySelectorAll('.nav-item')){
   const on=el.dataset.screen===name;el.classList.toggle('active',on);
   if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
  }
- const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,setup:'Setup',help:'Help'};
+ const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,furniture:'Furniture',setup:'Setup',help:'Help'};
  $('meeting-title').hidden=name!=='meetings';
  $('page-title').hidden=name==='meetings';
  $('page-title').textContent=titles[name];
@@ -419,7 +465,7 @@ function setScreen(name){
  document.title='Cobble · '+titles[name];
  if(name==='intelligences')renderIntelligences();
 }
-for(const el of document.querySelectorAll('.nav-item'))el.onclick=()=>setScreen(el.dataset.screen);
+for(const el of document.querySelectorAll('.nav-item[data-screen]'))el.onclick=()=>setScreen(el.dataset.screen);
 async function loadMeetings(){
  const response=await fetch('/api/live/rooms',{cache:'no-store'});
  if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
@@ -467,6 +513,16 @@ const sidebar=$('sidebar');
 const rememberedWidth=Number(safeStorageGet('cobble.sidebar.width'));
 function sidebarWidth(w){const allowed=Math.min(460,Math.max(215,Number(w)||272));sidebar.style.setProperty('--sidebar-width',allowed+'px');safeStorageSet('cobble.sidebar.width',String(allowed))}
 if(rememberedWidth)sidebarWidth(rememberedWidth);
+function showMyMeetings(expanded){
+  $('my-meetings-toggle').setAttribute('aria-expanded',String(expanded));
+  $('meeting-list').hidden=!expanded;
+  safeStorageSet('cobble.meetings.expanded',expanded?'1':'0');
+}
+showMyMeetings(safeStorageGet('cobble.meetings.expanded')!=='0');
+$('my-meetings-toggle').onclick=()=>{
+  if(sidebar.classList.contains('collapsed')){collapse(false);showMyMeetings(true);return}
+  showMyMeetings($('meeting-list').hidden);
+};
 function collapse(value){
  sidebar.classList.toggle('collapsed',value);
  $('collapse').setAttribute('aria-label',value?'Expand sidebar':'Collapse sidebar');
