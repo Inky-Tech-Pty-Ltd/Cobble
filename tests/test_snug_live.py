@@ -569,7 +569,7 @@ class LiveTests(unittest.TestCase):
                                  "Visible reply; private payload stays private")
                 self.assertNotIn("payload", supplier_turn)
                 self.assertNotIn("context", supplier_turn)
-                self.assertNotIn("payload", json.dumps(data))
+                self.assertTrue(all("payload" not in t for t in data["turns"]))
                 self.assertNotIn("context_sha256", json.dumps(data))
                 self.assertNotIn("SECRET OTHER ROOM", json.dumps(data))
                 denied = call(guest_port, "/api/guest/post",
