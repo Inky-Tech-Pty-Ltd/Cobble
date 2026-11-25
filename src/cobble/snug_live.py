@@ -238,12 +238,11 @@ class LiveChatService:
                         or not isinstance(contribution.get("provider"), str)
                         or not isinstance(contribution.get("turn_id"), str)):
                     raise ValueError("Invalid authorised contribution")
-            all_voice = room_output["contributions"]
-            voice = list(all_voice[-4:])
-            older_voice_omitted = len(all_voice) - len(voice)
+            # The room's entire current authorised position is tabled context.
+            # Never silently trim a convenor-approved contribution.
+            voice = list(room_output["contributions"])
         else:
             voice = []
-            older_voice_omitted = 0
         with self._lock:
             turns = self._turns()
             history = self._history(turns)
@@ -255,7 +254,6 @@ class LiveChatService:
                 current_voice = None if room_output is None else {
                     "agenda": room_output["agenda"],
                     "contributions": list(voice),
-                    "older_contributions_omitted": older_voice_omitted,
                 }
                 request = ExchangeRequest(
                     participant="operator", question=question,
@@ -272,12 +270,13 @@ class LiveChatService:
                         raise
                     if history:
                         history = history[1:]
-                    elif len(voice) > 1:
-                        # Preserve the newest authorised statement if possible.
-                        voice = voice[1:]
-                        older_voice_omitted += 1
                     else:
-                        raise
+                        # A smaller conversational window is tolerable; a partial
+                        # authorised position masquerading as complete is not.
+                        raise ValueError(
+                            "The room's complete authorised output exceeds the local "
+                            "request budget. No supplier call made."
+                        ) from error
             token = secrets.token_urlsafe(32)
             now = time.monotonic()
             self._pending = {
