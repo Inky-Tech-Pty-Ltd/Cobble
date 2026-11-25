@@ -154,6 +154,7 @@ class LiveChatService:
                 "turn_id": p.stem,
                 "created_utc": start["created_utc"],
                 "provider": start["provider"],
+                "speaker": start.get("speaker", "Joe"),
                 "question": start["question"],
                 "context_sha256": start["context_sha256"],
                 "context": start["context"],
@@ -189,11 +190,12 @@ class LiveChatService:
             "event_id": turn["turn_id"],
             "provider": turn["provider"],
             "participant": "operator",
+            "speaker": turn["speaker"],
             "question": turn["question"],
             "answer": turn["answer"] or "",
         } for turn in turns if turn["status"] in ("completed", "posted"))[-MAX_PRIOR:]
 
-    def post_operator(self, *, text):
+    def post_operator(self, *, text, speaker="Joe"):
         """Record one operator utterance locally; no supplier call or attempt.
 
         This has the same durable, append-only event format as paid turns.
@@ -201,6 +203,8 @@ class LiveChatService:
         """
         if not isinstance(text, str) or not 0 < len(text.strip()) <= MAX_QUESTION:
             raise ValueError("Post must contain 1–2000 characters")
+        if speaker not in ("Joe", "Sankarshan"):
+            raise PermissionError("Unrecognised meeting contributor")
         with self._lock:
             if self._inflight:
                 raise PermissionError("A supplier request is underway; post afterward")
@@ -210,9 +214,10 @@ class LiveChatService:
                 "turn_id": turn_id,
                 "created_utc": datetime.now(timezone.utc).isoformat(),
                 "kind": "operator_message",
+                "speaker": speaker,
                 "provider": "operator",
                 "question": text.strip(),
-                "context_sha256": _digest({"operator_message": text.strip()}),
+                "context_sha256": _digest({"operator_message": text.strip(), "speaker": speaker}),
                 "context": {},
                 "payload": {},
             })
