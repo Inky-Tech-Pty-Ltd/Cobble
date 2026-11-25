@@ -475,7 +475,7 @@ class LiveTests(unittest.TestCase):
             for thread in threads:
                 thread.start()
 
-            def http(port, route, body=None, token=None, guest=False,
+            def call(port, route, body=None, token=None, guest=False,
                      expected=200, origin=None):
                 conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
                 headers = {"Content-Type": "application/json",
@@ -497,15 +497,15 @@ class LiveTests(unittest.TestCase):
                     conn.close()
 
             try:
-                a = http(operator_port, "/api/live/rooms/create",
+                a = call(operator_port, "/api/live/rooms/create",
                          {"title": "Shared table"})["id"]
-                b = http(operator_port, "/api/live/rooms/create",
+                b = call(operator_port, "/api/live/rooms/create",
                          {"title": "Private room"})["id"]
-                http(operator_port, "/api/live/post",
+                call(operator_port, "/api/live/post",
                      {"room_id": a, "text": "Shared agenda"})
-                http(operator_port, "/api/live/post",
+                call(operator_port, "/api/live/post",
                      {"room_id": b, "text": "SECRET OTHER ROOM"})
-                invited = http(operator_port, "/api/live/rooms/invite", {"room_id": a})
+                invited = call(operator_port, "/api/live/rooms/invite", {"room_id": a})
                 self.assertEqual(invited["room_id"], a)
                 self.assertNotIn("SECRET OTHER ROOM", json.dumps(invited))
                 link = urlsplit(invited["guest_url"])
@@ -514,56 +514,56 @@ class LiveTests(unittest.TestCase):
                 token = parse_qs(link.fragment)["invite"][0]
                 self.assertGreaterEqual(len(token), 40)
                 self.assertEqual(
-                    http(guest_port, "/api/guest/session", guest=True, expected=403)["error"],
+                    call(guest_port, "/api/guest/session", guest=True, expected=403)["error"],
                     "Room invitation invalid or unavailable")
                 self.assertEqual(
-                    http(guest_port, "/api/live/session", guest=True, token=token,
+                    call(guest_port, "/api/live/session", guest=True, token=token,
                          expected=404)["error"], "Not found")
                 self.assertEqual(
-                    http(guest_port, "/api/search", guest=True, token=token,
+                    call(guest_port, "/api/search", guest=True, token=token,
                          expected=404)["error"], "Not found")
                 self.assertEqual(
-                    http(guest_port, "/api/guest/session?room_id=" + b,
+                    call(guest_port, "/api/guest/session?room_id=" + b,
                          guest=True, token=token, expected=404)["error"], "Not found")
-                data = http(guest_port, "/api/guest/session", guest=True, token=token)
+                data = call(guest_port, "/api/guest/session", guest=True, token=token)
                 self.assertEqual(data["meeting"]["id"], a)
                 self.assertEqual(data["speaker"], "Sankarshan")
                 self.assertEqual(data["turns"][0]["question"], "Shared agenda")
                 self.assertNotIn("payload", json.dumps(data))
                 self.assertNotIn("context_sha256", json.dumps(data))
                 self.assertNotIn("SECRET OTHER ROOM", json.dumps(data))
-                denied = http(guest_port, "/api/guest/post",
+                denied = call(guest_port, "/api/guest/post",
                               {"text": "Forged", "room_id": b}, guest=True,
                               token=token, expected=403)
                 self.assertEqual(denied["error"], "Guest contribution refused")
-                http(guest_port, "/api/guest/post",
+                call(guest_port, "/api/guest/post",
                      {"text": "Bad origin"}, guest=True, token=token,
                      origin="https://evil.test", expected=403)
-                posted = http(guest_port, "/api/guest/post",
+                posted = call(guest_port, "/api/guest/post",
                               {"text": "Hello Joe, from Sankarshan"},
                               guest=True, token=token)
                 self.assertEqual(posted["speaker"], "Sankarshan")
-                data = http(guest_port, "/api/guest/session", guest=True, token=token)
+                data = call(guest_port, "/api/guest/session", guest=True, token=token)
                 self.assertEqual(data["turns"][-1]["speaker"], "Sankarshan")
                 self.assertEqual(data["turns"][-1]["question"],
                                  "Hello Joe, from Sankarshan")
-                operator = http(operator_port, "/api/live/session?room_id=" + a)
+                operator = call(operator_port, "/api/live/session?room_id=" + a)
                 self.assertEqual(operator["turns"][-1]["speaker"], "Sankarshan")
-                self.assertEqual(len(http(operator_port, "/api/live/session?room_id=" + b)
+                self.assertEqual(len(call(operator_port, "/api/live/session?room_id=" + b)
                                      ["turns"]), 1)
-                preview = http(operator_port, "/api/live/preview",
+                preview = call(operator_port, "/api/live/preview",
                                {"room_id": a, "question": "What did Sankarshan say?"})
                 self.assertEqual(preview["previous_exchanges"][-1]["speaker"],
                                  "Sankarshan")
                 self.assertNotIn("SECRET OTHER ROOM", json.dumps(preview))
-                http(operator_port, "/api/live/rooms/configure",
+                call(operator_port, "/api/live/rooms/configure",
                      {"room_id": a, "voice_event": posted["turn_id"]})
-                output = http(operator_port, "/api/live/output?room_id=" + a)
+                output = call(operator_port, "/api/live/output?room_id=" + a)
                 self.assertEqual(output["contributions"][0]["speaker"], "Sankarshan")
-                http(operator_port, "/api/live/rooms/revoke", {"room_id": a})
-                http(guest_port, "/api/guest/session", guest=True, token=token,
+                call(operator_port, "/api/live/rooms/revoke", {"room_id": a})
+                call(guest_port, "/api/guest/session", guest=True, token=token,
                      expected=403)
-                http(guest_port, "/api/guest/post",
+                call(guest_port, "/api/guest/post",
                      {"text": "No longer admitted"}, guest=True, token=token,
                      expected=403)
             finally:
