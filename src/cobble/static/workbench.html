@@ -258,6 +258,15 @@ button{color:inherit}
 #invite-dialog #invite-open{border-color:var(--slate);background:var(--slate);color:white}
 #invite-dialog #invite-revoke{color:var(--slate);border-color:#cbd8e1}
 @media(max-width:650px){.joe-card{min-width:87px;padding-right:5px}.joe-card strong{font-size:.72rem}.joe-card small{font-size:.59rem}.header{gap:3px}.header-actions{gap:2px}}
+
+/* Instance Membrane is a destination with a crescent, not a divider band. */
+.membrane-boundary{position:relative;--weight-tone:var(--membrane-blue);margin:3px 0;padding:12px 13px 12px 22px;border:0;border-radius:10px;background:transparent;color:var(--slate);font-weight:650;letter-spacing:normal}
+.membrane-boundary.nav-item{width:100%}
+.membrane-boundary::before{content:"";position:absolute;left:3px;top:15%;height:70%;width:7px;border-left:4px solid var(--weight-tone);border-radius:100% 0 0 100%}
+.membrane-boundary.nav-item.active,.membrane-boundary.nav-item:hover{background:#e2ebf3;color:#23475d;box-shadow:none}
+.membrane-boundary .membrane-symbol{border:0;width:19px;height:19px;color:var(--membrane-ink)}
+.membrane-rule{display:none}
+@media(max-width:650px){.membrane-boundary{padding:9px 9px 9px 18px;margin:3px 0}}
 </style>
 </head>
 <body>
@@ -828,7 +837,9 @@ async function send(){
  const roomId=currentRoomId;
  let recipient;
  try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
- const publish=recipient==='post-only'?joeFloor:roomFloor===recipient;
+ // The supplier floor routes an exchange; it never silently publishes
+ // the supplier's future reply. Only Joe's deliberate default may auto-publish.
+ const publish=recipient==='post-only'&&joeFloor;
  busy=true;updateSend();
  status(recipient==='post-only'?'Recording a local meeting contribution…':
   'Consulting '+providerName(recipient)+' · one call, no automatic retries…');
