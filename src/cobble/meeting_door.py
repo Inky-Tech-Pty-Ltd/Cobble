@@ -53,7 +53,9 @@ class MeetingDoor:
                        not ROOM_ID.fullmatch(v.get("room_id", "")) or
                        v.get("speaker") != "Sankarshan" or
                        not isinstance(v.get("expires_utc"), str) or
-                       not isinstance(v.get("revoked"), bool)
+                       not isinstance(v.get("revoked"), bool) or
+                       ("first_seen_utc" in v and
+                        not isinstance(v["first_seen_utc"], str))
                        for k, v in records.items())):
             raise ValueError("Corrupt invitation registry")
         return records
@@ -112,18 +114,38 @@ class MeetingDoor:
             return {"token": token, "room_id": room_id,
                     "expires_utc": records[digest]["expires_utc"]}
 
-    def require(self, token):
-        """Return a room-bound admission. Never reveal the token or other rooms."""
+    def require(self, token, *, mark_arrival=False):
+        """Check this bearer, optionally remembering their first room visit.
+
+        Arrival proves a link was used, *not* that the real Sankarshan was
+        holding it. Polling a room does not continually rewrite the ledger.
+        """
         if not isinstance(token, str) or not TOKEN.fullmatch(token):
             raise PermissionError("Invitation not recognised")
         digest = hashlib.sha256(token.encode("ascii")).hexdigest()
         with self.lock:
-            record = self._read().get(digest)
-        if (not record or record["revoked"] or
-                datetime.fromisoformat(record["expires_utc"]) <=
-                datetime.now(timezone.utc)):
-            raise PermissionError("Invitation not recognised")
-        return {"room_id": record["room_id"], "speaker": record["speaker"]}
+            records = self._read()
+            record = records.get(digest)
+            now = datetime.now(timezone.utc)
+            if (not record or record["revoked"] or
+                    datetime.fromisoformat(record["expires_utc"]) <= now):
+                raise PermissionError("Invitation not recognised")
+            if mark_arrival and not record.get("first_seen_utc"):
+                record["first_seen_utc"] = now.isoformat()
+                self._write(records)
+            return {"room_id": record["room_id"], "speaker": record["speaker"]}
+
+    def status(self, *, room_id):
+        """Operator-only view. No bearer secret or unrelated room is returned."""
+        room_id = self._room(room_id)
+        with self.lock:
+            now = datetime.now(timezone.utc)
+            active = next((item for item in self._read().values()
+                           if item["room_id"] == room_id and not item["revoked"]
+                           and datetime.fromisoformat(item["expires_utc"]) > now), None)
+        return {"room_id": room_id, "open": active is not None,
+                "arrived": bool(active and active.get("first_seen_utc")),
+                "expires_utc": active["expires_utc"] if active else None}
 
     def revoke(self, *, room_id):
         room_id = self._room(room_id)
