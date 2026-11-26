@@ -43,7 +43,7 @@ The interface must also communicate this distinction **without relying on colour
 
 A weight-bearing utterance, a selected intelligence, a Door and standing orders are all different objects, but can be understood with a common visual vocabulary. Cobble's UI should explain the governance of Rooms through *the objects themselves*, rather than accumulating detached "Redact voice", "Give AI the floor" and "Joe: speak for room" buttons.
 
-The Membrane navigation entry represents **this Cobble instance's own boundary**. Smaller Doors reside under **Furniture → Doors**. Neither the visual treatment nor this decision grants an invited meeting visitor access to private memories, other rooms or the McKay operator console.
+The Membrane navigation entry represents **this Cobble instance's own boundary**. Its expandable menu contains **Membrane → Doors** (instance-level admission) and **Membrane → Windows** (instance-level selective outward display, including potential Star Credentials). Both have navigable pages, but neither currently configures a real remote Door, trust policy or publishing endpoint. The submenu's expanded state is a browser-local preference. **Furniture → Doors** and other Furniture fittings belong to *smaller Rooms*, and the existing meeting invitation Door remains there. Neither the visual treatment nor these menus grant an invited visitor access to private memories, other rooms or McKay's operator console.
 
 ## Implementation notes / verification
 
