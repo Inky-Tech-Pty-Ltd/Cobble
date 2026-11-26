@@ -104,7 +104,7 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("Deployed instance Windows · none registered", windows)
         self.assertIn("not a live registry query", doors)
         self.assertIn("not a live registry query", windows)
-        self.assertIn("not to McKay's instance membrane", doors)
+        self.assertIn("not installed at this Cobble instance's outer membrane", doors)
         self.assertIn("No Star Credentials or other information are published", windows)
 
     def test_all_room_costs_come_from_server_not_visited_browser_rooms(self):
