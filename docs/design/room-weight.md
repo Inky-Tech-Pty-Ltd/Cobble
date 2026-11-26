@@ -1,10 +1,16 @@
-# Room weight: the left-edge language
+# Room weight: transparent edge controls and enclosing shadows
 
 *Cobble design decision — 26 November 2026. [Discussion and rationale: Issue #85](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85). [Implementation: Candidate 3 PR #84](https://github.com/Inky-Tech-Pty-Ltd/Cobble/pull/84).*
 
-## What the crescent says
+## Two jobs, two independent mechanisms
 
-A thin **crescent at the left edge** tells us that an object can carry more weight than ordinary conversation. The *shape* is consistent, but the authority always belongs to the Room and to the role of the object. **Light** means ordinary participation; **heavy** means an expressly selected or constitutive role.
+The convenor recognised that we were asking one painted crescent to do two jobs. A manually drawn curve at the left did not quite touch its object, and visually appeared *inside* the membrane, detached from the shape it was supposed to enclose.
+
+**1. The transparent left-edge hit target is the control.** It is a real button attached to the card, with a tooltip, keyboard focus indication and `aria-pressed` semantics. It remains transparent in both states. Clicks still perform exactly the same room-governance operations as before.
+
+**2. The object's own teal `box-shadow` is the visible state.** A full-perimeter shadow, not a pseudo-element stripe, implies enclosure even where the contour cannot be followed by eye. An inactive object has no special weight shadow; an active one has it. Hovering a non-active edge gives a faint, temporary preview. The Chair, standing orders and the instance Membrane are structurally heavy and retain their own permanent shadow.
+
+The *visual shadow* is common, but its operational meaning depends on the object. **Light** means ordinary participation; **heavy** means an expressly selected or constitutive role.
 
 | Object | Light | Heavy | Who may change it? |
 |---|---|---|---|
@@ -31,13 +37,13 @@ Only eligible events get a publication edge: locally posted human contributions 
 
 ## Colour and accessibility
 
-**One crescent, one colour: teal (`#168A96`).** Earlier orange and blue experiments, including different crescent colours for participants, have been superseded. A crescent means the same visual kind of weight everywhere: admission at a membrane, an authorised utterance, the holder of the floor, a default voice mode, or a structural standing order. Its *action* still depends on the object, but its shape and colour do not. Supplier identity colours (for example Claude pink) may survive inside identity icons, **not** on the weight crescent.
+**One shadow colour: teal (`#168A96`).** Orange, bright blue, differently coloured crescents, then outer-offset stroked crescents have all been superseded. The weight shadow uses the element's actual rounded geometry and applies to the whole boundary through `box-shadow`. It is deliberately restrained and does not turn a card into a solid coloured block.
 
-**The crescent hugs the object's outside-left contour**, rather than sitting as a decorative vertical line *inside* its padding. The curve should read as enclosing or protecting the object. The compact Membrane navigation item is therefore a soft teal bubble, with the same curved outside edge even when the Membrane page is not selected. Guest speech, admission status, Joe's header card, the Chair, the supplier seats, the Door button, and the standing orders use the same shared teal rule. Heavy and light are encoded through opacity/strength, with a keyboard-accessible hit target where the edge is actionable.
+The transparent left-edge button keeps its accessible label, `aria-pressed`, tooltip, pointer cursor and keyboard focus ring. A gentle *whole-object* preview appears on hover over an inactive edge; on click the full shadow is activated by the existing state. No coloured pseudo-element is drawn along the edge. The guest view is read-only and draws the same shadows for authorised messages, an admitted Door and the Chair.
 
-The background surfaces stay in Cobble's restrained neutral blue-grey palette. Do **not** turn them into large teal, blue or orange fills.
+The **Membrane** navigation item remains a soft teal bubble with a structural full-perimeter shadow. A selected Room voice bubble, Joe's heavy default and a supplier holding the floor receive that shadow only while selected. The Chair and standing-orders object are always weight-bearing. Uninstalled templates in Furniture use normal borders rather than shadows; available is not the same as deployed.
 
-The interface must also communicate this distinction **without relying on colour alone**: left-edge shape, strength, hover, focus ring, title tooltip, and accessible labels. Fixed heavy accents are not interactive controls.
+Supplier identity colours (for example Claude's pink icon) remain separate from the teal weight language. The background surfaces stay in Cobble's restrained neutral blue-grey palette, not broad orange or teal fills. Accessible labels explain the action independent of colour.
 
 ## Why we chose this
 
