@@ -258,6 +258,22 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             self.assertIn(required, self.page)
         self.assertNotIn("execCommand('copy')", self.page)
 
+    def test_meeting_door_status_and_opening_agenda_are_visible(self):
+        for required in (
+            "function refreshDoorStatus()",
+            "'/api/live/rooms/door?room_id='",
+            "Door: awaiting Sankarshan",
+            "Door: Sankarshan has entered",
+            "Replace invitation",
+            "function pollMeetingUpdates()",
+            "const firstJoe=turns.find(",
+            "t.turn_id===openingTurnId",
+            "Waiting for the convenor",
+            "participants.push('Sankarshan')",
+        ):
+            self.assertIn(required, self.page)
+        self.assertNotIn("if(i===0&&meetingInfo?.standing_orders)", self.page)
+
     def test_one_room_invitation_controls_are_separate_from_supplier_calls(self):
         for required in (
             'id="invite-human"', 'id="invite-dialog"', 'id="invite-open"',
