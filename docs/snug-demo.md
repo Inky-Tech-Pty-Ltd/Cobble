@@ -106,18 +106,18 @@ restriction are unchanged. Floor selection is browser-local and creates
 The weight design now separates **two jobs**. The clickable **left-edge
 control is transparent**, retains its tooltip/keyboard focus/`aria-pressed`
 semantics, and still changes the same governance setting. The **actual card's
-CSS box-shadow** indicates its state, softly enveloping the whole shape:
+rounded 5px CSS left border** indicates its state, hugging the shape:
 selected Room-voice messages, a supplier currently holding the floor, and
-Joe's heavy default gain the same teal (`#168A96`) shadow. Unselected
+Joe's heavy default gain the same teal (`#168A96`) border. Unselected
 objects remain neutral; hovering an inactive left edge briefly previews the
-shadow. The Chair, standing orders and instance Membrane are structurally
-heavy and retain a permanent shadow. The guest view shows that weight but
+border. The Chair, standing orders and instance Membrane are structurally
+heavy and retain a permanent weight border. The guest view shows that weight but
 cannot change it. No painted outer crescent or interior vertical stripe
 is used.
 
 This supersedes the earlier orange fills, blue/pink crescents and
 offset-stroke experiments. The **Membrane** menu retains its soft teal
-bubble, now enclosed by its own shadow. Supplier icon colours remain
+bubble, with its own close-fitting rounded border. Supplier icon colours remain
 identity markers, not weight signals. Reusable Furniture templates have
 ordinary neutral borders; they are not falsely displayed as activated objects.
 The working meeting Door remains attached to its meeting, not to McKay's

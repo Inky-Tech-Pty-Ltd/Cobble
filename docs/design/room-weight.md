@@ -1,4 +1,4 @@
-# Room weight: transparent edge controls and enclosing shadows
+# Room weight: transparent edge controls and rounded borders
 
 *Cobble design decision — 26 November 2026. [Discussion and rationale: Issue #85](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85). [Implementation: Candidate 3 PR #84](https://github.com/Inky-Tech-Pty-Ltd/Cobble/pull/84).*
 
@@ -8,9 +8,9 @@ The convenor recognised that we were asking one painted crescent to do two jobs.
 
 **1. The transparent left-edge hit target is the control.** It is a real button attached to the card, with a tooltip, keyboard focus indication and `aria-pressed` semantics. It remains transparent in both states. Clicks still perform exactly the same room-governance operations as before.
 
-**2. The object's own teal `box-shadow` is the visible state.** A full-perimeter shadow, not a pseudo-element stripe, implies enclosure even where the contour cannot be followed by eye. An inactive object has no special weight shadow; an active one has it. Hovering a non-active edge gives a faint, temporary preview. The Chair, standing orders and the instance Membrane are structurally heavy and retain their own permanent shadow.
+**2. The object's own teal `border-left` is the visible state.** The original close-fitting effect was a 5px left border on the rounded object, not a diffuse shadow. An inactive object has no special weight border; an active one has it. Hovering a non-active edge gives a faint, temporary preview. The Chair, standing orders and the instance Membrane are structurally heavy and retain their own permanent weight border.
 
-The *visual shadow* is common, but its operational meaning depends on the object. **Light** means ordinary participation; **heavy** means an expressly selected or constitutive role.
+The *visual border* is common, but its operational meaning depends on the object. **Light** means ordinary participation; **heavy** means an expressly selected or constitutive role.
 
 | Object | Light | Heavy | Who may change it? |
 |---|---|---|---|
@@ -37,11 +37,11 @@ Only eligible events get a publication edge: locally posted human contributions 
 
 ## Colour and accessibility
 
-**One shadow colour: teal (`#168A96`).** Orange, bright blue, differently coloured crescents, then outer-offset stroked crescents have all been superseded. The weight shadow uses the element's actual rounded geometry and applies to the whole boundary through `box-shadow`. It is deliberately restrained and does not turn a card into a solid coloured block.
+**One weight colour: teal (`#168A96`).** The 5px left border follows the element's actual rounded geometry. The earlier diffuse shadow, detached crescents and pseudo-element strokes are superseded.
 
-The transparent left-edge button keeps its accessible label, `aria-pressed`, tooltip, pointer cursor and keyboard focus ring. A gentle *whole-object* preview appears on hover over an inactive edge; on click the full shadow is activated by the existing state. No coloured pseudo-element is drawn along the edge. The guest view is read-only and draws the same shadows for authorised messages, an admitted Door and the Chair.
+The transparent left-edge button keeps its accessible label, `aria-pressed`, tooltip, pointer cursor and keyboard focus ring. A faint border preview appears on hover over an inactive edge; on click the solid border is activated by the existing state. No coloured pseudo-element is drawn along the edge. The guest view is read-only and draws the same borders for authorised messages, an admitted Door and the Chair.
 
-The **Membrane** navigation item remains a soft teal bubble with a structural full-perimeter shadow. A selected Room voice bubble, Joe's heavy default and a supplier holding the floor receive that shadow only while selected. The Chair and standing-orders object are always weight-bearing. Uninstalled templates in Furniture use normal borders rather than shadows; available is not the same as deployed.
+The **Membrane** navigation item remains a soft teal bubble with a structural rounded border. A selected Room voice bubble, Joe's heavy default and a supplier holding the floor receive that border only while selected. The Chair and standing-orders object are always weight-bearing. Uninstalled templates in Furniture use normal borders rather than weight borders; available is not the same as deployed.
 
 Supplier identity colours (for example Claude's pink icon) remain separate from the teal weight language. The background surfaces stay in Cobble's restrained neutral blue-grey palette, not broad orange or teal fills. Accessible labels explain the action independent of colour.
 

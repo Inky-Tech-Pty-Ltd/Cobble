@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cobble · Meetings</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-teal:#168a96;--membrane-ink:#126f77;--membrane-pale:#edf7f6;--membrane-border:#c7e3e2;--weight-claude:#c77194;--weight-shadow:0 0 0 1px #168a9640,0 0 11px #168a963d,0 4px 13px #1d28331b;--weight-preview:0 0 0 1px #168a962b,0 0 6px #168a961e}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-teal:#168a96;--membrane-ink:#126f77;--membrane-pale:#edf7f6;--membrane-border:#c7e3e2;--weight-claude:#c77194;--weight-edge-border:5px solid var(--membrane-teal);--weight-preview:5px solid #168a9650}
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden}
 button,input,textarea,select{font:inherit}
@@ -54,7 +54,7 @@ button{color:inherit}
 .membrane-boundary{display:flex;align-items:center;gap:9px;font-size:.84rem}
 .membrane-boundary.nav-item{text-align:left}
 /* Active and hover treatments are applied to the complete Membrane bubble below. */
-.instance-membrane-panel{border:1px solid var(--membrane-border);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5;box-shadow:var(--weight-shadow)}
+.instance-membrane-panel{border:1px solid var(--membrane-border);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5;border-left:var(--weight-edge-border)}
 .instance-membrane-panel strong{color:var(--membrane-ink)}
 .instance-membrane-panel p{margin:7px 0 0}
 .furniture-doors{border:1px solid var(--membrane-border);background:#f9fcfc;border-radius:12px;margin:8px 0;padding:12px 15px}
@@ -217,31 +217,31 @@ button{color:inherit}
 @media(prefers-reduced-motion:no-preference){.supplier-card,.nav-item,.secondary{transition:background-color .12s ease}}
 /* Interaction and appearance are deliberately separate.
    Invisible left-edge button = operator control.
-   Teal box-shadow on the enclosing object = its current weight.
-   The full-perimeter shadow implies a membrane; no drawn pseudo-crescent. */
+   Teal left border on the enclosing object = its current weight.
+   The actual rounded border hugs the object; no drawn pseudo-crescent. */
 .weighted{position:relative;isolation:isolate}
 .weight-edge{position:absolute;top:0;bottom:0;left:-10px;width:28px;z-index:2;border:0;border-radius:15px 0 0 15px;background:transparent;padding:0;cursor:pointer}
 .weight-edge:hover,.weight-edge:active{background:transparent}
 .weight-edge:focus-visible{outline:2px solid var(--membrane-teal);outline-offset:-2px}
 .weight-edge:disabled{cursor:not-allowed}
-.weight-fixed,.message.weight-fixed{position:relative;box-shadow:var(--weight-shadow)}
+.weight-fixed,.message.weight-fixed{position:relative;border-left:var(--weight-edge-border)}
 .message.weighted{padding-left:19px}
-.message.room-voice,.exchange.latest .message.room-voice{box-shadow:var(--weight-shadow)}
-/* Only active states receive the lasting shadow; hover previews a toggle. */
+.message.room-voice,.exchange.latest .message.room-voice{border-left:var(--weight-edge-border)}
+/* Only active states receive the lasting border; hover previews a toggle. */
 .message.weighted:not(.room-voice):has(> .weight-edge:hover),
 .supplier-card:not(.floor):has(> .weight-edge:hover),
-.joe-card:not(.default-heavy):has(> .weight-edge:hover){box-shadow:var(--weight-preview)}
+.joe-card:not(.default-heavy):has(> .weight-edge:hover){border-left:var(--weight-preview)}
 .supplier-card{position:relative;padding-left:18px;isolation:isolate}
-.supplier-card.floor{border-color:var(--membrane-border);background:#eef5fa;box-shadow:var(--weight-shadow)}
+.supplier-card.floor{border-color:var(--membrane-border);background:#eef5fa;border-left:var(--weight-edge-border)}
 .supplier-card .weight-edge{border-radius:12px 0 0 12px}
 .joe-card{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;min-width:116px;padding:6px 12px 6px 20px;background:#f2f7fa;border:1px solid #dce5eb;border-radius:10px;line-height:1.2;min-height:40px}
 .joe-card strong{font-size:.79rem}
 .joe-card small{font-size:.66rem;color:var(--muted);margin-top:3px}
 .joe-card .weight-edge{border-radius:10px 0 0 10px}
-.joe-card.default-heavy{background:#e8f4f3;box-shadow:var(--weight-shadow)}
-.standing-orders-button{position:relative;box-shadow:var(--weight-shadow)}
+.joe-card.default-heavy{background:#e8f4f3;border-left:var(--weight-edge-border)}
+.standing-orders-button{position:relative;border-left:var(--weight-edge-border)}
 #invite-human.membrane-cue{position:relative;background:white!important;color:var(--slate)!important;border:1px solid #dce4eb!important;font-weight:650}
-#invite-human.membrane-cue.door-open{box-shadow:var(--weight-shadow)}
+#invite-human.membrane-cue.door-open{border-left:var(--weight-edge-border)}
 #invite-human.membrane-cue:hover{background:#edf2f6!important}
 #invite-dialog{border:1px solid #d4dfe7}
 #invite-dialog #invite-heading{color:var(--ink)}
@@ -249,11 +249,11 @@ button{color:inherit}
 #invite-dialog #invite-revoke{color:var(--slate);border-color:#cbd8e1}
 @media(max-width:650px){.joe-card{min-width:87px;padding-right:5px}.joe-card strong{font-size:.72rem}.joe-card small{font-size:.59rem}.header{gap:3px}.header-actions{gap:2px}}
 
-/* The instance's own Membrane is inherently heavy: shadow the whole bubble. */
-.membrane-boundary{position:relative;margin:3px 0;padding:12px 13px 12px 22px;border:1px solid var(--membrane-border);border-radius:12px;background:#edf7f6;color:#24565a;font-weight:650;letter-spacing:normal;box-shadow:var(--weight-shadow)}
+/* The instance's own Membrane is inherently heavy: use the bubble's own rounded border. */
+.membrane-boundary{position:relative;margin:3px 0;padding:12px 13px 12px 22px;border:1px solid var(--membrane-border);border-radius:12px;background:#edf7f6;color:#24565a;font-weight:650;letter-spacing:normal;border-left:var(--weight-edge-border)}
 .membrane-boundary.nav-item{width:100%}
-.membrane-boundary.nav-item.active{background:#dceeed;color:#174d53;box-shadow:var(--weight-shadow)}
-.membrane-boundary.nav-item:hover{background:#e0f0ee;color:#174d53;box-shadow:var(--weight-shadow)}
+.membrane-boundary.nav-item.active{background:#dceeed;color:#174d53;border-left:var(--weight-edge-border)}
+.membrane-boundary.nav-item:hover{background:#e0f0ee;color:#174d53;border-left:var(--weight-edge-border)}
 .membrane-boundary .membrane-symbol{border:0;width:19px;height:19px;color:var(--membrane-ink)}
 .membrane-rule{display:none}
 @media(max-width:650px){.membrane-boundary{padding:9px 9px 9px 18px;margin:3px 0}}

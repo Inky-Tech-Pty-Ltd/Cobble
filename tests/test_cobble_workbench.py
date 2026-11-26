@@ -374,7 +374,7 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "api('live/rooms/revoke',{room_id:currentRoomId})",
             "This one-room invitation permits its bearer",
             "Local test only:",
-            "#invite-human.membrane-cue.door-open{box-shadow:var(--weight-shadow)}",
+            "#invite-human.membrane-cue.door-open{border-left:var(--weight-edge-border)}",
             "$('invite-human').classList.toggle('door-open',Boolean(data.open));",
             "--membrane-teal:#168a96",
         ):
@@ -382,25 +382,25 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         self.assertNotIn("#c95e21", self.page)
         self.assertNotIn("#fff4e7", self.page)
 
-    def test_transparent_click_targets_and_full_object_weight_shadow(self):
-        # The clickable edge is invisible. The *object* owns the shadow.
+    def test_transparent_click_targets_and_object_weight_border(self):
+        # The clickable edge is invisible. The *object* owns the border.
         for required in (
             "--membrane-teal:#168a96",
-            "--weight-shadow:0 0 0 1px #168a9640,0 0 11px #168a963d",
+            "--weight-edge-border:5px solid var(--membrane-teal)",
             ".weight-edge{position:absolute;top:0;bottom:0;left:-10px;width:28px;",
             "background:transparent;padding:0;cursor:pointer",
             ".weight-edge:hover,.weight-edge:active{background:transparent}",
             ".weight-edge:focus-visible{outline:2px solid var(--membrane-teal)",
-            ".message.room-voice,.exchange.latest .message.room-voice{box-shadow:var(--weight-shadow)}",
-            ".supplier-card.floor{border-color:var(--membrane-border);background:#eef5fa;box-shadow:var(--weight-shadow)}",
-            ".joe-card.default-heavy{background:#e8f4f3;box-shadow:var(--weight-shadow)}",
-            ".weight-fixed,.message.weight-fixed{position:relative;box-shadow:var(--weight-shadow)}",
-            ".standing-orders-button{position:relative;box-shadow:var(--weight-shadow)}",
-            ".membrane-boundary.nav-item.active{background:#dceeed;color:#174d53;box-shadow:var(--weight-shadow)}",
-            ".membrane-boundary.nav-item:hover{background:#e0f0ee;color:#174d53;box-shadow:var(--weight-shadow)}",
+            ".message.room-voice,.exchange.latest .message.room-voice{border-left:var(--weight-edge-border)}",
+            ".supplier-card.floor{border-color:var(--membrane-border);background:#eef5fa;border-left:var(--weight-edge-border)}",
+            ".joe-card.default-heavy{background:#e8f4f3;border-left:var(--weight-edge-border)}",
+            ".weight-fixed,.message.weight-fixed{position:relative;border-left:var(--weight-edge-border)}",
+            ".standing-orders-button{position:relative;border-left:var(--weight-edge-border)}",
+            ".membrane-boundary.nav-item.active{background:#dceeed;color:#174d53;border-left:var(--weight-edge-border)}",
+            ".membrane-boundary.nav-item:hover{background:#e0f0ee;color:#174d53;border-left:var(--weight-edge-border)}",
             ".instance-membrane-panel{border:1px solid var(--membrane-border);",
             ".furniture-doors{border:1px solid var(--membrane-border);",
-            "box-shadow:var(--weight-preview)",
+            "border-left:var(--weight-preview)",
         ):
             self.assertIn(required, self.page)
         for forbidden in (
@@ -412,14 +412,14 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         ):
             self.assertNotIn(forbidden, self.page)
 
-    def test_guest_weight_is_read_only_whole_object_shadow(self):
+    def test_guest_weight_is_read_only_object_weight_border(self):
         guest = (HTML.parent / "guest_room.html").read_text(encoding="utf-8")
         for required in (
             "--membrane-teal:#168a96",
-            "--weight-shadow:0 0 0 1px #168a9640",
-            ".message.authorised{background:#f2f8fc;border-color:#d5e4f0;box-shadow:var(--weight-shadow)}",
-            ".weight-fixed{position:relative;padding-left:16px;box-shadow:var(--weight-shadow)}",
-            ".door-status.admitted{box-shadow:var(--weight-shadow)}",
+            "--weight-edge-border:5px solid var(--membrane-teal)",
+            ".message.authorised{background:#f2f8fc;border-color:#d5e4f0;border-left:var(--weight-edge-border)}",
+            ".weight-fixed{position:relative;padding-left:16px;border-left:var(--weight-edge-border)}",
+            ".door-status.admitted{border-left:var(--weight-edge-border)}",
             "$('identity').classList.add('admitted')",
             "$('identity').classList.remove('admitted')",
             'class="door-status"',
