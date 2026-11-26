@@ -339,6 +339,58 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         self.assertNotIn("Redact voice", guest)
         self.assertNotIn("voice_event", guest)
 
+    def test_weight_edge_clicks_route_floor_and_joe_default_without_a_supplier_call(self):
+        """Exercise the actual JS controls, not just their markup."""
+        if not shutil.which("node"):
+            self.skipTest("Node.js required for interactive edge tests")
+        start = self.page.index("function createWeightEdge(")
+        end = self.page.index("function renderSuppliers(){", start)
+        controls = self.page[start:end]
+        harness = r"""
+const calls=[];
+const make=tag=>({tag,disabled:false,attributes:{},setAttribute(k,v){this.attributes[k]=v}});
+const nodes={
+ 'joe-card':{classList:{toggle:(...v)=>calls.push(['class',...v])}},
+ 'joe-voice-edge':make('button'),
+ 'joe-mode':{textContent:''},
+ 'floor-status':{textContent:''}
+};
+const $=id=>nodes[id];
+const states={claude:{live:true,active:true},mistral:{live:false,active:false}};
+const providerName=id=>({claude:'Claude',mistral:'Mistral'})[id]||id;
+function renderSuppliers(){calls.push('render')}
+function status(message){calls.push(message)}
+let roomFloor=null,joeFloor=false,invoked=0;
+async function check(){
+ const edge=createWeightEdge({heavy:false,label:'Authorise',onClick:()=>{invoked++}});
+ if(edge.attributes['aria-pressed']!=='false'||edge.attributes['aria-label']!=='Authorise')
+   throw Error('Accessible edge state missing');
+ await edge.onclick();
+ if(invoked!==1||edge.disabled)throw Error('Edge click failed');
+ selectSupplierFloor('mistral');
+ if(roomFloor!==null)throw Error('Disconnected supplier got the floor');
+ selectSupplierFloor('claude');
+ if(roomFloor!=='claude'||nodes['floor-status'].textContent.indexOf('Claude')<0)
+   throw Error('Claude could not take the floor');
+ selectSupplierFloor('claude');
+ if(roomFloor!==null)throw Error('Claude did not release the floor');
+ nodes['joe-voice-edge'].onclick();
+ if(!joeFloor||nodes['joe-voice-edge'].attributes['aria-pressed']!=='true'||
+    nodes['joe-mode'].textContent!=='Room voice by default')
+    throw Error('Joe default heavy state not set');
+ selectSupplierFloor('claude');
+ if(joeFloor||roomFloor!=='claude')throw Error('Room cannot have two defaults');
+ if(calls.some(c=>Array.isArray(c)?false:String(c).startsWith('api:')))
+    throw Error('A floor selection sent a model call');
+}
+check().catch(e=>{console.error(e);process.exitCode=1});
+"""
+        result = subprocess.run(["node", "-"], input=harness.split("async function check(){",1)[0]
+                                + controls + "\nasync function check(){"
+                                + harness.split("async function check(){",1)[1],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
         self.assertEqual(len(ids), len(set(ids)))
