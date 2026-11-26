@@ -530,6 +530,8 @@ class LiveTests(unittest.TestCase):
     def test_room_door_token_hash_persistence_expiry_and_replacement(self):
         door = MeetingDoor(self.store)
         first = door.issue(room_id="default")
+        self.assertEqual(door.status(room_id="default")["open"], True)
+        self.assertEqual(door.status(room_id="default")["arrived"], False)
         self.assertEqual(door.require(first["token"]),
                          {"room_id": "default", "speaker": "Sankarshan"})
         saved = self.store / "snug" / "doors" / "invitations.json"
@@ -537,11 +539,16 @@ class LiveTests(unittest.TestCase):
         self.assertNotIn(first["token"], saved.read_text())
         again = MeetingDoor(self.store)
         self.assertEqual(again.require(first["token"])["room_id"], "default")
+        door.require(first["token"], mark_arrival=True)
+        self.assertTrue(again.status(room_id="default")["arrived"])
+        self.assertNotIn(first["token"], json.dumps(again.status(room_id="default")))
         second = again.issue(room_id="default")
+        self.assertFalse(door.status(room_id="default")["arrived"])
         with self.assertRaises(PermissionError):
             door.require(first["token"])
         self.assertEqual(door.require(second["token"])["speaker"], "Sankarshan")
         again.revoke(room_id="default")
+        self.assertFalse(door.status(room_id="default")["open"])
         with self.assertRaises(PermissionError):
             door.require(second["token"])
         with self.assertRaises(ValueError):
@@ -602,6 +609,46 @@ class LiveTests(unittest.TestCase):
                          {"title": "Shared table"})["id"]
                 b = call(operator_port, "/api/live/rooms/create",
                          {"title": "Private room"})["id"]
+                waiting = call(operator_port, "/api/live/rooms/create",
+                               {"title": "Waiting for Joe"})["id"]
+                invitation = call(operator_port, "/api/live/rooms/invite",
+                                  {"room_id": waiting})
+                waiting_token = parse_qs(urlsplit(invitation["guest_url"]).fragment)["invite"][0]
+                status = call(operator_port, "/api/live/rooms/door?room_id=" + waiting)
+                self.assertTrue(status["open"])
+                self.assertFalse(status["arrived"])
+                self.assertNotIn(waiting_token, json.dumps(status))
+                before = call(guest_port, "/api/guest/session",
+                              guest=True, token=waiting_token)
+                self.assertFalse(before["meeting"]["convenor_started"])
+                status = call(operator_port, "/api/live/rooms/door?room_id=" + waiting)
+                self.assertTrue(status["arrived"])
+                self.assertNotIn(waiting_token, json.dumps(status))
+                call(guest_port, "/api/guest/post", {"text": "Premature guest agenda"},
+                     guest=True, token=waiting_token, expected=403)
+                self.assertEqual(call(operator_port, "/api/live/output?room_id=" + waiting)["agenda"], "")
+                call(operator_port, "/api/live/post",
+                     {"room_id": waiting, "text": "Joe opens the table"})
+                after = call(guest_port, "/api/guest/session",
+                             guest=True, token=waiting_token)
+                self.assertTrue(after["meeting"]["convenor_started"])
+                call(guest_port, "/api/guest/post",
+                     {"text": "Now I'm invited to speak"},
+                     guest=True, token=waiting_token)
+                self.assertEqual(call(operator_port, "/api/live/output?room_id=" + waiting)["agenda"],
+                                 "Joe opens the table")
+                # Existing early experiments may contain a guest post before
+                # the convenor. Immutable history stays put; the guest never
+                # becomes the agenda by accident.
+                legacy = call(operator_port, "/api/live/rooms/create",
+                              {"title": "Pre-fix meeting"})["id"]
+                LiveChatService(self.store, adapters={}, meeting_id=legacy).post_operator(
+                    text="Guest spoke too soon", speaker="Sankarshan")
+                call(operator_port, "/api/live/post",
+                     {"room_id": legacy, "text": "Joe's actual agenda"})
+                self.assertEqual(
+                    call(operator_port, "/api/live/output?room_id=" + legacy)["agenda"],
+                    "Joe's actual agenda")
                 call(operator_port, "/api/live/post",
                      {"room_id": a, "text": "Shared agenda"})
                 call(operator_port, "/api/live/post",
@@ -633,6 +680,7 @@ class LiveTests(unittest.TestCase):
                     call(guest_port, "/api/guest/session?room_id=" + b,
                          guest=True, token=token, expected=404)["error"], "Not found")
                 data = call(guest_port, "/api/guest/session", guest=True, token=token)
+                self.assertTrue(data["meeting"]["convenor_started"])
                 self.assertEqual(data["meeting"]["id"], a)
                 self.assertEqual(data["speaker"], "Sankarshan")
                 self.assertEqual(data["turns"][0]["question"], "Shared agenda")
