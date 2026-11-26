@@ -366,7 +366,7 @@ check().catch(e=>{console.error(e);process.exitCode=1});
                         "Redact voice", "Restore voice", "Authorise room voice"):
             self.assertNotIn(removed, self.page)
 
-    def test_room_door_unchanged_except_outer_teal_crescent(self):
+    def test_room_door_highlight_appears_only_when_invitation_is_open(self):
         for required in (
             'id="invite-human"', 'id="invite-dialog"', 'id="invite-open"',
             'id="invite-revoke"', 'id="invite-copy"',
@@ -374,50 +374,62 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "api('live/rooms/revoke',{room_id:currentRoomId})",
             "This one-room invitation permits its bearer",
             "Local test only:",
-            "#invite-human.membrane-cue::before",
+            "#invite-human.membrane-cue.door-open{box-shadow:var(--weight-shadow)}",
+            "$('invite-human').classList.toggle('door-open',Boolean(data.open));",
             "--membrane-teal:#168a96",
         ):
             self.assertIn(required, self.page)
         self.assertNotIn("#c95e21", self.page)
         self.assertNotIn("#fff4e7", self.page)
 
-    def test_crescents_wrap_outer_boundaries_in_one_teal(self):
+    def test_transparent_click_targets_and_full_object_weight_shadow(self):
+        # The clickable edge is invisible. The *object* owns the shadow.
         for required in (
             "--membrane-teal:#168a96",
-            ".weight-edge{position:absolute;top:0;bottom:0;left:-10px",
-            ".weight-fixed::before{left:-9px;top:0;bottom:0",
-            "border-left:4px solid var(--membrane-teal)",
-            "border-radius:50% 0 0 50%",
-            ".membrane-boundary::before{content:\"\";position:absolute;left:-10px",
-            ".membrane-boundary{position:relative;isolation:isolate;",
-            "background:#edf7f6;color:#24565a",
-            ".membrane-boundary.nav-item.active{background:#dceeed",
+            "--weight-shadow:0 0 0 1px #168a9640,0 0 11px #168a963d",
+            ".weight-edge{position:absolute;top:0;bottom:0;left:-10px;width:28px;",
+            "background:transparent;padding:0;cursor:pointer",
+            ".weight-edge:hover,.weight-edge:active{background:transparent}",
+            ".weight-edge:focus-visible{outline:2px solid var(--membrane-teal)",
+            ".message.room-voice,.exchange.latest .message.room-voice{box-shadow:var(--weight-shadow)}",
+            ".supplier-card.floor{border-color:var(--membrane-border);background:#eef5fa;box-shadow:var(--weight-shadow)}",
+            ".joe-card.default-heavy{background:#e8f4f3;box-shadow:var(--weight-shadow)}",
+            ".weight-fixed{position:relative;box-shadow:var(--weight-shadow)}",
+            ".standing-orders-button{position:relative;box-shadow:var(--weight-shadow)}",
+            ".membrane-boundary.nav-item.active{background:#dceeed;color:#174d53;box-shadow:var(--weight-shadow)}",
+            ".membrane-boundary.nav-item:hover{background:#e0f0ee;color:#174d53;box-shadow:var(--weight-shadow)}",
+            ".instance-membrane-panel{border:1px solid var(--membrane-border);",
+            ".furniture-doors{border:1px solid var(--membrane-border);",
+            "box-shadow:var(--weight-preview)",
         ):
             self.assertIn(required, self.page)
-        # Coloured supplier identity marks remain; their weight edges do not
-        # borrow supplier or participant colours.
         for forbidden in (
+            ".weight-edge::before", ".weight-fixed::before",
+            ".membrane-boundary::before", ".standing-orders-button::before",
+            "#invite-human.membrane-cue::before",
             "--membrane-orange:", "--membrane-blue:",
-            "--weight-openai:", "--weight-joe:", "--weight-chair:",
-            "--weight-mistral:", ".exchange.supplier[data-provider=\"claude\"]{--weight-tone:",
-            "left:1px;top:10%;height:80%",
+            "border-left:4px solid var(--membrane-teal)",
         ):
             self.assertNotIn(forbidden, self.page)
 
-    def test_guest_uses_matching_read_only_crescents(self):
+    def test_guest_weight_is_read_only_whole_object_shadow(self):
         guest = (HTML.parent / "guest_room.html").read_text(encoding="utf-8")
         for required in (
             "--membrane-teal:#168a96",
+            "--weight-shadow:0 0 0 1px #168a9640",
+            ".message.authorised{background:#f2f8fc;border-color:#d5e4f0;box-shadow:var(--weight-shadow)}",
+            ".weight-fixed{position:relative;padding-left:16px;box-shadow:var(--weight-shadow)}",
+            ".door-status{padding-left:14px;box-shadow:var(--weight-shadow)}",
             'class="door-status"',
-            "weighted:not(.authorised)::before",
-            "weighted::before,.weight-fixed::before",
-            "class=\"weight-fixed\"",
+            'class="weight-fixed"',
             "const humanVoice=t.provider==='operator'&&t.authorised_voice",
         ):
             self.assertIn(required, guest)
-        self.assertNotIn("--membrane-orange", guest)
-        self.assertNotIn("Redact voice", guest)
-        self.assertNotIn("voice_event", guest)
+        for forbidden in (
+            ".weighted::before", ".weight-fixed::before", ".door-status::before",
+            ".weight-edge", "--membrane-orange", "Redact voice", "voice_event",
+        ):
+            self.assertNotIn(forbidden, guest)
 
     def test_weight_edge_clicks_route_floor_and_joe_default_without_a_supplier_call(self):
         """Exercise the actual JS controls, not just their markup."""
