@@ -631,6 +631,7 @@ function renderIntelligences(){
 function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
  const firstJoe=turns.find(t=>t.provider==='operator'&&(t.speaker||'Joe')==='Joe'&&t.status==='posted');
+ $('question').placeholder=firstJoe?'Message the meeting…':'Open the meeting with your agenda…';
  const openingTurnId=(firstJoe||turns[0])?.turn_id;
  if(!firstJoe){
   const note=make('p','Waiting for the convenor\'s opening agenda. Joe\'s first post opens the table; an invited guest can enter but cannot speak yet.');
@@ -673,6 +674,8 @@ function updateSend(){
  $('send').disabled=busy||!serverReady||!$('question').value.trim();
 }
 function chooseRecipient(question){
+ // The convenor's opening agenda is a local post, never a paid AI request.
+ if(!turns.some(t=>t.provider==='operator'&&(t.speaker||'Joe')==='Joe'&&t.status==='posted'))return 'post-only';
  if(joeFloor)return 'post-only';
  if(roomFloor&&states[roomFloor]?.active)return roomFloor;
  const named=question.match(/^(?:(?:hey|hello|hi|dear|mr\.?)\s+)?(GPT|Claude|Mistral)\b[\s,.:!?-]*/i);
