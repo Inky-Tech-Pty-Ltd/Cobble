@@ -49,6 +49,18 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("#invite-human.membrane-cue", self.page)
         self.assertIn('class="furniture-doors"', self.page)
 
+    def test_all_room_costs_come_from_server_not_visited_browser_rooms(self):
+        self.assertIn("function applyCostSnapshot(data)", self.page)
+        self.assertIn("estimated_total_usd", self.page)
+        self.assertIn("room.estimated_cost_usd", self.page)
+        self.assertIn("async function refreshMeetingCosts()", self.page)
+        self.assertIn("applyCostSnapshot(data);", self.page)
+        self.assertIn("await refreshMeetingCosts();", self.page)
+        self.assertIn("Recorded supplier cost estimates across all saved meetings",
+                      self.page)
+        self.assertNotIn("meetingCosts[currentRoomId]=turns.reduce", self.page)
+        self.assertNotIn("Object.values(meetingCosts).reduce", self.page)
+
     def test_navigation_sidebar_and_meeting_layout(self):
         for item in ("Senses", "Memories", "Intelligences", "Meetings", "Setup", "Help",
                      'id="sidebar"', 'id="resize-grip"', "ondblclick",
