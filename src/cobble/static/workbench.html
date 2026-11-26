@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cobble · Meetings</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-blue:#0c94e8;--membrane-ink:#08639b;--membrane-pale:#f0f7ff;--membrane-border:#b8d8ef;--weight-joe:#168a96;--weight-chair:#3b5166;--weight-openai:#49877c;--weight-claude:#c77194;--weight-mistral:#627faa}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-teal:#168a96;--membrane-ink:#126f77;--membrane-pale:#edf7f6;--membrane-border:#c7e3e2;--weight-claude:#c77194}
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden}
 button,input,textarea,select{font:inherit}
@@ -51,28 +51,28 @@ button{color:inherit}
 .icon-button:hover,.nav-item:hover,.meeting-item:hover{background:#edf2f6}
 .icon-button svg,.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .primary-nav{display:flex;flex-direction:column;gap:3px;margin-top:9px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding-bottom:8px}
-.membrane-boundary{display:flex;align-items:center;gap:9px;margin:11px 4px 9px;padding:10px 11px;border-top:2px solid var(--membrane-blue);border-bottom:2px solid var(--membrane-blue);border-radius:5px;background:var(--membrane-pale);color:var(--membrane-ink);font-weight:750;letter-spacing:.045em;font-size:.84rem}
-.membrane-boundary.nav-item{width:calc(100% - 8px);text-align:left}
-.membrane-boundary.nav-item:hover,.membrane-boundary.nav-item.active{background:#e9f4fd;color:var(--membrane-ink);box-shadow:inset 3px 0 0 var(--membrane-blue)}
-.instance-membrane-panel{border-left:4px solid var(--membrane-blue);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5}
+.membrane-boundary{display:flex;align-items:center;gap:9px;font-size:.84rem}
+.membrane-boundary.nav-item{text-align:left}
+/* Active and hover treatments are applied to the complete Membrane bubble below. */
+.instance-membrane-panel{border-left:4px solid var(--membrane-teal);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5}
 .instance-membrane-panel strong{color:var(--membrane-ink)}
 .instance-membrane-panel p{margin:7px 0 0}
-.furniture-doors{border-left:4px solid var(--membrane-blue);background:var(--membrane-pale);border-radius:12px;margin:8px 0;padding:12px 15px}
+.furniture-doors{border-left:4px solid var(--membrane-teal);background:var(--membrane-pale);border-radius:12px;margin:8px 0;padding:12px 15px}
 .furniture-doors summary{cursor:pointer;color:var(--membrane-ink);font-weight:700}
 .furniture-doors .door-detail{margin-top:12px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
-.furniture-doors button{color:var(--membrane-ink);border:1px solid var(--membrane-blue);border-radius:9px;background:#f7fbff;padding:8px 12px;font-weight:600}
+.furniture-doors button{color:var(--membrane-ink);border:1px solid var(--membrane-teal);border-radius:9px;background:#f7fbff;padding:8px 12px;font-weight:600}
 .furniture-doors button:hover{background:#e9f4fd}
-.membrane-symbol{display:inline-grid;place-items:center;border:2px solid var(--membrane-blue);border-radius:50%;width:20px;height:20px;font-size:.7rem;line-height:1;flex-shrink:0}
+.membrane-symbol{display:inline-grid;place-items:center;border:2px solid var(--membrane-teal);border-radius:50%;width:20px;height:20px;font-size:.7rem;line-height:1;flex-shrink:0}
 .membrane-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .membrane-rule{height:1px;background:var(--membrane-border);flex:1;min-width:8px}
-.membrane-cue{color:var(--membrane-ink)!important;border-color:var(--membrane-border)!important;background:var(--membrane-pale)!important}
-#invite-human.membrane-cue{font-weight:750}
-#invite-human.membrane-cue:hover{background:#e9f4fd!important}
-#invite-dialog{border:2px solid var(--membrane-blue)}
+.membrane-cue{color:var(--slate)!important;background:white!important}
+#invite-human.membrane-cue{font-weight:650}
+#invite-human.membrane-cue:hover{background:#edf2f6!important}
+#invite-dialog{border:2px solid var(--membrane-teal)}
 #invite-dialog #invite-heading{color:var(--membrane-ink)}
-#invite-dialog #invite-open{border-color:var(--membrane-blue);background:var(--membrane-blue);color:white;font-weight:700}
-#invite-dialog #invite-revoke{color:var(--membrane-ink);border-color:var(--membrane-blue)}
-.furniture-door{border-left:4px solid var(--membrane-blue);background:var(--membrane-pale)}
+#invite-dialog #invite-open{border-color:var(--membrane-teal);background:var(--membrane-teal);color:white;font-weight:700}
+#invite-dialog #invite-revoke{color:var(--membrane-ink);border-color:var(--membrane-teal)}
+.furniture-door{border-left:4px solid var(--membrane-teal);background:var(--membrane-pale)}
 .furniture-door strong{color:var(--membrane-ink)}
 .utility-nav{display:flex;gap:4px;padding-top:6px;margin-top:5px;border-top:1px solid var(--line);flex-shrink:0}
 .utility-nav .nav-item{justify-content:center;gap:7px;padding:7px 5px;font-size:.76rem}
@@ -217,41 +217,33 @@ button{color:inherit}
 @media(prefers-reduced-motion:no-preference){.supplier-card,.nav-item,.secondary{transition:background-color .12s ease}}
 /* Room weight is a control surface, not a broad colour fill.
    Same crescent shape, different semantics at each object boundary. */
-.weighted{position:relative;--weight-tone:var(--membrane-blue)}
-.weight-edge{position:absolute;top:0;bottom:0;left:0;width:18px;z-index:2;border:0;border-radius:12px 0 0 12px;background:transparent;padding:0;cursor:pointer;color:var(--weight-tone)}
-.weight-edge::before,.weight-fixed::before{content:"";display:block;position:absolute;left:1px;top:10%;height:80%;width:5px;border-left:4px solid var(--weight-tone);border-radius:90% 0 0 90%;opacity:.24;transition:opacity .12s ease,width .12s ease}
-.weight-edge[aria-pressed="true"]::before,.weight-fixed::before{opacity:1;width:7px}
-.weight-edge:hover::before,.weight-edge:focus-visible::before{opacity:1;width:8px}
-.weight-edge:focus-visible{outline:2px solid var(--weight-tone);outline-offset:1px}
+.weighted{position:relative;--weight-tone:var(--membrane-teal);isolation:isolate}
+.weight-edge{position:absolute;top:0;bottom:0;left:-10px;width:28px;z-index:2;border:0;border-radius:15px 0 0 15px;background:transparent;padding:0;cursor:pointer;color:var(--weight-tone)}
+.weight-edge::before,.weight-fixed::before{content:"";display:block;position:absolute;left:1px;top:0;bottom:0;width:22px;border-left:4px solid var(--membrane-teal);border-radius:50% 0 0 50%;opacity:.22;transition:opacity .12s ease,border-width .12s ease}
+.weight-edge[aria-pressed="true"]::before,.weight-fixed::before{opacity:1}
+.weight-edge:hover::before,.weight-edge:focus-visible::before{opacity:1;border-left-width:5px}
+.weight-edge:focus-visible{outline:2px solid var(--membrane-teal);outline-offset:-2px}
 .weight-edge:disabled{cursor:not-allowed;opacity:.25}
 .weight-edge:disabled::before{opacity:.16}
-.weight-fixed{position:relative;--weight-tone:var(--weight-chair)}
-.message.weighted{padding-left:24px}
+.weight-fixed{position:relative;--weight-tone:var(--membrane-teal);isolation:isolate}
+.message.weighted{padding-left:19px}
 .message.room-voice{box-shadow:inset 0 0 0 1px #bdd4e3}
-.exchange.human{--weight-tone:var(--weight-joe)}
-.exchange.human[data-speaker="Sankarshan"]{--weight-tone:var(--membrane-blue)}
-.exchange.supplier[data-provider="openai"]{--weight-tone:var(--weight-openai)}
-.exchange.supplier[data-provider="claude"]{--weight-tone:var(--weight-claude)}
-.exchange.supplier[data-provider="mistral"]{--weight-tone:var(--weight-mistral)}
-.exchange.supplier.chair{--weight-tone:var(--weight-chair)}
-.weight-fixed::before{height:85%;top:7.5%}
-.supplier-card{position:relative;padding-left:18px}
-.supplier-card[data-provider="openai"]{--weight-tone:var(--weight-openai)}
-.supplier-card[data-provider="claude"]{--weight-tone:var(--weight-claude)}
-.supplier-card[data-provider="mistral"]{--weight-tone:var(--weight-mistral)}
+/* Every crescent has the same meaning and the same teal. Supplier identity colours belong to their icons, not their boundary. */
+.weight-fixed::before{left:-9px;top:0;bottom:0;height:auto;width:22px}
+.supplier-card{position:relative;padding-left:18px;isolation:isolate;--weight-tone:var(--membrane-teal)}
 .supplier-card.floor{border-color:#c7d7e4;background:#eef5fa}
-.supplier-card .weight-edge{border-radius:10px 0 0 10px}
+.supplier-card .weight-edge{border-radius:12px 0 0 12px}
 .supplier-card .weight-edge:disabled{opacity:.3}
 .supplier-card.off .weight-edge{opacity:.25}
-.joe-card{--weight-tone:var(--weight-joe);position:relative;display:flex;flex-direction:column;justify-content:center;min-width:116px;padding:6px 12px 6px 23px;background:#f2f7fa;border:1px solid #dce5eb;border-radius:10px;line-height:1.2;min-height:40px}
+.joe-card{--weight-tone:var(--membrane-teal);position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;min-width:116px;padding:6px 12px 6px 20px;background:#f2f7fa;border:1px solid #dce5eb;border-radius:10px;line-height:1.2;min-height:40px}
 .joe-card strong{font-size:.79rem}
 .joe-card small{font-size:.66rem;color:var(--muted);margin-top:3px}
 .joe-card .weight-edge{border-radius:10px 0 0 10px}
-.joe-card.default-heavy{background:#e7f2f4}
-.standing-orders-button{position:relative;--weight-tone:var(--weight-chair);padding-left:18px!important}
-.standing-orders-button::before{content:"";position:absolute;left:3px;top:15%;height:70%;width:5px;border-left:4px solid var(--weight-chair);border-radius:90% 0 0 90%}
+.joe-card.default-heavy{background:#e8f4f3}
+.standing-orders-button{position:relative;--weight-tone:var(--membrane-teal);padding-left:18px!important}
+.standing-orders-button::before{content:"";position:absolute;left:-5px;top:0;bottom:0;width:15px;border-left:4px solid var(--membrane-teal);border-radius:50% 0 0 50%}
 #invite-human.membrane-cue{position:relative;background:white!important;color:var(--slate)!important;border:1px solid #dce4eb!important;padding-left:18px!important;font-weight:650}
-#invite-human.membrane-cue::before{content:"";position:absolute;left:3px;top:14%;height:72%;border-left:4px solid var(--membrane-blue);border-radius:90%}
+#invite-human.membrane-cue::before{content:"";position:absolute;left:-5px;top:0;bottom:0;width:15px;border-left:4px solid var(--membrane-teal);border-radius:50% 0 0 50%}
 #invite-human.membrane-cue:hover{background:#edf2f6!important}
 #invite-dialog{border:1px solid #d4dfe7}
 #invite-dialog #invite-heading{color:var(--ink)}
@@ -259,11 +251,12 @@ button{color:inherit}
 #invite-dialog #invite-revoke{color:var(--slate);border-color:#cbd8e1}
 @media(max-width:650px){.joe-card{min-width:87px;padding-right:5px}.joe-card strong{font-size:.72rem}.joe-card small{font-size:.59rem}.header{gap:3px}.header-actions{gap:2px}}
 
-/* Instance Membrane is a destination with a crescent, not a divider band. */
-.membrane-boundary{position:relative;--weight-tone:var(--membrane-blue);margin:3px 0;padding:12px 13px 12px 22px;border:0;border-radius:10px;background:transparent;color:var(--slate);font-weight:650;letter-spacing:normal}
+/* This Cobble instance's Membrane is a soft teal object, wrapped on the outside. */
+.membrane-boundary{position:relative;isolation:isolate;--weight-tone:var(--membrane-teal);margin:3px 0;padding:12px 13px 12px 22px;border:1px solid var(--membrane-border);border-radius:12px;background:#edf7f6;color:#24565a;font-weight:650;letter-spacing:normal}
 .membrane-boundary.nav-item{width:100%}
-.membrane-boundary::before{content:"";position:absolute;left:3px;top:15%;height:70%;width:7px;border-left:4px solid var(--weight-tone);border-radius:100% 0 0 100%}
-.membrane-boundary.nav-item.active,.membrane-boundary.nav-item:hover{background:#e2ebf3;color:#23475d;box-shadow:none}
+.membrane-boundary::before{content:"";position:absolute;left:-10px;top:-1px;bottom:-1px;width:23px;border-left:4px solid var(--membrane-teal);border-radius:50% 0 0 50%}
+.membrane-boundary.nav-item.active{background:#dceeed;color:#174d53;box-shadow:none}
+.membrane-boundary.nav-item:hover{background:#e0f0ee;color:#174d53;box-shadow:none}
 .membrane-boundary .membrane-symbol{border:0;width:19px;height:19px;color:var(--membrane-ink)}
 .membrane-rule{display:none}
 @media(max-width:650px){.membrane-boundary{padding:9px 9px 9px 18px;margin:3px 0}}
