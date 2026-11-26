@@ -57,6 +57,78 @@ class LiveTests(unittest.TestCase):
         p = self.svc.preview(question=question)
         return self.svc.send(approval_token=p["approval_token"])["turn"]
 
+    def test_durable_estimated_cost_survives_unopened_room_and_history_window(self):
+        """All saved estimates, not browser-opened or last 100 turns."""
+        from cobble.meeting_rooms import MeetingCatalog
+        from decimal import Decimal
+
+        class Priced:
+            name = "openai"
+
+            def answer(self, request):
+                return fake_reply("A saved paid response.")
+
+        catalog = MeetingCatalog(self.store)
+        distant = catalog.create(title="Never opened in this browser")["id"]
+        closed = catalog.create(title="Closed room")["id"]
+        catalog.configure(meeting_id=closed, state="closed")
+
+        default = LiveChatService(self.store, adapter=Priced())
+        old = LiveChatService(self.store, adapter=Priced(), meeting_id=distant)
+        another = LiveChatService(self.store, adapter=Priced(), meeting_id=closed)
+        default.send(approval_token=default.preview(question="Default")["approval_token"])
+        old.send(approval_token=old.preview(question="First paid call")["approval_token"])
+        another.send(approval_token=another.preview(question="Closed later")["approval_token"])
+        for i in range(101):
+            old.post_operator(text=f"Local message {i}")
+        self.assertNotIn("openai", [t["provider"] for t in old.session()["turns"]])
+        self.assertEqual(old.recorded_estimated_cost_usd(), "0.00001")
+        self.assertEqual(LiveChatService(self.store, adapters={},
+                         meeting_id=distant).recorded_estimated_cost_usd(), "0.00001")
+
+        index = self.store / "index" / "search.sqlite3"
+        build(self.store, index)
+        entry = Path(__file__).resolve().parents[1] / "scripts" / "snug_demo_web.py"
+        spec = importlib.util.spec_from_file_location("snug_demo_web", entry)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        with module.create_server(self.store, index, port=0) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                conn = http.client.HTTPConnection("127.0.0.1", server.server_port,
+                                                  timeout=10)
+                conn.request("GET", "/api/live/rooms")
+                response = conn.getresponse()
+                payload = json.loads(response.read())
+                conn.close()
+                self.assertEqual(response.status, 200)
+                self.assertEqual(Decimal(payload["estimated_total_usd"]), Decimal("0.00003"))
+                prices = {room["id"]: Decimal(room["estimated_cost_usd"])
+                          for room in payload["rooms"]}
+                self.assertEqual(set(prices), {"default", distant, closed})
+                self.assertEqual(prices[distant], Decimal("0.00001"))
+                self.assertEqual(prices[closed], Decimal("0.00001"))
+                self.assertNotIn("payload", payload)
+                self.assertNotIn("turns", payload)
+                self.assertNotIn("question", payload)
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+
+    def test_unknown_supplier_outcome_does_not_invent_an_estimated_cost(self):
+        self.assertEqual(self.svc.recorded_estimated_cost_usd(), "0")
+        self.send("Known paid call")
+        self.assertEqual(self.svc.recorded_estimated_cost_usd(), "0.00001")
+        self.supplier.fail = True
+        p = self.svc.preview(question="Outcome uncertain")
+        with self.assertRaises(OutcomeUnknown):
+            self.svc.send(approval_token=p["approval_token"])
+        self.assertEqual(self.svc.recorded_estimated_cost_usd(), "0.00001")
+        self.assertEqual(LiveChatService(self.store, adapters={})
+                         .recorded_estimated_cost_usd(), "0.00001")
+
     def test_standing_orders_are_distinct_and_in_exact_payload_for_all_suppliers(self):
         orders = "Convenor rule: listen before speaking."
         request = ExchangeRequest(
