@@ -79,6 +79,36 @@ markers, not official trademark artwork or endorsements. The existing
 perspective boardroom remains available at **http://127.0.0.1:8766/boardroom**
 for comparison and its filename-only staging controls.
 
+
+### Candidate 3: Room weight and left-edge controls (26 November 2026)
+
+**Read the source decisions:** [Room-weight design note](design/room-weight.md)
+and [GitHub Issue #85 — why the crescents work this way](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85).
+The live interface's **Help → Room weight** link opens the decision on GitHub.
+
+The same left-edge crescent now carries a family of *weight* meanings.
+Click a **speech bubble's** edge to include or withdraw a posted human
+contribution or completed supplier reply from the Room's outward voice.
+Click the **left edge of a connected supplier's card** to give that supplier
+the floor for the next manually sent request, or to release it.
+Click **Joe's top-right edge** to toggle his default future posts between
+ordinary table talk and the Room's outward voice. The Chair and standing
+orders have a permanently heavy edge, but this does not publish the
+standing orders. Individual posts remain independently adjustable.
+
+Each interactive edge is an accessible button with hover, keyboard focus,
+tooltip and `aria-pressed`. The guest interface is *read-only with respect to*
+these choices. The server's immutable message ledger, voice/redaction
+metadata, supplier preview/approval flow, and the guest's room-only
+restriction are unchanged. Floor selection is browser-local and creates
+**no** paid model calls by itself.
+
+The visual experiment with broad orange fills has been withdrawn in favour
+of slender crescents and existing Inky palette accents, especially membrane
+blue `#0C94E8` and Claude's pink supplier tone. The **Membrane** entry
+represents the boundary of this instance; smaller Room Doors are in
+**Furniture → Doors**. The meeting's Door does not open the McKay instance.
+
 ### Workspace navigation
 
 #### Senses
