@@ -362,48 +362,53 @@ button{color:inherit}
           <p class="pane-intro">The boundary of <strong>this Cobble instance</strong>, not the entrance to an individual meeting. Teal crescents identify a membrane wherever it appears.</p>
           <div class="instance-membrane-panel">
             <strong>Instance membrane · McKay</strong>
-            <p>This membrane separates this instance's private memories and tools from what it encounters through Senses. Its Doors would govern admission; its Windows would show selected information outward.</p>
+            <p>This membrane separates this instance's private memories and tools from what it encounters through Senses. These pages are the inventory of <strong>actual Doors and Windows installed here</strong>, not a catalogue of available types.</p>
           </div>
-          <div class="info-row"><span>Doors</span><small>Who or what may cross this instance's boundary · <button id="membrane-doors-open" type="button" class="link" aria-label="Open this instance's Doors">Explore Doors</button></small></div>
-          <div class="info-row"><span>Windows</span><small>What this instance chooses to show beyond its boundary · <button id="membrane-windows-open" type="button" class="link" aria-label="Open this instance's Windows">Explore Windows</button></small></div>
-          <p class="pane-intro">Neither submenu is an active access or publication policy yet. Smaller Rooms have their own Doors and Windows under <strong>Furniture</strong>; opening a meeting Door does not open McKay's membrane.</p>
+          <div class="info-row"><span>Deployed Doors</span><small>Instance-level installations · <button id="membrane-doors-open" type="button" class="link" aria-label="View deployed Doors of this instance">View Doors</button></small></div>
+          <div class="info-row"><span>Deployed Windows</span><small>Instance-level installations · <button id="membrane-windows-open" type="button" class="link" aria-label="View deployed Windows of this instance">View Windows</button></small></div>
+          <p class="pane-intro">Only deployments at <em>this instance's membrane</em> belong in this inventory. Reusable, uninstalled designs belong under <strong>Furniture</strong>. A meeting's deployed Door belongs to that meeting's own membrane, and does not open McKay's.</p>
         </div></div>
       </section>
       <section class="screen" id="screen-membrane-doors" aria-label="Doors of this Cobble instance">
         <div class="content-pane"><div class="reading">
-          <p class="pane-intro">Doors are the <strong>admission mechanisms at this Cobble instance's membrane</strong>. They assess whether an incoming connection or contribution may enter, subject to the instance's trust policy.</p>
-          <div class="instance-membrane-panel"><strong>Instance Doors · not yet configured</strong>
-            <p>McKay's operator console remains local. This page does not expose a new remote entrance or give anyone access to its private memories, tools, or credentials.</p>
+          <p class="pane-intro">The <strong>installed Doors of this Cobble instance</strong> belong here: individual admissions mechanisms placed at McKay's own membrane, as distinct from Door templates available in Furniture.</p>
+          <div class="instance-membrane-panel"><strong>Deployed instance Doors · none registered</strong>
+            <p>This Candidate 3 build has no inventory or installation mechanism for instance-level Door objects. This is an honest empty state, not a live registry query. Nothing on this page grants access to McKay's memories, tools or credentials.</p>
           </div>
-          <div class="info-row"><span>Operator console</span><small>Localhost-only in this demonstration</small></div>
-          <div class="info-row"><span>Instance admission and trust policy</span><small>Future capability · no access controls can be changed here</small></div>
-          <p class="pane-intro">The working invitation Door belongs to an <em>individual meeting Room</em>, not to McKay's instance membrane. Find smaller Doors under <strong>Furniture → Doors</strong>.</p>
+          <div class="info-row"><span>Existing operator interface</span><small>Loopback-only service; not a configured Door object</small></div>
+          <div class="info-row"><span>Door installations</span><small>Registry and deployment controls are future work</small></div>
+          <p class="pane-intro">The working invitation Door is installed <em>on the selected meeting Room</em> and operated in Meetings; it is not installed at this Cobble instance's outer membrane. Its reusable <strong>template</strong> is described in Furniture → Doors.</p>
         </div></div>
       </section>
       <section class="screen" id="screen-membrane-windows" aria-label="Windows of this Cobble instance">
         <div class="content-pane"><div class="reading">
-          <p class="pane-intro">Windows govern <strong>what this Cobble instance chooses to show outward</strong> across its membrane. A Window might display selected Star Credentials without exposing the memories from which they were assembled.</p>
-          <div class="instance-membrane-panel"><strong>Instance Windows · not yet configured</strong>
-            <p>No instance-level public display, Star Credential publishing endpoint or outbound disclosure policy is available from this page.</p>
+          <p class="pane-intro">The <strong>installed Windows of this Cobble instance</strong> belong here: particular outward-facing views actually deployed on McKay's membrane, rather than reusable Window templates.</p>
+          <div class="instance-membrane-panel"><strong>Deployed instance Windows · none registered</strong>
+            <p>This Candidate 3 build has no inventory or installation mechanism for instance-level Window objects. This is an honest empty state, not a live registry query. No Star Credentials or other information are published by visiting this page.</p>
           </div>
-          <div class="info-row"><span>Published views</span><small>None configured here</small></div>
-          <div class="info-row"><span>Visibility and provenance rules</span><small>Future capability · no information is published by opening this page</small></div>
-          <p class="pane-intro">A Room's outward voice or a smaller Room's Window is not automatically a Window through the instance membrane.</p>
+          <div class="info-row"><span>Published instance views</span><small>No Window installations registered here</small></div>
+          <div class="info-row"><span>Window installations</span><small>Registry and disclosure controls are future work</small></div>
+          <p class="pane-intro">A meeting's outward voice is not automatically a Window through McKay's instance membrane. Reusable Window designs belong in Furniture → Windows.</p>
         </div></div>
       </section>
       <section class="screen" id="screen-furniture" aria-label="Furniture">
         <div class="content-pane"><div class="reading">
-          <p class="pane-intro">Furniture describes the roles of smaller Rooms within Cobble. Doors govern admission at the membrane of their own Room. These are not yet a general furniture marketplace.</p>
+          <p class="pane-intro"><strong>Furniture is the template catalogue.</strong> Doors, Windows, Chairs, Seats and other fittings are reusable designs that a Room may deploy. Browsing a template does not install or operate it.</p>
           <details class="furniture-doors" id="furniture-doors">
-            <summary>Doors · admission to smaller Rooms</summary>
-            <div class="door-detail"><span>Meeting Door · admit Sankarshan into the currently selected meeting, without admitting him into McKay's Cobble instance.</span><button type="button" id="furniture-open-meeting-door">Open selected meeting Door</button></div>
-            <p class="pane-intro">Other Door rooms and reusable Door templates remain future work.</p>
+            <summary>Doors · templates</summary>
+            <div class="door-detail"><span><strong>Meeting invitation Door template</strong> · a bearer invitation admitting a guest to one meeting Room, not to McKay's own membrane. A working Door based on this design is operated in Meetings.</span></div>
+            <p class="pane-intro">Future templates may require credentials, reputational evidence, payment or other trust checks. Generic template installation is not yet implemented.</p>
           </details>
-          <div class="info-row"><strong>Chair</strong><small>Conduct and standing orders · meeting controls already exist</small></div>
-          <div class="info-row"><strong>Seat</strong><small>Participation · more general seats are planned</small></div>
-          <div class="info-row"><strong>Table</strong><small>What participants share within a Room</small></div>
-          <div class="info-row"><strong>Window</strong><small>What a Room chooses to show beyond itself · planned</small></div>
-          <div class="info-row"><strong>Socket</strong><small>Connections between Rooms · planned</small></div>
+          <details class="furniture-doors" id="furniture-windows">
+            <summary>Windows · templates</summary>
+            <div class="door-detail"><span><strong>Star Credential Window template</strong> · an outward view of selected credentials, subject to the owning Room's disclosure rules. This is a proposed design, not an installed or publishing Window.</span></div>
+            <p class="pane-intro">A generic Window template library and installation mechanism are future work.</p>
+          </details>
+          <div class="info-row"><strong>Chair</strong><small>Reusable conduct and standing-orders templates · meeting controls already exist</small></div>
+          <div class="info-row"><strong>Seat</strong><small>Reusable participation templates · general seats are planned</small></div>
+          <div class="info-row"><strong>Table</strong><small>Reusable shared-context patterns for Rooms</small></div>
+          <div class="info-row"><strong>Socket</strong><small>Reusable Room connection patterns · planned</small></div>
+          <p class="pane-intro">To inspect <em>installed</em> objects at McKay's outer membrane, visit <strong>Membrane → Doors</strong> or <strong>Membrane → Windows</strong>. Smaller Rooms keep their deployed furniture at their own boundaries.</p>
         </div></div>
       </section>
       <section class="screen" id="screen-memories" aria-label="Memories">
@@ -616,10 +621,6 @@ $('membrane-toggle').onclick=()=>{
 };
 $('membrane-doors-open').onclick=()=>setScreen('membrane-doors');
 $('membrane-windows-open').onclick=()=>setScreen('membrane-windows');
-$('furniture-open-meeting-door').onclick=()=>{
-  setScreen('meetings');
-  $('invite-human').click();
-};
 async function loadMeetings(){
  const response=await fetch('/api/live/rooms',{cache:'no-store'});
  if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
