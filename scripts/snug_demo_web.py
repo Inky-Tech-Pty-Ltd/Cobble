@@ -98,7 +98,15 @@ def create_server(store, index, port=8766, *, live_gpt=False,
         by_id = {e["turn_id"]: e for e in events}
         if any(i not in by_id or not eligible(by_id[i]) for i in selected):
             raise ValueError("Room voice contains unavailable or ineligible evidence")
-        return {"agenda": events[0]["question"] if events else "",
+        # The convenor owns the agenda, even for an early experimental room
+        # where a guest happened to post before Joe. Never elevate guest
+        # speech to the room's opening agenda by accident.
+        agenda_turn = next((e for e in events if e["provider"] == "operator"
+                            and e.get("speaker", "Joe") == "Joe"), None)
+        if agenda_turn is None:
+            agenda_turn = next((e for e in events
+                                if e.get("speaker", "Joe") != "Sankarshan"), None)
+        return {"agenda": agenda_turn["question"] if agenda_turn else "",
                 "contributions": [
                     {"turn_id": e["turn_id"], "provider": e["provider"],
                      "speaker": e.get("speaker", "Joe") if e["status"] == "posted" else e["provider"],
@@ -159,6 +167,17 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         snapshot = rooms_with_accounting()
                     self.reply(200, snapshot)
                 except (ValueError, PermissionError, OSError) as error:
+                    self.reply(400, {"error": str(error)})
+            elif urlsplit(self.path).path == "/api/live/rooms/door":
+                try:
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query) != {"room_id"} or len(query["room_id"]) != 1:
+                        raise ValueError("One room ID required")
+                    with governance_lock:
+                        room_id = catalog.require(query["room_id"][0])
+                        result = door.status(room_id=room_id)
+                    self.reply(200, result)
+                except (ValueError, PermissionError, OSError, TypeError) as error:
                     self.reply(400, {"error": str(error)})
             elif urlsplit(self.path).path == "/api/live/output":
                 try:
@@ -364,6 +383,14 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     if meeting.get("state") == "closed":
                         raise PermissionError("This meeting is closed")
                     history = room_session(room_id).complete_history()
+                    # A successful view is admission, not evidence of who
+                    # holds the bearer invitation.
+                    door.require(self.headers.get("X-Cobble-Room-Token"),
+                                 mark_arrival=True)
+                    convenor_started = any(
+                        t["provider"] == "operator" and
+                        t.get("speaker", "Joe") == "Joe" and
+                        t["status"] == "posted" for t in history)
                     projection = [{
                         "turn_id": t["turn_id"],
                         "created_utc": t["created_utc"],
@@ -381,6 +408,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                             "id": room_id, "title": meeting["title"],
                             "state": meeting.get("state", "open"),
                             "standing_orders": meeting.get("standing_orders", DEFAULT_ORDERS),
+                            "convenor_started": convenor_started,
                         },
                         "speaker": admit["speaker"],
                         "turns": projection, "room_output": room_output(room_id),
@@ -406,6 +434,11 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     meeting = next(r for r in catalog.list() if r["id"] == room_id)
                     if meeting.get("state") == "closed":
                         raise PermissionError("This meeting is closed")
+                    history = room_session(room_id).complete_history()
+                    if not any(t["provider"] == "operator" and
+                               t.get("speaker", "Joe") == "Joe" and
+                               t["status"] == "posted" for t in history):
+                        raise PermissionError("Waiting for convenor's opening agenda")
                     outcome = room_session(room_id).post_operator(
                         text=data["text"], speaker=admit["speaker"])
                 self.reply(200, {"turn_id": outcome["turn"]["turn_id"],
