@@ -4,6 +4,7 @@ Live supplier access is explicit, per-supplier, and uses the shared private
 conversation ledger; keys remain only in local server process memory.
 """
 import argparse
+from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
@@ -66,6 +67,18 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                 live_sessions[room_id] = LiveChatService(
                     store, adapters=adapters, meeting_id=room_id)
             return live_sessions[room_id]
+
+    def rooms_with_accounting():
+        """One server-owned snapshot for all rooms, including unopened ones."""
+        listed = catalog.list()
+        total = Decimal("0")
+        rooms = []
+        for room in listed:
+            estimated = room_session(room["id"]).recorded_estimated_cost_usd()
+            rooms.append({**room, "estimated_cost_usd": estimated})
+            total += Decimal(estimated)
+        return {"rooms": rooms, "estimated_total_usd": format(total, "f"),
+                "default_standing_orders": DEFAULT_ORDERS}
 
     # Serialize governance transitions and live actions in this single local server.
     # This is not a multi-process or multi-user authorization mechanism.
@@ -142,7 +155,9 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                  "source": "github"})
             elif self.path == "/api/live/rooms":
                 try:
-                    self.reply(200, {"rooms": catalog.list(), "default_standing_orders": DEFAULT_ORDERS})
+                    with governance_lock:
+                        snapshot = rooms_with_accounting()
+                    self.reply(200, snapshot)
                 except (ValueError, PermissionError, OSError) as error:
                     self.reply(400, {"error": str(error)})
             elif urlsplit(self.path).path == "/api/live/output":
