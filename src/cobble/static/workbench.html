@@ -771,7 +771,8 @@ function renderIntelligences(){
   row.append(label,summary,button);target.append(row);
  }
 }
-function renderTurns(){
+function renderTurns({preserveScroll=false}={}){
+ const scroll=$('chat-scroll');const previousTop=scroll.scrollTop;
  const thread=$('thread');thread.replaceChildren();
  const firstJoe=turns.find(t=>t.provider==='operator'&&(t.speaker||'Joe')==='Joe'&&t.status==='posted');
  $('question').placeholder=firstJoe?'Message the meeting…':'Open the meeting with your agenda…';
@@ -827,7 +828,7 @@ function renderTurns(){
   meta.textContent=[t.model||'',t.status==='completed'?money(t.usage?.estimated_provider_cost_usd)+' estimated':'',t.status!=='completed'?t.status:''].filter(Boolean).join(' · ');
   box.append(meta,copyButton(body.textContent,'Copy '+p.name+' contribution'));exchange.append(box);thread.append(exchange);
  }
- $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;
+ scroll.scrollTop=preserveScroll?previousTop:scroll.scrollHeight;
  for(const p of PROVIDERS)states[p.id].cost=0;
  for(const t of turns){
   const amount=Number(t.usage?.estimated_provider_cost_usd||0);
@@ -923,8 +924,8 @@ async function send(){
  }finally{busy=false;updateSend()}
 }
 
-async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId});return true}catch(e){status(e.message,true);return false}}
-async function saveRoom(changes){const updated=await api('live/rooms/configure',{room_id:currentRoomId,...changes});Object.assign(meetings.find(x=>x.id===currentRoomId),updated);meetingInfo=updated;renderTurns();return updated}
+async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId},{preserveScroll:true});return true}catch(e){status(e.message,true);return false}}
+async function saveRoom(changes,{preserveScroll=false}={}){const roomId=currentRoomId;const updated=await api('live/rooms/configure',{room_id:roomId,...changes});const room=meetings.find(x=>x.id===roomId);if(room)Object.assign(room,updated);if(roomId===currentRoomId){meetingInfo=updated;renderTurns({preserveScroll})}return updated}
 
 $('meeting-state').onchange=async()=>{try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
 $('edit-orders').onclick=()=>{

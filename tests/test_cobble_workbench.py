@@ -485,6 +485,49 @@ check().catch(e=>{console.error(e);process.exitCode=1});
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_room_voice_toggle_preserves_chat_scroll(self):
+        """Exercise the actual render and room-update functions without a browser."""
+        if not shutil.which("node"):
+            self.skipTest("Node.js required for interactive scroll tests")
+        render = self.page[self.page.index("function renderTurns("):
+                           self.page.index("function updateSend(")]
+        update = self.page[self.page.index("async function setVoice("):
+                           self.page.index("$('meeting-state').onchange")]
+        harness = r"""
+const scroll={scrollTop:240,scrollHeight:1800};
+const nodes={'chat-scroll':scroll,'thread':{replaceChildren(){scroll.scrollTop=0},append(){}},'question':{}};
+const $=id=>nodes[id];
+const make=()=>({});
+let turns=[],meetingInfo=null,currentRoomId='r1';
+const meetings=[{id:'r1'},{id:'r2'}],PROVIDERS=[],states={};
+function renderSuppliers(){}
+function renderIntelligences(){}
+function status(message){throw Error(message)}
+let calls=[],switchRoom=false;
+async function api(route,data){
+ calls.push(data);
+ if(switchRoom)currentRoomId='r2';
+ return {id:data.room_id,room_voice:data.voice_event?[data.voice_event]:[]};
+}
+async function check(){
+ await setVoice('e1',true);
+ if(scroll.scrollTop!==240||calls[0].voice_event!=='e1')throw Error('Authorising moved viewport');
+ scroll.scrollTop=520;
+ await setVoice('e1',false);
+ if(scroll.scrollTop!==520||calls[1].redact_event!=='e1')throw Error('Withdrawal moved viewport');
+ renderTurns();
+ if(scroll.scrollTop!==1800)throw Error('Normal render no longer scrolls to bottom');
+ scroll.scrollTop=300;
+ switchRoom=true;
+ await setVoice('e2',true);
+ if(scroll.scrollTop!==300||meetings[1].room_voice)throw Error('Late update changed another room');
+}
+check().catch(e=>{console.error(e);process.exitCode=1});
+"""
+        result = subprocess.run(["node", "-"], input=render + update + harness,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
         self.assertEqual(len(ids), len(set(ids)))
