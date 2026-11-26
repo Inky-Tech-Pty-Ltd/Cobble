@@ -630,11 +630,25 @@ function renderIntelligences(){
 }
 function renderTurns(){
  const thread=$('thread');thread.replaceChildren();
+ const firstJoe=turns.find(t=>t.provider==='operator'&&(t.speaker||'Joe')==='Joe'&&t.status==='posted');
+ const openingTurnId=(firstJoe||turns[0])?.turn_id;
+ if(!firstJoe){
+  const note=make('p','Waiting for the convenor\'s opening agenda. Joe\'s first post opens the table; an invited guest can enter but cannot speak yet.');
+  note.className='pane-intro';thread.append(note);
+ }
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
   const hb=make('div');hb.className='message';const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled((t.speaker||'Joe')+(hvoice?' (speaking for the room)':''),null),make('p',t.question||''));
   hb.lastChild.className='message-body';if(t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}if(t.provider==='operator'&&t.speaker==='Sankarshan'&&!meetingInfo?.room_voice?.includes(t.turn_id)){const grant=make('button','Authorise room voice');grant.onclick=()=>setVoice(t.turn_id,true);hb.append(grant)}hb.append(copyButton(t.question||'','Copy '+(t.speaker||'Joe')+' contribution'));human.append(hb);thread.append(human);
-  if(i===0&&meetingInfo?.standing_orders){const chair=make('article');chair.className='exchange supplier';const cb=make('div');cb.className='message';cb.append(titled('Chair',null));const speech=make('p',meetingInfo.standing_orders+'\n\nParticipants: Joe (convenor), '+providerOrder.filter(id=>states[id]?.active).map(providerName).join(', '));speech.className='message-body';cb.append(speech,copyButton(speech.textContent,'Copy Chair standing orders'));chair.append(cb);thread.append(chair)}
+  if(t.turn_id===openingTurnId&&meetingInfo?.standing_orders){
+   const chair=make('article');chair.className='exchange supplier';
+   const cb=make('div');cb.className='message';cb.append(titled('Chair',null));
+   const participants=['Joe (convenor)'];
+   if(turns.some(x=>x.speaker==='Sankarshan'))participants.push('Sankarshan');
+   participants.push(...providerOrder.filter(id=>states[id]?.active).map(providerName));
+   const speech=make('p',meetingInfo.standing_orders+'\n\nParticipants: '+participants.join(', '));
+   speech.className='message-body';cb.append(speech,copyButton(speech.textContent,'Copy Chair standing orders'));chair.append(cb);thread.append(chair);
+  }
   if(t.status==='posted'&&t.provider==='operator')continue;
   const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
   const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');
@@ -687,6 +701,20 @@ async function reload(){
  if(latest)lastProvider=latest.provider;
  renderTurns();populateResponder();
  await refreshMeetingCosts();
+ await refreshDoorStatus();
+}
+async function pollMeetingUpdates(){
+ if(!serverReady||busy||currentScreen!=='meetings')return;
+ const roomId=currentRoomId;
+ try{
+  const response=await fetch('/api/live/session?room_id='+encodeURIComponent(roomId),{cache:'no-store'});
+  if(!response.ok||roomId!==currentRoomId)return;
+  const data=await response.json();
+  if(roomId!==currentRoomId)return;
+  const incoming=data.turns||[];
+  const signature=list=>list.map(t=>t.turn_id+':'+t.status).join('|');
+  if(signature(incoming)!==signature(turns)){turns=incoming;renderTurns();}
+ }catch(_){} // A transient polling error must not interrupt the convenor.
 }
 async function send(){
  if(busy)return;
@@ -755,16 +783,39 @@ $('output-copy').onclick=()=>{
  if(lastRoomOutput)copyText(formatRoomOutput(lastRoomOutput),'Room output',$('output-copy'));
 };
 $('output-close').onclick=()=>$('room-output-dialog').close();
+let doorSnapshot={open:false,arrived:false};
+async function refreshDoorStatus(){
+ const roomId=currentRoomId;
+ try{
+  const response=await fetch('/api/live/rooms/door?room_id='+encodeURIComponent(roomId),{cache:'no-store'});
+  if(!response.ok)throw Error('Door status unavailable');
+  const data=await response.json();
+  if(roomId!==currentRoomId)return;
+  doorSnapshot=data;
+  $('invite-human').textContent=data.open?(data.arrived?'Door: Sankarshan has entered':'Door: awaiting Sankarshan'):'Door: invite Sankarshan';
+  $('invite-open').textContent=data.open?'Replace invitation':'Open Door';
+  $('invite-revoke').disabled=!data.open;
+  if($('invite-dialog').open&&!$('invite-url').value){
+   $('invite-status').textContent=data.open?
+    (data.arrived?'This invitation has been used. The bearer entered this Room.':'Door open; invitation not yet used.')+
+     ' The link is only shown when issued; replacing it revokes the old link.':
+    'Door closed. Open it to issue a new, room-specific invitation.';
+  }
+ }catch(error){
+  if(roomId===currentRoomId&&$('invite-dialog').open)$('invite-status').textContent=error.message;
+ }
+}
 $('invite-human').onclick=()=>{
  $('invite-url').value='';
- $('invite-status').textContent='Opening the Door replaces any earlier invitation for this room.';
  $('invite-dialog').showModal();
+ refreshDoorStatus();
 };
 $('invite-open').onclick=async()=>{
  try{
   const result=await api('live/rooms/invite',{room_id:currentRoomId});
   $('invite-url').value=result.guest_url;
-  $('invite-status').textContent='Door open for Sankarshan until '+result.expires_utc+'. This local URL must not be published.';
+  $('invite-status').textContent='Door open until '+result.expires_utc+'. Keep this link private. Reissuing revokes any previous one.';
+  await refreshDoorStatus();
  }catch(error){$('invite-status').textContent=error.message}
 };
 $('invite-copy').onclick=()=>{
@@ -774,6 +825,7 @@ $('invite-revoke').onclick=async()=>{
  try{
   const result=await api('live/rooms/revoke',{room_id:currentRoomId});
   $('invite-url').value='';
+  await refreshDoorStatus();
   $('invite-status').textContent='Door closed · '+result.revoked_count+' active invitation(s) revoked.';
  }catch(error){$('invite-status').textContent=error.message}
 };
@@ -969,6 +1021,7 @@ $('memory-form').onsubmit=async e=>{
   status('');
  }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}
 })();
+setInterval(()=>{if(serverReady&&!busy){refreshDoorStatus();pollMeetingUpdates()}},4000);
 })();
 </script>
 </body>
