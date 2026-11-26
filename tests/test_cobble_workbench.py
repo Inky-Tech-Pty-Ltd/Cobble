@@ -374,7 +374,7 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "api('live/rooms/revoke',{room_id:currentRoomId})",
             "This one-room invitation permits its bearer",
             "Local test only:",
-            "#invite-human.membrane-cue.door-open{border-left:var(--weight-edge-border)}",
+            "#invite-human.membrane-cue.door-open{border-left:var(--weight-edge-border)!important}",
             "$('invite-human').classList.toggle('door-open',Boolean(data.open));",
             "--membrane-teal:#168a96",
         ):
