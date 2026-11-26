@@ -5,6 +5,7 @@ the provider call. No automatic retries. Missing outcomes after a crash are
 represented as uncertain, never silently discarded or resubmitted.
 """
 from dataclasses import asdict
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -168,6 +169,44 @@ class LiveChatService:
                 "provider_request_id": outcome.get("provider_request_id") if outcome else None,
             })
         return turns
+
+    def recorded_estimated_cost_usd(self):
+        """Sum all retained, completed provider estimates for this room.
+
+        Read only immutable outcomes, not the browser's last 100 displayed
+        turns or the sensitive outgoing request payloads. Unknown outcomes
+        have no verified accounting estimate and are not silently guessed.
+        """
+        with self._lock:
+            folder = self.root / "outcomes"
+            if folder.is_symlink():
+                raise PermissionError("Unsafe live outcome directory")
+            if not folder.exists():
+                return "0"
+            total = Decimal("0")
+            for path in folder.glob("*.json"):
+                if path.is_symlink() or not TURN_ID.fullmatch(path.stem):
+                    raise ValueError("Unsafe outcome record in session")
+                outcome = self._read("outcomes", path.stem)
+                if outcome is None:
+                    raise ValueError("Unreadable outcome record")
+                if outcome.get("status") != "completed":
+                    continue
+                usage = outcome.get("usage")
+                if not isinstance(usage, dict):
+                    raise ValueError("Completed supplier call lacks accounting")
+                raw = usage.get("estimated_provider_cost_usd")
+                if raw is None:
+                    # Older completed records may not have a priced estimate.
+                    continue
+                try:
+                    amount = Decimal(str(raw))
+                except InvalidOperation as exc:
+                    raise ValueError("Invalid recorded supplier cost") from exc
+                if not amount.is_finite() or amount < 0:
+                    raise ValueError("Invalid recorded supplier cost")
+                total += amount
+            return format(total, "f")
 
     def complete_history(self):
         """Internal operator ledger snapshot; never expose directly as room output."""
