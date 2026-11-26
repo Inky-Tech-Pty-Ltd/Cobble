@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cobble · Meetings</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-orange:#c95e21;--membrane-ink:#a34612;--membrane-pale:#fff4e7;--membrane-border:#efc59e}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-blue:#0c94e8;--membrane-ink:#08639b;--membrane-pale:#f0f7ff;--membrane-border:#b8d8ef;--weight-joe:#168a96;--weight-chair:#3b5166;--weight-openai:#49877c;--weight-claude:#c77194;--weight-mistral:#627faa}
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden}
 button,input,textarea,select{font:inherit}
@@ -51,28 +51,28 @@ button{color:inherit}
 .icon-button:hover,.nav-item:hover,.meeting-item:hover{background:#edf2f6}
 .icon-button svg,.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .primary-nav{display:flex;flex-direction:column;gap:3px;margin-top:9px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding-bottom:8px}
-.membrane-boundary{display:flex;align-items:center;gap:9px;margin:11px 4px 9px;padding:10px 11px;border-top:2px solid var(--membrane-orange);border-bottom:2px solid var(--membrane-orange);border-radius:5px;background:var(--membrane-pale);color:var(--membrane-ink);font-weight:750;letter-spacing:.045em;font-size:.84rem}
+.membrane-boundary{display:flex;align-items:center;gap:9px;margin:11px 4px 9px;padding:10px 11px;border-top:2px solid var(--membrane-blue);border-bottom:2px solid var(--membrane-blue);border-radius:5px;background:var(--membrane-pale);color:var(--membrane-ink);font-weight:750;letter-spacing:.045em;font-size:.84rem}
 .membrane-boundary.nav-item{width:calc(100% - 8px);text-align:left}
-.membrane-boundary.nav-item:hover,.membrane-boundary.nav-item.active{background:#ffe6cf;color:var(--membrane-ink);box-shadow:inset 3px 0 0 var(--membrane-orange)}
-.instance-membrane-panel{border-left:4px solid var(--membrane-orange);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5}
+.membrane-boundary.nav-item:hover,.membrane-boundary.nav-item.active{background:#e9f4fd;color:var(--membrane-ink);box-shadow:inset 3px 0 0 var(--membrane-blue)}
+.instance-membrane-panel{border-left:4px solid var(--membrane-blue);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5}
 .instance-membrane-panel strong{color:var(--membrane-ink)}
 .instance-membrane-panel p{margin:7px 0 0}
-.furniture-doors{border-left:4px solid var(--membrane-orange);background:var(--membrane-pale);border-radius:12px;margin:8px 0;padding:12px 15px}
+.furniture-doors{border-left:4px solid var(--membrane-blue);background:var(--membrane-pale);border-radius:12px;margin:8px 0;padding:12px 15px}
 .furniture-doors summary{cursor:pointer;color:var(--membrane-ink);font-weight:700}
 .furniture-doors .door-detail{margin-top:12px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
-.furniture-doors button{color:var(--membrane-ink);border:1px solid var(--membrane-orange);border-radius:9px;background:#fff8f0;padding:8px 12px;font-weight:600}
-.furniture-doors button:hover{background:#ffe6cf}
-.membrane-symbol{display:inline-grid;place-items:center;border:2px solid var(--membrane-orange);border-radius:50%;width:20px;height:20px;font-size:.7rem;line-height:1;flex-shrink:0}
+.furniture-doors button{color:var(--membrane-ink);border:1px solid var(--membrane-blue);border-radius:9px;background:#f7fbff;padding:8px 12px;font-weight:600}
+.furniture-doors button:hover{background:#e9f4fd}
+.membrane-symbol{display:inline-grid;place-items:center;border:2px solid var(--membrane-blue);border-radius:50%;width:20px;height:20px;font-size:.7rem;line-height:1;flex-shrink:0}
 .membrane-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .membrane-rule{height:1px;background:var(--membrane-border);flex:1;min-width:8px}
 .membrane-cue{color:var(--membrane-ink)!important;border-color:var(--membrane-border)!important;background:var(--membrane-pale)!important}
 #invite-human.membrane-cue{font-weight:750}
-#invite-human.membrane-cue:hover{background:#ffe8d2!important}
-#invite-dialog{border:2px solid var(--membrane-orange)}
+#invite-human.membrane-cue:hover{background:#e9f4fd!important}
+#invite-dialog{border:2px solid var(--membrane-blue)}
 #invite-dialog #invite-heading{color:var(--membrane-ink)}
-#invite-dialog #invite-open{border-color:var(--membrane-orange);background:var(--membrane-orange);color:white;font-weight:700}
-#invite-dialog #invite-revoke{color:var(--membrane-ink);border-color:var(--membrane-orange)}
-.furniture-door{border-left:4px solid var(--membrane-orange);background:var(--membrane-pale)}
+#invite-dialog #invite-open{border-color:var(--membrane-blue);background:var(--membrane-blue);color:white;font-weight:700}
+#invite-dialog #invite-revoke{color:var(--membrane-ink);border-color:var(--membrane-blue)}
+.furniture-door{border-left:4px solid var(--membrane-blue);background:var(--membrane-pale)}
 .furniture-door strong{color:var(--membrane-ink)}
 .utility-nav{display:flex;gap:4px;padding-top:6px;margin-top:5px;border-top:1px solid var(--line);flex-shrink:0}
 .utility-nav .nav-item{justify-content:center;gap:7px;padding:7px 5px;font-size:.76rem}
@@ -108,14 +108,14 @@ button{color:inherit}
 .suppliers h2{margin:4px 8px 10px;font-weight:600;font-size:.77rem;color:var(--muted)}
 .supplier-list{display:grid;gap:7px;overflow-y:auto;max-height:34dvh}
 .supplier-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e1e6ea;border-radius:12px;padding:7px 8px;box-shadow:0 2px 7px #1d28330b}
-.supplier-card[draggable="true"]{cursor:grab}.supplier-card.drag-over{outline:2px solid #89a3bb}.supplier-card.floor{border-color:#3b5166;background:#e7f2fa}.meeting-cost{margin-left:auto;font-size:.7rem;color:#657386;font-variant-numeric:tabular-nums}.governance{padding:8px 20px;border-bottom:1px solid #e4e8eb;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem}.governance button,.governance select{border:1px solid #dce4eb;border-radius:7px;background:white;padding:6px}.room-voice{border-left:4px solid #3b718b!important}.supplier-card.off{background:#f8f9fa;opacity:.78}
+.supplier-card[draggable="true"]{cursor:grab}.supplier-card.drag-over{outline:2px solid #89a3bb}.supplier-card.floor{border-color:#3b5166;background:#e7f2fa}.meeting-cost{margin-left:auto;font-size:.7rem;color:#657386;font-variant-numeric:tabular-nums}.governance{padding:8px 20px;border-bottom:1px solid #e4e8eb;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem}.governance button,.governance select{border:1px solid #dce4eb;border-radius:7px;background:white;padding:6px}.supplier-card.off{background:#f8f9fa;opacity:.78}
 .supplier-main{border:0;background:transparent;display:flex;align-items:center;gap:9px;min-width:0;flex:1;text-align:left;padding:2px 1px}
 .supplier-main .supplier-name{font-weight:650;font-size:.85rem}
 .supplier-detail{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
 .mark{display:inline-grid;place-items:center;flex-shrink:0;border-radius:8px;width:31px;height:31px;font-weight:750}
 .mark.openai{background:#edf1f1;color:#304f49;font-size:1rem}
 .mark.claude{color:#cf684c;background:#fcf0ec;font-size:1.55rem}
-.mark.mistral{background:#fff4e7;color:#c95e21;font-size:1.15rem}
+.mark.mistral{background:#edf4fa;color:#526e8b;font-size:1.15rem}
 .supplier-model{display:grid;place-items:center;border:0;background:transparent;color:#3b5166;border-radius:7px;width:28px;height:32px}
 .supplier-model{font-size:.68rem;font-weight:600}
 .supplier-model:hover{background:#e7eef3}
@@ -215,6 +215,49 @@ button{color:inherit}
 @media(max-width:900px){.inspector.open{position:absolute;right:0;top:0;bottom:0;width:min(395px,90vw);box-shadow:-6px 0 26px #283b4e2b;z-index:15}.reading{padding:0 15px}.exchange{max-width:100%!important}}
 @media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.membrane-boundary{padding:8px 9px;margin-block:8px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}.exchange.human .message{width:90%}}
 @media(prefers-reduced-motion:no-preference){.supplier-card,.nav-item,.secondary{transition:background-color .12s ease}}
+/* Room weight is a control surface, not a broad colour fill.
+   Same crescent shape, different semantics at each object boundary. */
+.weighted{position:relative;--weight-tone:var(--membrane-blue)}
+.weight-edge{position:absolute;top:0;bottom:0;left:0;width:18px;z-index:2;border:0;border-radius:12px 0 0 12px;background:transparent;padding:0;cursor:pointer;color:var(--weight-tone)}
+.weight-edge::before,.weight-fixed::before{content:"";display:block;position:absolute;left:1px;top:10%;height:80%;width:5px;border-left:4px solid var(--weight-tone);border-radius:90% 0 0 90%;opacity:.24;transition:opacity .12s ease,width .12s ease}
+.weight-edge[aria-pressed="true"]::before,.weight-fixed::before{opacity:1;width:7px}
+.weight-edge:hover::before,.weight-edge:focus-visible::before{opacity:1;width:8px}
+.weight-edge:focus-visible{outline:2px solid var(--weight-tone);outline-offset:1px}
+.weight-edge:disabled{cursor:not-allowed;opacity:.25}
+.weight-edge:disabled::before{opacity:.16}
+.weight-fixed{position:relative;--weight-tone:var(--weight-chair)}
+.message.weighted{padding-left:24px}
+.message.room-voice{box-shadow:inset 0 0 0 1px #bdd4e3}
+.exchange.human{--weight-tone:var(--weight-joe)}
+.exchange.human[data-speaker="Sankarshan"]{--weight-tone:var(--membrane-blue)}
+.exchange.supplier[data-provider="openai"]{--weight-tone:var(--weight-openai)}
+.exchange.supplier[data-provider="claude"]{--weight-tone:var(--weight-claude)}
+.exchange.supplier[data-provider="mistral"]{--weight-tone:var(--weight-mistral)}
+.exchange.supplier.chair{--weight-tone:var(--weight-chair)}
+.weight-fixed::before{height:85%;top:7.5%}
+.supplier-card{position:relative;padding-left:18px}
+.supplier-card[data-provider="openai"]{--weight-tone:var(--weight-openai)}
+.supplier-card[data-provider="claude"]{--weight-tone:var(--weight-claude)}
+.supplier-card[data-provider="mistral"]{--weight-tone:var(--weight-mistral)}
+.supplier-card.floor{border-color:#c7d7e4;background:#eef5fa}
+.supplier-card .weight-edge{border-radius:10px 0 0 10px}
+.supplier-card .weight-edge:disabled{opacity:.3}
+.supplier-card.off .weight-edge{opacity:.25}
+.joe-card{--weight-tone:var(--weight-joe);position:relative;display:flex;flex-direction:column;justify-content:center;min-width:116px;padding:6px 12px 6px 23px;background:#f2f7fa;border:1px solid #dce5eb;border-radius:10px;line-height:1.2;min-height:40px}
+.joe-card strong{font-size:.79rem}
+.joe-card small{font-size:.66rem;color:var(--muted);margin-top:3px}
+.joe-card .weight-edge{border-radius:10px 0 0 10px}
+.joe-card.default-heavy{background:#e7f2f4}
+.standing-orders-button{position:relative;--weight-tone:var(--weight-chair);padding-left:18px!important}
+.standing-orders-button::before{content:"";position:absolute;left:3px;top:15%;height:70%;width:5px;border-left:4px solid var(--weight-chair);border-radius:90% 0 0 90%}
+#invite-human.membrane-cue{position:relative;background:white!important;color:var(--slate)!important;border:1px solid #dce4eb!important;padding-left:18px!important;font-weight:650}
+#invite-human.membrane-cue::before{content:"";position:absolute;left:3px;top:14%;height:72%;border-left:4px solid var(--membrane-blue);border-radius:90%}
+#invite-human.membrane-cue:hover{background:#edf2f6!important}
+#invite-dialog{border:1px solid #d4dfe7}
+#invite-dialog #invite-heading{color:var(--ink)}
+#invite-dialog #invite-open{border-color:var(--slate);background:var(--slate);color:white}
+#invite-dialog #invite-revoke{color:var(--slate);border-color:#cbd8e1}
+@media(max-width:650px){.joe-card{min-width:87px;padding-right:5px}.joe-card strong{font-size:.72rem}.joe-card small{font-size:.59rem}.header{gap:3px}.header-actions{gap:2px}}
 </style>
 </head>
 <body>
@@ -256,9 +299,9 @@ button{color:inherit}
     <div class="workspace">
       <header class="header">
         <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
-        <div class="header-actions"><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
+        <div class="header-actions"><div id="joe-card" class="joe-card weighted" title="Joe's default speaking weight; you can still change each contribution individually"><button id="joe-voice-edge" type="button" class="weight-edge" aria-label="Make Joe speak for the room by default" aria-pressed="false" title="Switch Joe's default voice"></button><strong>Joe</strong><small id="joe-mode">Table talk</small></div><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
-      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="grant-floor">Give AI the floor</button><button id="joe-floor" aria-pressed="false">Joe: speak for room</button><button id="view-output">Room output</button><button id="invite-human" class="membrane-cue">Door: invite Sankarshan</button><span id="floor-status"></span></div>
+      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders" class="standing-orders-button">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="view-output">Room output</button><button id="invite-human" class="membrane-cue">Door: invite Sankarshan</button><span id="floor-status"></span></div>
         <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
@@ -332,7 +375,7 @@ button{color:inherit}
       <section class="screen" id="screen-help" aria-label="Help">
         <div class="content-pane"><div class="reading">
           <h2 class="section-title">Cobble documentation</h2>
-          <div class="help-links">
+          <div class="help-links"><a id="weight-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/84" target="_blank" rel="noopener noreferrer">Room weight · how left-edge controls work</a>
             <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#senses" target="_blank" rel="noopener noreferrer">Senses</a>
             <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#memories" target="_blank" rel="noopener noreferrer">Memories</a>
             <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#intelligences" target="_blank" rel="noopener noreferrer">Intelligences</a>
