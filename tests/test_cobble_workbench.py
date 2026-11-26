@@ -270,6 +270,8 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "t.turn_id===openingTurnId",
             "Waiting for the convenor",
             "participants.push('Sankarshan')",
+            "The convenor's opening agenda is a local post",
+            "Open the meeting with your agenda…",
         ):
             self.assertIn(required, self.page)
         self.assertNotIn("if(i===0&&meetingInfo?.standing_orders)", self.page)
