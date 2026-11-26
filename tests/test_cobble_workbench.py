@@ -43,8 +43,9 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("setScreen('meetings');", self.page)
         self.assertIn("$('invite-human').click();", self.page)
         self.assertNotIn('role="separator"', spine)
-        self.assertIn("--membrane-orange:#c95e21", self.page)
-        self.assertIn("--membrane-pale:#fff4e7", self.page)
+        self.assertIn("--membrane-blue:#0c94e8", self.page)
+        self.assertNotIn("--membrane-orange:", self.page)
+        self.assertIn("--membrane-pale:#f0f7ff", self.page)
         self.assertIn('class="membrane-cue"', self.page)
         self.assertIn("#invite-human.membrane-cue", self.page)
         self.assertIn('class="furniture-doors"', self.page)
@@ -66,7 +67,7 @@ class WorkbenchTests(unittest.TestCase):
                      'id="sidebar"', 'id="resize-grip"', "ondblclick",
                      "cobble.sidebar.width", "cobble.sidebar.collapsed",
                      'id="thread"', 'id="chat-scroll"',
-                     'id="grant-floor"', 'id="joe-floor"', 'id="send"', 'id="question"',
+                     'id="joe-card"', 'id="joe-voice-edge"', 'id="send"', 'id="question"',
                      'id="inspector"', 'id="supplier-list"',
                      'id="memory-form"', 'id="memory-results"'):
             self.assertIn(item, self.page)
@@ -208,11 +209,20 @@ async function check(){
      field.value!==''||calls.join(',')!=='live/post,configure')throw Error('Local false success');
   messages=[];calls=[];field.value='Question';recipient='openai';joeFloor=false;roomFloor='openai';
   await send();
-  if(!messages.at(-1).error||!messages.at(-1).message.includes('Do not resend')||
-     field.value!==''||calls.join(',')!=='live/preview,live/send,configure')throw Error('Supplier false success');
+  // Having the floor must NOT automatically publish a supplier answer.
+  if(messages.at(-1).error||field.value!==''||
+     calls.join(',')!=='live/preview,live/send')throw Error('Supplier floor silently published a reply');
+  calls=[];messages=[];
+  const selected=await setVoice('fixture',true);
+  if(selected!==false||!messages.at(-1).error||calls.join(',')!=='configure')
+     throw Error('Explicit publication failure not reported');
   messages=[];calls=[];field.value='Question';failed=false;
   await send();
-  if(messages.at(-1).error||calls.join(',')!=='live/preview,live/send,configure')throw Error('Successful selection not reported');
+  if(messages.at(-1).error||calls.join(',')!=='live/preview,live/send')
+     throw Error('Supplier send not independent from publication');
+  calls=[];messages=[];
+  if(!await setVoice('fixture',true)||calls.join(',')!=='configure')
+     throw Error('Explicit publication did not work');
 }
 check().catch(e=>{console.error(e);process.exitCode=1});
 """
@@ -276,17 +286,60 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             self.assertIn(required, self.page)
         self.assertNotIn("if(i===0&&meetingInfo?.standing_orders)", self.page)
 
-    def test_one_room_invitation_controls_are_separate_from_supplier_calls(self):
+    def test_shared_left_edge_weight_language_is_actionable_and_accessible(self):
+        for required in (
+            'id="joe-card"', 'id="joe-voice-edge"', 'id="joe-mode"',
+            'class="weight-edge"', 'class="message weight-fixed"',
+            "function createWeightEdge(", "function renderJoeControl()",
+            "function selectSupplierFloor(id)", "onClick:()=>selectSupplierFloor(p.id)",
+            "aria-pressed", "aria-label", "tooltip",
+            "Authorise '+(t.speaker||'Joe')+' contribution for room voice",
+            "Withdraw '+(t.speaker||'Joe')+' contribution from room voice",
+            "onClick:()=>setVoice(t.turn_id,!hvoice)",
+            "onClick:()=>setVoice(t.turn_id,!voiced)",
+            "joeFloor=!joeFloor", "if(roomFloor)joeFloor=false",
+            "const publish=recipient==='post-only'&&joeFloor",
+            "box.classList.add('weighted')",
+            "hb.classList.add('weighted')",
+            "speech.className='message-body'",
+            'id="weight-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85"',
+        ):
+            if required == "tooltip":
+                required = "edge.title=label"
+            self.assertIn(required, self.page)
+        for removed in ("id=\"grant-floor\"", "id=\"joe-floor\"",
+                        "Redact voice", "Restore voice", "Authorise room voice"):
+            self.assertNotIn(removed, self.page)
+
+    def test_room_door_unchanged_except_subtle_left_edge_and_blue_palette(self):
         for required in (
             'id="invite-human"', 'id="invite-dialog"', 'id="invite-open"',
             'id="invite-revoke"', 'id="invite-copy"',
-            "t.speaker==='Sankarshan'", "Authorise room voice",
             "api('live/rooms/invite',{room_id:currentRoomId})",
             "api('live/rooms/revoke',{room_id:currentRoomId})",
             "This one-room invitation permits its bearer",
             "Local test only:",
+            "#invite-human.membrane-cue::before",
+            "--membrane-blue:#0c94e8",
         ):
             self.assertIn(required, self.page)
+        self.assertNotIn("#c95e21", self.page)
+        self.assertNotIn("#fff4e7", self.page)
+
+    def test_guest_uses_matching_read_only_crescents(self):
+        guest = (HTML.parent / "guest_room.html").read_text(encoding="utf-8")
+        for required in (
+            "--membrane-blue:#0c94e8",
+            'class="door-status"',
+            "weighted:not(.authorised)::before",
+            "weighted::before,.weight-fixed::before",
+            "class=\"weight-fixed\"",
+            "const humanVoice=t.provider==='operator'&&t.authorised_voice",
+        ):
+            self.assertIn(required, guest)
+        self.assertNotIn("--membrane-orange", guest)
+        self.assertNotIn("Redact voice", guest)
+        self.assertNotIn("voice_event", guest)
 
     def test_dom_ids_unique_and_javascript_parses(self):
         ids = re.findall(r' id="([^"]+)"', self.page)
