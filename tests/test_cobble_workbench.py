@@ -36,13 +36,13 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn('id="screen-membrane"', self.page)
         self.assertIn('id="screen-furniture"', self.page)
         self.assertIn("The boundary of", self.page)
-        self.assertIn("Instance admission and trust policy", self.page)
-        self.assertIn("Instance Doors · not yet configured", self.page)
-        self.assertIn("Instance Windows · not yet configured", self.page)
+        self.assertIn("Deployed instance Doors · none registered", self.page)
+        self.assertIn("Deployed instance Doors · none registered", self.page)
+        self.assertIn("Deployed instance Windows · none registered", self.page)
         self.assertIn('id="furniture-doors"', self.page)
-        self.assertIn('id="furniture-open-meeting-door"', self.page)
-        self.assertIn("setScreen('meetings');", self.page)
-        self.assertIn("$('invite-human').click();", self.page)
+        self.assertIn('id="furniture-doors"', self.page)
+        self.assertIn('id="furniture-windows"', self.page)
+        self.assertNotIn('id="furniture-open-meeting-door"', self.page)
         self.assertNotIn('role="separator"', spine)
         self.assertIn("--membrane-teal:#168a96", self.page)
         self.assertNotIn("--membrane-orange:", self.page)
@@ -73,15 +73,39 @@ class WorkbenchTests(unittest.TestCase):
             "showMembraneSubmenu($('membrane-submenu').hidden)",
             ".sidebar.collapsed .membrane-submenu,.sidebar.collapsed .membrane-toggle{display:none}",
             "This Cobble instance's membrane",
-            "No instance-level public display",
-            "Localhost-only in this demonstration",
+            "No Star Credentials or other information are published",
+            "Loopback-only service; not a configured Door object",
         ):
             self.assertIn(required, self.page)
-        self.assertIn("Instance Doors · not yet configured", self.page)
-        self.assertIn("Instance Windows · not yet configured", self.page)
-        # The room's existing invitation Door remains a separate mechanism.
-        self.assertIn('id="furniture-open-meeting-door"', self.page)
+        self.assertIn("Deployed instance Doors · none registered", self.page)
+        self.assertIn("Deployed instance Windows · none registered", self.page)
+        # Furniture is templates; installed meeting invitation is still in Meetings.
+        self.assertIn('id="furniture-windows"', self.page)
+        self.assertIn("Furniture is the template catalogue.", self.page)
+        self.assertIn("Meeting invitation Door template", self.page)
+        self.assertIn("Star Credential Window template", self.page)
         self.assertIn('id="invite-human"', self.page)
+        self.assertNotIn('id="furniture-open-meeting-door"', self.page)
+
+    def test_furniture_templates_not_deployed_instance_controls(self):
+        furniture = self.page.split('id="screen-furniture"', 1)[1].split(
+            'id="screen-memories"', 1)[0]
+        doors = self.page.split('id="screen-membrane-doors"', 1)[1].split(
+            'id="screen-membrane-windows"', 1)[0]
+        windows = self.page.split('id="screen-membrane-windows"', 1)[1].split(
+            'id="screen-furniture"', 1)[0]
+        self.assertIn("Furniture is the template catalogue.", furniture)
+        self.assertIn("Doors · templates", furniture)
+        self.assertIn("Windows · templates", furniture)
+        self.assertIn("A working Door based on this design is operated in Meetings.", furniture)
+        self.assertIn("proposed design, not an installed or publishing Window", furniture)
+        self.assertNotIn("Open selected meeting Door", furniture)
+        self.assertIn("Deployed instance Doors · none registered", doors)
+        self.assertIn("Deployed instance Windows · none registered", windows)
+        self.assertIn("not a live registry query", doors)
+        self.assertIn("not a live registry query", windows)
+        self.assertIn("not to McKay's instance membrane", doors)
+        self.assertIn("No Star Credentials or other information are published", windows)
 
     def test_all_room_costs_come_from_server_not_visited_browser_rooms(self):
         self.assertIn("function applyCostSnapshot(data)", self.page)
