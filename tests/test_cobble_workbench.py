@@ -43,9 +43,9 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("setScreen('meetings');", self.page)
         self.assertIn("$('invite-human').click();", self.page)
         self.assertNotIn('role="separator"', spine)
-        self.assertIn("--membrane-blue:#0c94e8", self.page)
+        self.assertIn("--membrane-teal:#168a96", self.page)
         self.assertNotIn("--membrane-orange:", self.page)
-        self.assertIn("--membrane-pale:#f0f7ff", self.page)
+        self.assertIn("--membrane-pale:#edf7f6", self.page)
         self.assertIn('class="membrane-cue"', self.page)
         self.assertIn("#invite-human.membrane-cue", self.page)
         self.assertIn('class="furniture-doors"', self.page)
@@ -309,7 +309,7 @@ check().catch(e=>{console.error(e);process.exitCode=1});
                         "Redact voice", "Restore voice", "Authorise room voice"):
             self.assertNotIn(removed, self.page)
 
-    def test_room_door_unchanged_except_subtle_left_edge_and_blue_palette(self):
+    def test_room_door_unchanged_except_outer_teal_crescent(self):
         for required in (
             'id="invite-human"', 'id="invite-dialog"', 'id="invite-open"',
             'id="invite-revoke"', 'id="invite-copy"',
@@ -318,16 +318,39 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "This one-room invitation permits its bearer",
             "Local test only:",
             "#invite-human.membrane-cue::before",
-            "--membrane-blue:#0c94e8",
+            "--membrane-teal:#168a96",
         ):
             self.assertIn(required, self.page)
         self.assertNotIn("#c95e21", self.page)
         self.assertNotIn("#fff4e7", self.page)
 
+    def test_crescents_wrap_outer_boundaries_in_one_teal(self):
+        for required in (
+            "--membrane-teal:#168a96",
+            ".weight-edge{position:absolute;top:0;bottom:0;left:-10px",
+            ".weight-fixed::before{left:-9px;top:0;bottom:0",
+            "border-left:4px solid var(--membrane-teal)",
+            "border-radius:50% 0 0 50%",
+            ".membrane-boundary::before{content:\"\";position:absolute;left:-10px",
+            ".membrane-boundary{position:relative;isolation:isolate;",
+            "background:#edf7f6;color:#24565a",
+            ".membrane-boundary.nav-item.active{background:#dceeed",
+        ):
+            self.assertIn(required, self.page)
+        # Coloured supplier identity marks remain; their weight edges do not
+        # borrow supplier or participant colours.
+        for forbidden in (
+            "--membrane-orange:", "--membrane-blue:",
+            "--weight-openai:", "--weight-joe:", "--weight-chair:",
+            "--weight-mistral:", ".exchange.supplier[data-provider=\"claude\"]{--weight-tone:",
+            "left:1px;top:10%;height:80%",
+        ):
+            self.assertNotIn(forbidden, self.page)
+
     def test_guest_uses_matching_read_only_crescents(self):
         guest = (HTML.parent / "guest_room.html").read_text(encoding="utf-8")
         for required in (
-            "--membrane-blue:#0c94e8",
+            "--membrane-teal:#168a96",
             'class="door-status"',
             "weighted:not(.authorised)::before",
             "weighted::before,.weight-fixed::before",
