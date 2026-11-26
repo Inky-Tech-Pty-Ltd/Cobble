@@ -795,6 +795,20 @@ class LiveTests(unittest.TestCase):
                                        "text": event["answer"]}]})
                 self.assertNotIn("Private supplier prompt", json.dumps(output))
                 self.assertNotIn("Private standing orders", json.dumps(output))
+                question_id = event_id + ":question"
+                question = {"turn_id": question_id, "provider": "operator",
+                            "speaker": "Joe", "text": "Private supplier prompt"}
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": question_id})
+                self.assertEqual(call(prefix + "output")["contributions"],
+                                 [question, *output["contributions"]])
+                call(prefix + "rooms/configure", {"room_id": "default", "redact_event": event_id})
+                self.assertEqual(call(prefix + "output")["contributions"], [question])
+                prompt_preview = call(prefix + "preview", {"question": "Check prompt only"})
+                self.assertEqual(prompt_preview["room_authorised_output"]["contributions"], [question])
+                call(prefix + "rooms/configure", {"room_id": "default", "redact_event": question_id})
+                self.assertEqual(call(prefix + "output")["contributions"], [])
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id})
+                self.assertEqual(call(prefix + "output"), output)
                 call(prefix + "rooms/configure", {"room_id": "default", "redact_event": event_id})
                 self.assertEqual(call(prefix + "output")["contributions"], [])
                 withdrawn = call(prefix + "preview", {"question": "Still authorised?"})
@@ -805,6 +819,8 @@ class LiveTests(unittest.TestCase):
                 self.assertEqual(call(prefix + "output"), output)
                 other = call(prefix + "rooms/create", {"title": "Other"})["id"]
                 call(prefix + "rooms/configure", {"room_id": other, "voice_event": event_id}, 400)
+                call(prefix + "rooms/configure", {"room_id": other, "voice_event": question_id}, 400)
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id + ":answer"}, 400)
                 call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id,
                      "redact_event": event_id}, 400)
                 call(prefix + "output?room_id=default&room_id=" + other, expected=400)

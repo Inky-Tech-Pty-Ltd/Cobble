@@ -33,7 +33,7 @@ Joe's header card controls his **local default posting mode**. Individual subseq
 
 The Chair and standing orders always appear heavy because they govern the table. **Heavy does not mean externally published.** Standing orders are supplied as context where authorised; they are not inserted into the Room's outward output.
 
-Only eligible events get a publication edge: locally posted human contributions and completed supplier replies with actual answers. A prompt addressed to a supplier is not independently publishable with the present paired-turn event model; its *reply* can be selected. The restricted guest interface shows selected weight but has **no controls** to change it.
+Human contributions, including prompts addressed to suppliers, and completed supplier replies with actual answers each get their own publication edge. A paired turn retains its original ledger ID; the human prompt uses that ID with a `:question` suffix for selection. Bare IDs retain their historical meaning (a local post or supplier answer). Selecting or withdrawing either half never changes the other. The restricted guest interface shows selected weight but has **no controls** to change it.
 
 ## Colour and accessibility
 

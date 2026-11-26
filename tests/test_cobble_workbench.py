@@ -352,7 +352,7 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "aria-pressed", "aria-label", "edge.title=label",
             "Authorise '+(t.speaker||'Joe')+' contribution for room voice",
             "Withdraw '+(t.speaker||'Joe')+' contribution from room voice",
-            "onClick:()=>setVoice(t.turn_id,!hvoice)",
+            "onClick:()=>setVoice(humanId,!hvoice)",
             "onClick:()=>setVoice(t.turn_id,!voiced)",
             "joeFloor=!joeFloor", "if(roomFloor)joeFloor=false",
             "const publish=recipient==='post-only'&&joeFloor",
@@ -424,7 +424,7 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "$('identity').classList.remove('admitted')",
             'class="door-status"',
             'class="weight-fixed"',
-            "const humanVoice=t.provider==='operator'&&t.authorised_voice",
+            "const humanVoice=t.authorised_question",
         ):
             self.assertIn(required, guest)
         for forbidden in (

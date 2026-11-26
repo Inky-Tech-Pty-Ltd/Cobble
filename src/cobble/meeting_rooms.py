@@ -101,7 +101,7 @@ class MeetingCatalog:
             values = result[key]
             if (not isinstance(values, list)
                     or any(not isinstance(value, str) or
-                           not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}", value)
+                           not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}(?::question)?", value)
                            for value in values)
                     or len(set(values)) != len(values)):
                 raise ValueError("Invalid persisted room voice metadata")
@@ -221,7 +221,7 @@ class MeetingCatalog:
                 updated["precedence"] = precedence
             if voice_event is not None:
                 if (not isinstance(voice_event, str) or
-                    not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}", voice_event)):
+                    not re.fullmatch(r"[0-9]{20}-[0-9a-f]{12}(?::question)?", voice_event)):
                     raise ValueError("Invalid contribution ID")
                 voice = list(updated.get("room_voice", []))
                 if voice_event not in voice:

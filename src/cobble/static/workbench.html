@@ -785,13 +785,14 @@ function renderTurns({preserveScroll=false}={}){
   const t=turns[i],human=make('article');human.className='exchange human';
   human.dataset.speaker=t.speaker||'Joe';
   const hb=make('div');hb.className='message';
-  const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);
-  if(t.provider==='operator'){
+  const humanId=t.provider==='operator'?t.turn_id:t.turn_id+':question';
+  const hvoice=meetingInfo?.room_voice?.includes(humanId)&&!meetingInfo?.redacted?.includes(humanId);
+  if(t.provider==='operator'||t.question?.trim()){
    hb.classList.add('weighted');
    hb.append(createWeightEdge({
     heavy:hvoice,
     label:hvoice?'Withdraw '+(t.speaker||'Joe')+' contribution from room voice':'Authorise '+(t.speaker||'Joe')+' contribution for room voice',
-    onClick:()=>setVoice(t.turn_id,!hvoice)
+    onClick:()=>setVoice(humanId,!hvoice)
    }));
   }
   if(hvoice)hb.classList.add('room-voice');

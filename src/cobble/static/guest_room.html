@@ -63,13 +63,13 @@ summary{cursor:pointer;font-weight:650}.error{color:#a32222}
   $('send').disabled=busy||!canPost;
   $('conversation').replaceChildren();
   for(const t of data.turns){
-   const you=text('article','');const humanVoice=t.provider==='operator'&&t.authorised_voice;
-   you.className='message'+(t.provider==='operator'?' weighted':'')+(humanVoice?' authorised':'');
+   const you=text('article','');const humanVoice=t.authorised_question;
+   you.className='message weighted'+(humanVoice?' authorised':'');
    you.append(text('strong',t.speaker+(humanVoice?' (speaking for the room)':'')));
    you.append(text('p',t.question));$('conversation').append(you);
    if(t.provider!=='operator'){
     const model=text('article','');model.className='message weighted'+(t.authorised_voice?' authorised':'');
-    model.append(text('strong',names[t.provider]||t.provider));
+    model.append(text('strong',(names[t.provider]||t.provider)+(t.authorised_voice?' (speaking for the room)':'')));
     model.append(text('p',t.status==='completed'?(t.answer||''):'No verified answer yet'));
     $('conversation').append(model);
    }

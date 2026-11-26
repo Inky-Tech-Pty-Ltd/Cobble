@@ -84,10 +84,19 @@ def create_server(store, index, port=8766, *, live_gpt=False,
     # This is not a multi-process or multi-user authorization mechanism.
     governance_lock = threading.RLock()
 
-    def eligible(event):
-        return ((event["status"] == "posted" and event["provider"] == "operator")
-                or (event["status"] == "completed"
-                    and isinstance(event["answer"], str) and bool(event["answer"].strip())))
+    def contributions(events):
+        """Stable utterance IDs; legacy bare IDs retain their original meaning."""
+        for e in events:
+            base = e["turn_id"]
+            if e["provider"] != "operator" and isinstance(e["question"], str) and e["question"].strip():
+                yield {"turn_id": base + ":question", "provider": "operator",
+                       "speaker": e.get("speaker", "Joe"), "text": e["question"]}
+            if e["status"] == "posted" and e["provider"] == "operator":
+                yield {"turn_id": base, "provider": "operator",
+                       "speaker": e.get("speaker", "Joe"), "text": e["question"]}
+            elif e["provider"] != "operator" and e["status"] == "completed" and isinstance(e["answer"], str) and e["answer"].strip():
+                yield {"turn_id": base, "provider": e["provider"],
+                       "speaker": e["provider"], "text": e["answer"]}
 
     def room_output(meeting_id):
         item = next(r for r in catalog.list() if r["id"] == catalog.require(meeting_id))
@@ -95,8 +104,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             raise PermissionError("Closed meeting output is unavailable")
         events = room_session(meeting_id).complete_history()
         selected = set(item.get("room_voice", [])) - set(item.get("redacted", []))
-        by_id = {e["turn_id"]: e for e in events}
-        if any(i not in by_id or not eligible(by_id[i]) for i in selected):
+        available = {c["turn_id"]: c for c in contributions(events)}
+        if not selected.issubset(available):
             raise ValueError("Room voice contains unavailable or ineligible evidence")
         # The convenor owns the agenda, even for an early experimental room
         # where a guest happened to post before Joe. Never elevate guest
@@ -107,11 +116,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             agenda_turn = next((e for e in events
                                 if e.get("speaker", "Joe") != "Sankarshan"), None)
         return {"agenda": agenda_turn["question"] if agenda_turn else "",
-                "contributions": [
-                    {"turn_id": e["turn_id"], "provider": e["provider"],
-                     "speaker": e.get("speaker", "Joe") if e["status"] == "posted" else e["provider"],
-                     "text": e["question"] if e["status"] == "posted" else e["answer"]}
-                    for e in events if e["turn_id"] in selected]}
+                "contributions": [c for key, c in available.items() if key in selected]}
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
@@ -267,8 +272,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     session = room_session(meeting_id)
                     if "voice_event" in data or "redact_event" in data:
                         event_id = data.get("voice_event", data.get("redact_event"))
-                        if not any(e["turn_id"] == event_id and eligible(e)
-                                   for e in session.complete_history()):
+                        if not any(c["turn_id"] == event_id
+                                   for c in contributions(session.complete_history())):
                             raise ValueError("Contribution is not eligible in this meeting")
                     result = catalog.configure(meeting_id=meeting_id, **data)
                     session.invalidate_previews()
@@ -399,6 +404,10 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         "provider": t["provider"],
                         "question": t["question"],
                         "answer": t["answer"] if t["status"] == "completed" else None,
+                        "authorised_question": (t["turn_id"] if t["provider"] == "operator"
+                                                else t["turn_id"] + ":question") in
+                            (set(meeting.get("room_voice", [])) -
+                             set(meeting.get("redacted", []))),
                         "authorised_voice": t["turn_id"] in
                             (set(meeting.get("room_voice", [])) -
                              set(meeting.get("redacted", []))),
