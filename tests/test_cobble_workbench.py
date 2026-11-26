@@ -289,10 +289,10 @@ check().catch(e=>{console.error(e);process.exitCode=1});
     def test_shared_left_edge_weight_language_is_actionable_and_accessible(self):
         for required in (
             'id="joe-card"', 'id="joe-voice-edge"', 'id="joe-mode"',
-            'class="weight-edge"', 'class="message weight-fixed"',
+            "edge.className='weight-edge'", "cb.className='message weight-fixed'",
             "function createWeightEdge(", "function renderJoeControl()",
             "function selectSupplierFloor(id)", "onClick:()=>selectSupplierFloor(p.id)",
-            "aria-pressed", "aria-label", "tooltip",
+            "aria-pressed", "aria-label", "edge.title=label",
             "Authorise '+(t.speaker||'Joe')+' contribution for room voice",
             "Withdraw '+(t.speaker||'Joe')+' contribution from room voice",
             "onClick:()=>setVoice(t.turn_id,!hvoice)",
@@ -304,8 +304,6 @@ check().catch(e=>{console.error(e);process.exitCode=1});
             "speech.className='message-body'",
             'id="weight-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85"',
         ):
-            if required == "tooltip":
-                required = "edge.title=label"
             self.assertIn(required, self.page)
         for removed in ("id=\"grant-floor\"", "id=\"joe-floor\"",
                         "Redact voice", "Restore voice", "Authorise room voice"):
