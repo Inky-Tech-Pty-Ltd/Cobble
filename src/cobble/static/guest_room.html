@@ -28,11 +28,13 @@ summary{cursor:pointer;font-weight:650}.error{color:#a32222}
 <p id="identity" class="door-status">This Door admits a bearer of the invitation to one room only.</p>
 <p id="status" role="status"></p>
 <details><summary>Chair's standing orders</summary><div id="orders" class="body"></div></details>
-<section><h2>At the table</h2><div id="conversation"></div></section>
+<section><h2>At the table</h2>
+<p id="awaiting-agenda" class="door-status" hidden>You're through the Door. The convenor must first place an opening agenda on the table before you can contribute.</p>
+<div id="conversation"></div></section>
 <form id="post">
 <label for="message"><strong>Your contribution</strong></label>
-<textarea id="message" maxlength="2000" placeholder="Speak to this meeting…" required></textarea>
-<button type="submit" id="send">Post to meeting</button>
+<textarea id="message" maxlength="2000" placeholder="Speak to this meeting…" required disabled></textarea>
+<button type="submit" id="send" disabled>Post to meeting</button>
 <p class="muted">Posts are recorded in the meeting. Only the convenor can authorise paid supplier calls or publication in the room's voice.</p>
 </form>
 </main>
@@ -41,13 +43,17 @@ summary{cursor:pointer;font-weight:650}.error{color:#a32222}
  const $=id=>document.getElementById(id);
  const token=new URLSearchParams(location.hash.slice(1)).get('invite')||'';
  const names={openai:'GPT',claude:'Claude',mistral:'Mistral'};
- let busy=false;
+ let busy=false,canPost=false;
  const text=(tag,value)=>{const n=document.createElement(tag);n.textContent=value??'';return n};
  function status(message,error=false){$('status').textContent=message;$('status').className=error?'error':''}
  function render(data){
   $('meeting-title').textContent=data.meeting.title;
   $('identity').textContent='Admitted as '+data.speaker+' · '+data.meeting.state+' meeting';
   $('orders').textContent=data.meeting.standing_orders;
+  canPost=Boolean(data.meeting.convenor_started);
+  $('awaiting-agenda').hidden=canPost;
+  $('message').disabled=!canPost;
+  $('send').disabled=busy||!canPost;
   $('conversation').replaceChildren();
   for(const t of data.turns){
    const you=text('article','');you.className='message'+(t.authorised_voice?' authorised':'');
@@ -68,10 +74,10 @@ summary{cursor:pointer;font-weight:650}.error{color:#a32222}
    if(!r.ok)throw Error('Invitation unavailable or withdrawn.');
    render(await r.json());
    if(!silent)status('Connected to this room.');
-  }catch(e){status(e.message,true);$('send').disabled=true}
+  }catch(e){canPost=false;status(e.message,true);$('message').disabled=true;$('send').disabled=true}
  }
  $('post').onsubmit=async e=>{
-  e.preventDefault();if(busy||!token)return;
+  e.preventDefault();if(busy||!token||!canPost)return;
   const message=$('message').value.trim();if(!message)return;
   busy=true;$('send').disabled=true;
   try{
@@ -82,7 +88,7 @@ summary{cursor:pointer;font-weight:650}.error{color:#a32222}
    $('message').value='';await refresh(true);
    status('Posted as Sankarshan.');
   }catch(error){status(error.message,true)}
-  finally{busy=false;$('send').disabled=false}
+  finally{busy=false;$('send').disabled=!canPost}
  };
  refresh();
  setInterval(()=>{if(!busy)refresh(true)},5000);
