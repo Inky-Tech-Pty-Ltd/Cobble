@@ -103,11 +103,15 @@ metadata, supplier preview/approval flow, and the guest's room-only
 restriction are unchanged. Floor selection is browser-local and creates
 **no** paid model calls by itself.
 
-The visual experiment with broad orange fills has been withdrawn in favour
-of slender crescents and existing Inky palette accents, especially membrane
-blue `#0C94E8` and Claude's pink supplier tone. The **Membrane** entry
-represents the boundary of this instance; smaller Room Doors are in
-**Furniture → Doors**. The meeting's Door does not open the McKay instance.
+The visual experiments with broad orange fills, blue accents and
+different participant-coloured crescents have been withdrawn in favour of a
+**single teal crescent (`#168A96`) wrapping the outer left-hand contour** of
+each weight-bearing object. The crescent must not look like a stripe placed
+inside the card's padding. Claude's pink remains a supplier identity marker,
+not a different crescent colour. The **Membrane** menu is now a soft teal
+bubble with the same outer-wrapping edge, representing the boundary of this
+Cobble instance; smaller Room Doors are in **Furniture → Doors**. The
+meeting's Door does not open the McKay instance.
 
 ### Workspace navigation
 
