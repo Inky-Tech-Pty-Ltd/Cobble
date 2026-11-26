@@ -440,13 +440,27 @@ let meetings=[{id:'default',title:'Current meeting'}];
 let currentRoomId=safeStorageGet('cobble.meeting.active')||'default';
 let currentMeetingTitle='Current meeting';
 const roomDrafts=new Map();
+function applyCostSnapshot(data){
+ // The server reads every room's immutable supplier outcomes, including
+ // meetings not opened in this browser session.
+ meetingCosts=Object.fromEntries((data.rooms||[]).map(room=>
+  [room.id,Number(room.estimated_cost_usd||0)]));
+ $('total-cost').textContent=money(data.estimated_total_usd||0);
+ $('total-cost').title='Recorded supplier cost estimates across all saved meetings';
+ renderMeetingList();
+}
+async function refreshMeetingCosts(){
+ const response=await fetch('/api/live/rooms',{cache:'no-store'});
+ if(!response.ok)throw Error('Meeting cost totals unavailable');
+ applyCostSnapshot(await response.json());
+}
 function renderMeetingList(){
  const target=$('meeting-list');target.replaceChildren();
  for(const room of meetings){
   const item=make('button');item.className='meeting-item'+(room.id===currentRoomId?' active':'');
   if(room.id===currentRoomId)item.setAttribute('aria-current','page');
   const icon=make('span','▢');icon.setAttribute('aria-hidden','true');
-  item.append(icon,make('strong',room.title));const cost=make('small',money(meetingCosts[room.id]||0));cost.className='meeting-cost';item.append(cost);item.title=room.title;
+  item.append(icon,make('strong',room.title));const cost=make('small',money(meetingCosts[room.id]||0));cost.className='meeting-cost';cost.title='Recorded supplier cost estimate for this meeting';item.append(cost);item.title=room.title;
   item.onclick=()=>switchMeeting(room.id);
   target.append(item);
  }
@@ -501,6 +515,7 @@ async function loadMeetings(){
  if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
  const data=await response.json();
  meetings=data.rooms||[];defaultOrders=data.default_standing_orders||'';
+ applyCostSnapshot(data);
  // Preserve the legacy default conversation and its browser-local title.
  const oldLabel=safeStorageGet('cobble.meeting.title');
  const original=meetings.find(m=>m.id==='default');
@@ -638,8 +653,7 @@ function renderTurns(){
  }
  renderSuppliers();
  renderIntelligences();
- meetingCosts[currentRoomId]=turns.reduce((sum,t)=>sum+Number(t.usage?.estimated_provider_cost_usd||0),0);
- $('total-cost').textContent=money(Object.values(meetingCosts).reduce((a,b)=>a+b,0));renderMeetingList();
+ // Room and all-room totals come from the durable server-side accounting snapshot.
 }
 function updateSend(){
  $('send').disabled=busy||!serverReady||!$('question').value.trim();
@@ -672,6 +686,7 @@ async function reload(){
  const latest=turns.filter(t=>t.status==='completed').at(-1);
  if(latest)lastProvider=latest.provider;
  renderTurns();populateResponder();
+ await refreshMeetingCosts();
 }
 async function send(){
  if(busy)return;
