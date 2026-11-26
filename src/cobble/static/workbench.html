@@ -795,7 +795,7 @@ async function refreshDoorStatus(){
   const data=await response.json();
   if(roomId!==currentRoomId)return;
   doorSnapshot=data;
-  $('invite-human').textContent=data.open?(data.arrived?'Door: Sankarshan has entered':'Door: awaiting Sankarshan'):'Door: invite Sankarshan';
+  $('invite-human').textContent=data.open?(data.arrived?'Door: invitation used':'Door: awaiting guest'):'Door: invite Sankarshan';
   $('invite-open').textContent=data.open?'Replace invitation':'Open Door';
   $('invite-revoke').disabled=!data.open;
   if($('invite-dialog').open&&!$('invite-url').value){
