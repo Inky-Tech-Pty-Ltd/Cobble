@@ -117,27 +117,33 @@ meeting's Door does not open the McKay instance.
 
 #### Membrane
 
-**The Membrane is the boundary of this Cobble instance, not an individual
-meeting.** In the sidebar, expand the soft teal **Membrane** bubble to reveal
-two instance-level submenus:
+**Furniture is the catalogue; Membrane is the installation.** The Membrane
+represents the boundary of *this actual Cobble instance*. Expand its soft teal
+bubble for two instance-level deployment inventories:
 
-- **Doors**: admission and trust at this *instance's* membrane. This page
-  honestly reports that no instance-level remote Door or trust-policy editor
-  is configured. It does not grant guests access to McKay.
-- **Windows**: selected outward-facing disclosure at this *instance's*
-  membrane. Windows might present Star Credentials, but no instance-level
-  public display or publishing endpoint is configured in the present build.
+- **Doors**: the particular Door objects **installed at McKay's outer
+  membrane**, where they would govern incoming access. No formal instance-level
+  Door has been registered in Candidate 3; this is a stated empty state, not
+  a live query against a working installation registry. The localhost operator
+  interface is not itself represented as a configured Door object.
+- **Windows**: the particular Window objects **installed at that same membrane**,
+  governing selected outward disclosure. None has been registered here. No
+  Window, public Star Credential view or publishing endpoint is created by
+  opening the page.
 
-Both are real navigable destinations, with a disclosure of current limitations,
-not working security or publishing controls. The submenu can be collapsed,
-remembers its expanded state locally, and is hidden when the whole sidebar
-is collapsed. Opening a child destination expands the Membrane group.
+These are real navigable destinations but are **not yet backed by a generic
+installation registry, deployment mechanism or policy editor**. The submenu
+can be collapsed and remembers its state in this browser.
 
-**Furniture → Doors** continues to mean *smaller Room Doors*, including the
-working meeting-specific invitation Door. It is deliberately distinct from
-**Membrane → Doors**: opening the former never opens this Cobble instance's
-private memories, tools, or operator console. The same scale distinction
-applies to instance Windows versus the Windows of other Rooms.
+**Furniture** contains the *reusable templates* for Doors and Windows (and
+Chairs, Seats, Tables and Sockets), not their deployed instances. A meeting
+invitation Door is a design example under **Furniture → Doors**; the **working
+Door installed on a specific meeting** remains operated from that meeting's
+toolbar in **Meetings**. Its existence does not install a Door at McKay's outer
+membrane. The same distinction applies at other scales: every Room can have
+its own deployed furniture at its own membrane, independently of Cobble's
+template catalogue. No item in Furniture currently performs generic
+installation.
 
 The navigation implementation and its rationale are in
 [the design decision on GitHub](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85)
