@@ -103,15 +103,25 @@ metadata, supplier preview/approval flow, and the guest's room-only
 restriction are unchanged. Floor selection is browser-local and creates
 **no** paid model calls by itself.
 
-The visual experiments with broad orange fills, blue accents and
-different participant-coloured crescents have been withdrawn in favour of a
-**single teal crescent (`#168A96`) wrapping the outer left-hand contour** of
-each weight-bearing object. The crescent must not look like a stripe placed
-inside the card's padding. Claude's pink remains a supplier identity marker,
-not a different crescent colour. The **Membrane** menu is now a soft teal
-bubble with the same outer-wrapping edge, representing the boundary of this
-Cobble instance; smaller Room Doors are in **Furniture → Doors**. The
-meeting's Door does not open the McKay instance.
+The weight design now separates **two jobs**. The clickable **left-edge
+control is transparent**, retains its tooltip/keyboard focus/`aria-pressed`
+semantics, and still changes the same governance setting. The **actual card's
+CSS box-shadow** indicates its state, softly enveloping the whole shape:
+selected Room-voice messages, a supplier currently holding the floor, and
+Joe's heavy default gain the same teal (`#168A96`) shadow. Unselected
+objects remain neutral; hovering an inactive left edge briefly previews the
+shadow. The Chair, standing orders and instance Membrane are structurally
+heavy and retain a permanent shadow. The guest view shows that weight but
+cannot change it. No painted outer crescent or interior vertical stripe
+is used.
+
+This supersedes the earlier orange fills, blue/pink crescents and
+offset-stroke experiments. The **Membrane** menu retains its soft teal
+bubble, now enclosed by its own shadow. Supplier icon colours remain
+identity markers, not weight signals. Reusable Furniture templates have
+ordinary neutral borders; they are not falsely displayed as activated objects.
+The working meeting Door remains attached to its meeting, not to McKay's
+instance boundary.
 
 ### Workspace navigation
 
