@@ -577,7 +577,7 @@ async function switchMeeting(roomId){
  currentRoomId=roomId;
  safeStorageSet('cobble.meeting.active',roomId);
  setCurrentMeetingName(room.title);
- roomFloor=null;joeFloor=false;
+ roomFloor=null;joeFloor=false;renderJoeControl();
  $('question').value=roomDrafts.get(roomId)||'';
  resizeComposer();
  // Filename staging belongs to the active meeting only.
@@ -635,6 +635,35 @@ grip.onkeydown=e=>{
 };
 
 function populateResponder(){updateSend();}
+function createWeightEdge({heavy,label,onClick,disabled=false}){
+ const edge=make('button');edge.type='button';edge.className='weight-edge';
+ edge.setAttribute('aria-label',label);edge.setAttribute('aria-pressed',String(Boolean(heavy)));
+ edge.title=label;edge.disabled=disabled;
+ edge.onclick=async()=>{if(edge.disabled)return;edge.disabled=true;try{await onClick()}finally{edge.disabled=false}};
+ return edge;
+}
+function renderJoeControl(){
+ const active=Boolean(joeFloor);
+ $('joe-card').classList.toggle('default-heavy',active);
+ $('joe-voice-edge').setAttribute('aria-pressed',String(active));
+ $('joe-voice-edge').setAttribute('aria-label',active?
+  'Switch Joe to ordinary table talk by default':'Switch Joe to speaking for the room by default');
+ $('joe-voice-edge').title=active?'Joe: switch to table talk':'Joe: speak for the room by default';
+ $('joe-mode').textContent=active?'Room voice by default':'Table talk by default';
+ $('floor-status').textContent=roomFloor?providerName(roomFloor)+' has the floor':'';
+}
+function selectSupplierFloor(id){
+ if(!states[id]?.live||!states[id]?.active)return;
+ roomFloor=roomFloor===id?null:id;
+ if(roomFloor)joeFloor=false;
+ renderJoeControl();renderSuppliers();
+ status(roomFloor?providerName(roomFloor)+' has the floor.':'Supplier floor released.');
+}
+$('joe-voice-edge').onclick=()=>{
+ joeFloor=!joeFloor;if(joeFloor)roomFloor=null;
+ renderJoeControl();renderSuppliers();
+ status(joeFloor?'Joe speaks for the room by default.':'Joe speaks as a participant by default.');
+};
 function renderSuppliers(){
  const list=$('supplier-list');list.replaceChildren();
  for(const id of providerOrder){
@@ -646,6 +675,12 @@ function renderSuppliers(){
   card.ondragleave=()=>card.classList.remove('drag-over');
   card.ondrop=async e=>{e.preventDefault();card.classList.remove('drag-over');const from=e.dataTransfer.getData('text/plain');if(!providerOrder.includes(from)||from===p.id)return;providerOrder=providerOrder.filter(x=>x!==from);providerOrder.splice(providerOrder.indexOf(p.id),0,from);renderSuppliers();try{await saveRoom({precedence:providerOrder})}catch(err){status(err.message,true)}};
   if(roomFloor===p.id)card.classList.add('floor');
+  const edge=createWeightEdge({
+   heavy:roomFloor===p.id,
+   label:roomFloor===p.id?'Release '+p.name+' from the floor':'Give '+p.name+' the floor',
+   disabled:!s.live||!s.active,
+   onClick:()=>selectSupplierFloor(p.id)
+  });
   const toggle=make('button');toggle.className='supplier-main';toggle.disabled=!s.live;
   toggle.setAttribute('aria-pressed',String(s.active));
   toggle.title=s.live?(s.active?'Move '+p.name+' out of the meeting':'Invite '+p.name+' to the meeting'):p.name+' is not connected to this server';
@@ -659,7 +694,7 @@ function renderSuppliers(){
   };
   const model=make('button','···');model.className='supplier-model';model.title='Model and cost details for '+p.name;
   model.setAttribute('aria-label',model.title);model.onclick=()=>openInspector(p.id,'model');
-  card.append(toggle,model);list.append(card);
+  card.append(edge,toggle,model);list.append(card);
  }
 }
 function renderIntelligences(){
@@ -682,11 +717,25 @@ function renderTurns(){
  }
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
-  const hb=make('div');hb.className='message';const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled((t.speaker||'Joe')+(hvoice?' (speaking for the room)':''),null),make('p',t.question||''));
-  hb.lastChild.className='message-body';if(t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}if(t.provider==='operator'&&t.speaker==='Sankarshan'&&!meetingInfo?.room_voice?.includes(t.turn_id)){const grant=make('button','Authorise room voice');grant.onclick=()=>setVoice(t.turn_id,true);hb.append(grant)}hb.append(copyButton(t.question||'','Copy '+(t.speaker||'Joe')+' contribution'));human.append(hb);thread.append(human);
+  human.dataset.speaker=t.speaker||'Joe';
+  const hb=make('div');hb.className='message';
+  const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);
+  if(t.provider==='operator'){
+   hb.classList.add('weighted');
+   hb.append(createWeightEdge({
+    heavy:hvoice,
+    label:hvoice?'Withdraw '+(t.speaker||'Joe')+' contribution from room voice':'Authorise '+(t.speaker||'Joe')+' contribution for room voice',
+    onClick:()=>setVoice(t.turn_id,!hvoice)
+   }));
+  }
+  if(hvoice)hb.classList.add('room-voice');
+  hb.append(titled((t.speaker||'Joe')+(hvoice?' (speaking for the room)':''),null));
+  const humanSpeech=make('p',t.question||'');humanSpeech.className='message-body';hb.append(humanSpeech);
+  hb.append(copyButton(t.question||'','Copy '+(t.speaker||'Joe')+' contribution'));
+  human.append(hb);thread.append(human);
   if(t.turn_id===openingTurnId&&meetingInfo?.standing_orders){
-   const chair=make('article');chair.className='exchange supplier';
-   const cb=make('div');cb.className='message';cb.append(titled('Chair',null));
+   const chair=make('article');chair.className='exchange supplier chair';
+   const cb=make('div');cb.className='message weight-fixed';cb.append(titled('Chair',null));
    const participants=['Joe (convenor)'];
    if(turns.some(x=>x.speaker==='Sankarshan'))participants.push('Sankarshan');
    participants.push(...providerOrder.filter(id=>states[id]?.active).map(providerName));
@@ -695,13 +744,23 @@ function renderTurns(){
   }
   if(t.status==='posted'&&t.provider==='operator')continue;
   const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
-  const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');
-  const box=make('div');box.className='message';const voiced=t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(voiced)box.classList.add('room-voice');box.append(titled(p.name+(voiced?' (speaking for the room)':''),p));
+  const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');exchange.dataset.provider=t.provider;
+  const box=make('div');box.className='message';
+  const voiced=t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);
+  if(t.provider!=='operator'&&t.status==='completed'&&t.answer?.trim()){
+   box.classList.add('weighted');
+   box.append(createWeightEdge({
+    heavy:voiced,
+    label:voiced?'Withdraw '+p.name+' reply from room voice':'Authorise '+p.name+' reply for room voice',
+    onClick:()=>setVoice(t.turn_id,!voiced)
+   }));
+  }
+  if(voiced)box.classList.add('room-voice');box.append(titled(p.name+(voiced?' (speaking for the room)':''),p));
   const body=make('p',t.status==='completed'?(t.answer||''):t.status==='outcome_unknown'?'Outcome unknown — do not automatically retry.':'No verified response retained.');
   body.className='message-body';box.append(body);
   const meta=make('div');meta.className='turn-meta';
   meta.textContent=[t.model||'',t.status==='completed'?money(t.usage?.estimated_provider_cost_usd)+' estimated':'',t.status!=='completed'?t.status:''].filter(Boolean).join(' · ');
-  box.append(meta);if(t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));box.append(b)}box.append(copyButton(body.textContent,'Copy '+p.name+' contribution'));exchange.append(box);thread.append(exchange);
+  box.append(meta,copyButton(body.textContent,'Copy '+p.name+' contribution'));exchange.append(box);thread.append(exchange);
  }
  $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;
  for(const p of PROVIDERS)states[p.id].cost=0;
@@ -799,8 +858,7 @@ async function send(){
 
 async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId});return true}catch(e){status(e.message,true);return false}}
 async function saveRoom(changes){const updated=await api('live/rooms/configure',{room_id:currentRoomId,...changes});Object.assign(meetings.find(x=>x.id===currentRoomId),updated);meetingInfo=updated;renderTurns();return updated}
-$('joe-floor').onclick=()=>{joeFloor=!joeFloor;if(joeFloor)roomFloor=null;$('joe-floor').setAttribute('aria-pressed',String(joeFloor));$('joe-floor').textContent=joeFloor?'Joe has the floor ✓':'Joe: speak for room';renderSuppliers()};
-$('grant-floor').onclick=()=>{roomFloor=roomFloor?null:providerOrder.find(id=>states[id]?.active&&states[id]?.live)||null;joeFloor=false;$('joe-floor').setAttribute('aria-pressed','false');$('joe-floor').textContent='Joe: speak for room';$('floor-status').textContent=roomFloor?providerName(roomFloor)+' has the floor':'';renderSuppliers()};
+
 $('meeting-state').onchange=async()=>{try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
 $('edit-orders').onclick=()=>{
  $('orders-text').value=meetingInfo?.standing_orders||defaultOrders;
@@ -1061,7 +1119,7 @@ $('memory-form').onsubmit=async e=>{
   for(const p of PROVIDERS){states[p.id].live=available.has(p.id);states[p.id].active=states[p.id].live}
   serverReady=true;
   $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
-  renderSuppliers();populateResponder();
+  renderSuppliers();renderJoeControl();populateResponder();
   await loadMeetings();
   await reload();
   status('');
