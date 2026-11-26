@@ -31,7 +31,11 @@ Only eligible events get a publication edge: locally posted human contributions 
 
 ## Colour and accessibility
 
-The user chose an existing Inky blue **`#0C94E8`** as the general membrane/door accent, replacing experiments with orange fills. The blue accent is deliberately narrow. The crescent of each participant may adopt a restrained identity tone: **Joe teal, Claude pink**, other suppliers muted hues, Chair slate.
+**One crescent, one colour: teal (`#168A96`).** Earlier orange and blue experiments, including different crescent colours for participants, have been superseded. A crescent means the same visual kind of weight everywhere: admission at a membrane, an authorised utterance, the holder of the floor, a default voice mode, or a structural standing order. Its *action* still depends on the object, but its shape and colour do not. Supplier identity colours (for example Claude pink) may survive inside identity icons, **not** on the weight crescent.
+
+**The crescent hugs the object's outside-left contour**, rather than sitting as a decorative vertical line *inside* its padding. The curve should read as enclosing or protecting the object. The compact Membrane navigation item is therefore a soft teal bubble, with the same curved outside edge even when the Membrane page is not selected. Guest speech, admission status, Joe's header card, the Chair, the supplier seats, the Door button, and the standing orders use the same shared teal rule. Heavy and light are encoded through opacity/strength, with a keyboard-accessible hit target where the edge is actionable.
+
+The background surfaces stay in Cobble's restrained neutral blue-grey palette. Do **not** turn them into large teal, blue or orange fills.
 
 The interface must also communicate this distinction **without relying on colour alone**: left-edge shape, strength, hover, focus ring, title tooltip, and accessible labels. Fixed heavy accents are not interactive controls.
 
