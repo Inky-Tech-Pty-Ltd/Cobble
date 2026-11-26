@@ -262,8 +262,8 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         for required in (
             "function refreshDoorStatus()",
             "'/api/live/rooms/door?room_id='",
-            "Door: awaiting Sankarshan",
-            "Door: Sankarshan has entered",
+            "Door: awaiting guest",
+            "Door: invitation used",
             "Replace invitation",
             "function pollMeetingUpdates()",
             "const firstJoe=turns.find(",
