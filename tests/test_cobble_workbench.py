@@ -36,7 +36,7 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn('id="screen-membrane"', self.page)
         self.assertIn('id="screen-furniture"', self.page)
         self.assertIn("The boundary of", self.page)
-        self.assertIn("Instance Door and trust policy", self.page)
+        self.assertIn("Instance admission and trust policy", self.page)
         self.assertIn("Not yet implemented", self.page)
         self.assertIn('id="furniture-doors"', self.page)
         self.assertIn('id="furniture-open-meeting-door"', self.page)
