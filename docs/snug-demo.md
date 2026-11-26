@@ -115,6 +115,35 @@ meeting's Door does not open the McKay instance.
 
 ### Workspace navigation
 
+#### Membrane
+
+**The Membrane is the boundary of this Cobble instance, not an individual
+meeting.** In the sidebar, expand the soft teal **Membrane** bubble to reveal
+two instance-level submenus:
+
+- **Doors**: admission and trust at this *instance's* membrane. This page
+  honestly reports that no instance-level remote Door or trust-policy editor
+  is configured. It does not grant guests access to McKay.
+- **Windows**: selected outward-facing disclosure at this *instance's*
+  membrane. Windows might present Star Credentials, but no instance-level
+  public display or publishing endpoint is configured in the present build.
+
+Both are real navigable destinations, with a disclosure of current limitations,
+not working security or publishing controls. The submenu can be collapsed,
+remembers its expanded state locally, and is hidden when the whole sidebar
+is collapsed. Opening a child destination expands the Membrane group.
+
+**Furniture → Doors** continues to mean *smaller Room Doors*, including the
+working meeting-specific invitation Door. It is deliberately distinct from
+**Membrane → Doors**: opening the former never opens this Cobble instance's
+private memories, tools, or operator console. The same scale distinction
+applies to instance Windows versus the Windows of other Rooms.
+
+The navigation implementation and its rationale are in
+[the design decision on GitHub](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85)
+and [the Room-weight design note](design/room-weight.md).
+The context-sensitive **?** on these pages opens this section in the repo.
+
 #### Senses
 
 Incoming source material and its changes. GitHub archive search and
