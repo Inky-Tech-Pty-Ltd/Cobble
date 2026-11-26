@@ -260,6 +260,21 @@ button{color:inherit}
 .membrane-boundary .membrane-symbol{border:0;width:19px;height:19px;color:var(--membrane-ink)}
 .membrane-rule{display:none}
 @media(max-width:650px){.membrane-boundary{padding:9px 9px 9px 18px;margin:3px 0}}
+
+/* A hierarchy within the instance's Membrane, distinct from Furniture's smaller Rooms. */
+.membrane-nav-group{display:flex;flex-direction:column;gap:2px;min-width:0;padding:0 0 3px}
+.membrane-nav-heading{display:flex;position:relative;align-items:stretch;min-width:0}
+.membrane-nav-heading .membrane-boundary{min-width:0;flex:1;padding-right:36px}
+.membrane-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:29px;height:29px;border:0;border-radius:7px;background:transparent;color:var(--membrane-ink);font-size:1.15rem;line-height:1}
+.membrane-toggle:hover,.membrane-toggle:focus-visible{background:#d7eae8}
+.membrane-toggle[aria-expanded="false"] span{display:inline-block;transform:rotate(-90deg)}
+.membrane-submenu{display:grid;gap:2px;margin:0 0 0 17px;padding:2px 0 2px 14px;border-left:1px solid var(--membrane-border)}
+.membrane-child{font-size:.81rem;padding:7px 9px;color:#45636a}
+.membrane-child.active{background:#e7f3f1;color:#195e67}
+.membrane-child span:first-child{width:12px;color:var(--membrane-ink)}
+.sidebar.collapsed .membrane-submenu,.sidebar.collapsed .membrane-toggle{display:none}
+.sidebar.collapsed .membrane-nav-heading .membrane-boundary{padding-right:7px}
+@media(max-width:650px){.membrane-child{padding:6px 8px}.membrane-nav-heading .membrane-boundary{padding-right:30px}}
 </style>
 </head>
 <body>
@@ -274,9 +289,18 @@ button{color:inherit}
         <button class="nav-item" data-screen="intelligences"><span aria-hidden="true">✦</span><span class="nav-label">Intelligences</span></button>
         <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span><span id="total-cost" class="meeting-cost"></span></button>
         <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
-        <button class="nav-item membrane-boundary" data-screen="membrane" aria-label="Membrane of this Cobble instance" title="This Cobble's membrane · instance boundary">
-          <span class="membrane-symbol" aria-hidden="true">·</span><span class="membrane-title">Membrane</span><span class="membrane-rule" aria-hidden="true"></span>
-        </button>
+        <div class="membrane-nav-group" id="membrane-nav-group">
+          <div class="membrane-nav-heading">
+            <button class="nav-item membrane-boundary" data-screen="membrane" aria-label="Membrane of this Cobble instance" title="This Cobble's membrane · instance boundary">
+              <span class="membrane-symbol" aria-hidden="true">·</span><span class="membrane-title">Membrane</span><span class="membrane-rule" aria-hidden="true"></span>
+            </button>
+            <button id="membrane-toggle" class="membrane-toggle" type="button" aria-label="Hide Membrane submenus" aria-expanded="true" aria-controls="membrane-submenu" title="Show or hide Membrane submenus"><span aria-hidden="true">⌄</span></button>
+          </div>
+          <div class="membrane-submenu" id="membrane-submenu" role="group" aria-label="This Cobble instance's membrane">
+            <button class="nav-item membrane-child" data-screen="membrane-doors"><span aria-hidden="true">↳</span><span class="nav-label">Doors</span></button>
+            <button class="nav-item membrane-child" data-screen="membrane-windows"><span aria-hidden="true">↳</span><span class="nav-label">Windows</span></button>
+          </div>
+        </div>
         <button class="nav-item" data-screen="furniture"><span aria-hidden="true">▥</span><span class="nav-label">Furniture</span></button>
         <div class="tree" id="my-meetings-menu">
           <div class="tree-heading my-meetings-row">
@@ -335,14 +359,36 @@ button{color:inherit}
       </section>
       <section class="screen" id="screen-membrane" aria-label="This Cobble instance's membrane">
         <div class="content-pane"><div class="reading">
-          <p class="pane-intro">The boundary of <strong>this Cobble instance</strong>, not the entrance to an individual meeting. Orange marks membranes at every scale.</p>
+          <p class="pane-intro">The boundary of <strong>this Cobble instance</strong>, not the entrance to an individual meeting. Teal crescents identify a membrane wherever it appears.</p>
           <div class="instance-membrane-panel">
             <strong>Instance membrane · McKay</strong>
-            <p>This membrane separates this instance's private memories and tools from what it encounters through Senses. A Door at this scale would govern admission to the instance itself, rather than to any one meeting.</p>
+            <p>This membrane separates this instance's private memories and tools from what it encounters through Senses. Its Doors would govern admission; its Windows would show selected information outward.</p>
           </div>
-          <div class="info-row"><span>Current operator access</span><small>Localhost-only console · no instance-level remote Door is configured here</small></div>
-          <div class="info-row"><span>Instance Door and trust policy</span><small>Not yet implemented · no controls exposed</small></div>
-          <p class="pane-intro">Doors for individual meetings and other smaller Rooms are found under <strong>Furniture → Doors</strong>. Opening a meeting Door does not open this instance's membrane.</p>
+          <div class="info-row"><span>Doors</span><small>Who or what may cross this instance's boundary · <button id="membrane-doors-open" type="button" class="link" aria-label="Open this instance's Doors">Explore Doors</button></small></div>
+          <div class="info-row"><span>Windows</span><small>What this instance chooses to show beyond its boundary · <button id="membrane-windows-open" type="button" class="link" aria-label="Open this instance's Windows">Explore Windows</button></small></div>
+          <p class="pane-intro">Neither submenu is an active access or publication policy yet. Smaller Rooms have their own Doors and Windows under <strong>Furniture</strong>; opening a meeting Door does not open McKay's membrane.</p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-membrane-doors" aria-label="Doors of this Cobble instance">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">Doors are the <strong>admission mechanisms at this Cobble instance's membrane</strong>. They assess whether an incoming connection or contribution may enter, subject to the instance's trust policy.</p>
+          <div class="instance-membrane-panel"><strong>Instance Doors · not yet configured</strong>
+            <p>McKay's operator console remains local. This page does not expose a new remote entrance or give anyone access to its private memories, tools, or credentials.</p>
+          </div>
+          <div class="info-row"><span>Operator console</span><small>Localhost-only in this demonstration</small></div>
+          <div class="info-row"><span>Instance admission and trust policy</span><small>Future capability · no access controls can be changed here</small></div>
+          <p class="pane-intro">The working invitation Door belongs to an <em>individual meeting Room</em>, not to McKay's instance membrane. Find smaller Doors under <strong>Furniture → Doors</strong>.</p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-membrane-windows" aria-label="Windows of this Cobble instance">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">Windows govern <strong>what this Cobble instance chooses to show outward</strong> across its membrane. A Window might display selected Star Credentials without exposing the memories from which they were assembled.</p>
+          <div class="instance-membrane-panel"><strong>Instance Windows · not yet configured</strong>
+            <p>No instance-level public display, Star Credential publishing endpoint or outbound disclosure policy is available from this page.</p>
+          </div>
+          <div class="info-row"><span>Published views</span><small>None configured here</small></div>
+          <div class="info-row"><span>Visibility and provenance rules</span><small>Future capability · no information is published by opening this page</small></div>
+          <p class="pane-intro">A Room's outward voice or a smaller Room's Window is not automatically a Window through the instance membrane.</p>
         </div></div>
       </section>
       <section class="screen" id="screen-furniture" aria-label="Furniture">
@@ -535,22 +581,41 @@ $('meeting-title').onblur=async()=>{
 };
 $('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
- if(!['senses','memories','intelligences','meetings','membrane','furniture','setup','help'].includes(name))return;
+ if(!['senses','memories','intelligences','meetings','membrane','membrane-doors','membrane-windows','furniture','setup','help'].includes(name))return;
  currentScreen=name;
  for(const el of document.querySelectorAll('.screen'))el.classList.toggle('active',el.id==='screen-'+name);
  for(const el of document.querySelectorAll('.nav-item')){
   const on=el.dataset.screen===name;el.classList.toggle('active',on);
   if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
  }
- const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,membrane:'Membrane',furniture:'Furniture',setup:'Setup',help:'Help'};
+ const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,membrane:'Membrane','membrane-doors':'Membrane · Doors','membrane-windows':'Membrane · Windows',furniture:'Furniture',setup:'Setup',help:'Help'};
  $('meeting-title').hidden=name!=='meetings';
  $('page-title').hidden=name==='meetings';
  $('page-title').textContent=titles[name];
- $('context-help').href=HELP_DOC+'#'+(name==='help'?'workspace-navigation':name);
+ $('context-help').href=(name==='membrane'||name.startsWith('membrane-'))?
+   'https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/puck/room-door-sankarshan-1/docs/snug-demo.md#membrane':
+   HELP_DOC+'#'+(name==='help'?'workspace-navigation':name);
+ if(name==='membrane-doors'||name==='membrane-windows')showMembraneSubmenu(true);
  document.title='Cobble · '+titles[name];
  if(name==='intelligences')renderIntelligences();
 }
-for(const el of document.querySelectorAll('.nav-item[data-screen]'))el.onclick=()=>setScreen(el.dataset.screen);
+for(const el of document.querySelectorAll('.nav-item[data-screen]'))el.onclick=()=>{
+ if(sidebar.classList.contains('collapsed')&&el.dataset.screen.startsWith('membrane-'))collapse(false);
+ setScreen(el.dataset.screen);
+};
+function showMembraneSubmenu(expanded){
+ $('membrane-toggle').setAttribute('aria-expanded',String(expanded));
+ $('membrane-toggle').setAttribute('aria-label',expanded?'Hide Membrane submenus':'Show Membrane submenus');
+ $('membrane-submenu').hidden=!expanded;
+ safeStorageSet('cobble.membrane.expanded',expanded?'1':'0');
+}
+showMembraneSubmenu(safeStorageGet('cobble.membrane.expanded')!=='0');
+$('membrane-toggle').onclick=()=>{
+ if(sidebar.classList.contains('collapsed'))collapse(false);
+ showMembraneSubmenu($('membrane-submenu').hidden);
+};
+$('membrane-doors-open').onclick=()=>setScreen('membrane-doors');
+$('membrane-windows-open').onclick=()=>setScreen('membrane-windows');
 $('furniture-open-meeting-door').onclick=()=>{
   setScreen('meetings');
   $('invite-human').click();
