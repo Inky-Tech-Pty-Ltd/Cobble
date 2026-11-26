@@ -50,6 +50,38 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("#invite-human.membrane-cue", self.page)
         self.assertIn('class="furniture-doors"', self.page)
 
+    def test_membrane_nested_doors_windows_navigation(self):
+        spine = self.page.split('<nav class="primary-nav"', 1)[1].split('</nav>', 1)[0]
+        membrane = spine.split('id="membrane-nav-group"', 1)[1].split(
+            'data-screen="furniture"', 1)[0]
+        self.assertIn('data-screen="membrane"', membrane)
+        self.assertIn('id="membrane-toggle"', membrane)
+        self.assertIn('aria-expanded="true" aria-controls="membrane-submenu"', membrane)
+        self.assertIn('id="membrane-submenu" role="group"', membrane)
+        self.assertIn('data-screen="membrane-doors"', membrane)
+        self.assertIn('data-screen="membrane-windows"', membrane)
+        self.assertLess(membrane.index('>Doors<'), membrane.index('>Windows<'))
+        for required in (
+            'id="screen-membrane"', 'id="screen-membrane-doors"',
+            'id="screen-membrane-windows"',
+            'id="membrane-doors-open"', 'id="membrane-windows-open"',
+            'function showMembraneSubmenu(expanded)',
+            "safeStorageSet('cobble.membrane.expanded'",
+            "safeStorageGet('cobble.membrane.expanded')",
+            "if(name==='membrane-doors'||name==='membrane-windows')showMembraneSubmenu(true)",
+            "showMembraneSubmenu($('membrane-submenu').hidden)",
+            ".sidebar.collapsed .membrane-submenu,.sidebar.collapsed .membrane-toggle{display:none}",
+            "This Cobble instance's membrane",
+            "No instance-level public display",
+            "Localhost-only in this demonstration",
+        ):
+            self.assertIn(required, self.page)
+        self.assertIn("Instance Doors · not yet configured", self.page)
+        self.assertIn("Instance Windows · not yet configured", self.page)
+        # The room's existing invitation Door remains a separate mechanism.
+        self.assertIn('id="furniture-open-meeting-door"', self.page)
+        self.assertIn('id="invite-human"', self.page)
+
     def test_all_room_costs_come_from_server_not_visited_browser_rooms(self):
         self.assertIn("function applyCostSnapshot(data)", self.page)
         self.assertIn("estimated_total_usd", self.page)
