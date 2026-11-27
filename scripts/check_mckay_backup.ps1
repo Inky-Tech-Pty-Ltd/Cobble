@@ -193,7 +193,15 @@ function Invoke-CobbleSelfTest {
         if (@($missing.alerts | Where-Object { $_ -match 'Missing local backup' }).Count -eq 0) {
             throw 'Missing nightly backup was not detected'
         }
-        Write-Output 'BACKUP WATCHDOG SELF-TEST PASS: clean, overdue cloud, missing night'
+        # Exercise the real Windows DLL/P-Invoke path without cloud credentials
+        # or any real backup. A plain local text file is not a cloud placeholder.
+        $plain = Join-Path $local 'not-a-cloud-file.txt'
+        Set-Content -LiteralPath $plain -Value 'fixture'
+        $native = Get-CobbleCloudState $plain
+        if ($native -ne 'unknown-not-placeholder') {
+            throw "Unexpected native Cloud Files result on local fixture: $native"
+        }
+        Write-Output 'BACKUP WATCHDOG SELF-TEST PASS: clean, overdue cloud, missing night, native API'
     } finally {
         Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
     }
