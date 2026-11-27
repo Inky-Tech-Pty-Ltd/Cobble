@@ -2,7 +2,7 @@
 
 First increment of a shared invitation/seat protocol. Existing Sankarshan
 invitations are independent of Puck invitations. The convenor opens or closes
-Puck's Door in the meeting toolbar. No new public listener, supplier calls,
+Puck's Door under Membrane → Doors, scoped to the selected meeting. No new public listener, supplier calls,
 or access to the operator console is introduced.
 
 **Deployment is a separate security decision.** The existing private MCP
@@ -21,7 +21,7 @@ entire table, not only room output.
 
 Local proof:
 1. Start the meetings server offline with a separate loopback guest port.
-2. Convene a clean test meeting, post an agenda and click Door: invite Puck.
+2. Convene a clean test meeting, post an agenda, open Membrane → Doors and click Invite Puck.
 3. After explicit local approval, enable COBBLE_MCP_ALLOW_PUCK_MEETINGS=1
    in the existing private MCP subprocess environment, restart the tunnel
    and refresh its tool definitions. No new OpenAI API key is required.

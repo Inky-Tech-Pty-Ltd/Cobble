@@ -108,7 +108,7 @@ button{color:inherit}
 .suppliers h2{margin:4px 8px 10px;font-weight:600;font-size:.77rem;color:var(--muted)}
 .supplier-list{display:grid;gap:7px;overflow-y:auto;max-height:34dvh}
 .supplier-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e1e6ea;border-radius:12px;padding:7px 8px;box-shadow:0 2px 7px #1d28330b}
-.supplier-card[draggable="true"]{cursor:grab}.supplier-card.drag-over{outline:2px solid #89a3bb}.supplier-card.floor{border-color:#3b5166;background:#e7f2fa}.meeting-cost{margin-left:auto;font-size:.7rem;color:#657386;font-variant-numeric:tabular-nums}.governance{padding:8px 20px;border-bottom:1px solid #e4e8eb;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem}.governance button,.governance select{border:1px solid #dce4eb;border-radius:7px;background:white;padding:6px}.supplier-card.off{background:#f8f9fa;opacity:.78}
+.supplier-card[draggable="true"]{cursor:grab}.supplier-card.drag-over{outline:2px solid #89a3bb}.supplier-card.floor{border-color:#3b5166;background:#e7f2fa}.meeting-cost{margin-left:auto;font-size:.7rem;color:#657386;font-variant-numeric:tabular-nums}.supplier-card.off{background:#f8f9fa;opacity:.78}
 .supplier-main{border:0;background:transparent;display:flex;align-items:center;gap:9px;min-width:0;flex:1;text-align:left;padding:2px 1px}
 .supplier-main .supplier-name{font-weight:650;font-size:.85rem}
 .supplier-detail{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
@@ -274,6 +274,31 @@ button{color:inherit}
 .sidebar.collapsed .membrane-submenu,.sidebar.collapsed .membrane-toggle{display:none}
 .sidebar.collapsed .membrane-nav-heading .membrane-boundary{padding-right:7px}
 @media(max-width:650px){.membrane-child{padding:6px 8px}.membrane-nav-heading .membrane-boundary{padding-right:30px}}
+/* Consistent type across the navigation spine; metadata stays secondary. */
+.primary-nav .nav-item,.primary-nav .meeting-item{font-size:.9rem;line-height:1.35;font-weight:500}
+.primary-nav .nav-item.active,.primary-nav .membrane-boundary,.primary-nav .meeting-item.active strong{font-weight:650}
+.primary-nav .meeting-item strong{font-weight:inherit;min-width:0}
+.primary-nav .meeting-item.active strong{font-weight:650}
+.primary-nav .membrane-child{font-size:.9rem}
+.primary-nav .my-meetings-row{margin:0}
+.primary-nav .my-meetings-row .nav-item{color:#344354}
+.primary-nav .nav-item>span:first-child:not(.membrane-symbol){display:inline-flex;align-items:center;justify-content:center;width:19px;flex-shrink:0}
+.primary-nav .meeting-cost{font-size:.7rem;font-weight:400;flex-shrink:0}
+.primary-nav .meeting-item small{margin-top:0}
+.header-title{flex:1;min-width:0}
+.meeting-title-input{width:100%}
+.meeting-actions{position:relative;flex-shrink:0}
+#meeting-more{font-size:1.45rem;line-height:1;padding:5px 10px}
+.meeting-options{position:absolute;right:0;top:calc(100% + 8px);z-index:12;background:#fff;border:1px solid #d4dfe7;border-radius:12px;box-shadow:0 8px 28px #172b3c24;padding:7px;min-width:218px;display:grid;gap:4px;font-size:.88rem}
+.meeting-options button,.meeting-options select{background:white;border:1px solid transparent;border-radius:7px;padding:8px 10px;text-align:left}
+.meeting-options button:hover,.meeting-options select:hover{background:#edf2f6}
+.meeting-options label{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-left:10px}
+.meeting-options .standing-orders-button{border-left:var(--weight-edge-border)}
+#floor-status{font-size:.75rem;color:var(--muted);white-space:nowrap}
+#floor-status:empty{display:none}
+.meeting-door-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.meeting-door-actions button{padding:9px 14px;border-radius:9px;font-size:.9rem}
+#door-page-status{min-height:1.4em;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -323,10 +348,10 @@ button{color:inherit}
   <main class="main">
     <div class="workspace">
       <header class="header">
-        <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
-        <div class="header-actions"><div id="joe-card" class="joe-card weighted" title="Joe's default speaking weight; you can still change each contribution individually"><button id="joe-voice-edge" type="button" class="weight-edge" aria-label="Make Joe speak for the room by default" aria-pressed="false" title="Switch Joe's default voice"></button><strong>Joe</strong><small id="joe-mode">Table talk</small></div><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
+        <div class="header-title"><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
+        <div class="header-actions"><span id="floor-status" aria-live="polite"></span><div class="meeting-actions" id="meeting-actions"><button id="meeting-more" type="button" class="icon-button" aria-label="Meeting options" aria-expanded="false" aria-controls="meeting-options" title="Meeting options">⋯</button><div class="meeting-options" id="meeting-options" hidden><button id="edit-orders" class="standing-orders-button">Standing orders</button><label for="meeting-state">State <select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select></label><button id="view-output">Room output</button></div></div><div id="joe-card" class="joe-card weighted" title="Joe's default speaking weight; you can still change each contribution individually"><button id="joe-voice-edge" type="button" class="weight-edge" aria-label="Make Joe speak for the room by default" aria-pressed="false" title="Switch Joe's default voice"></button><strong>Joe</strong><small id="joe-mode">Table talk</small></div><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
-      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders" class="standing-orders-button">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="view-output">Room output</button><button id="invite-human" class="membrane-cue">Door: invite Sankarshan</button><button id="invite-puck" class="membrane-cue">Door: invite Puck</button><span id="floor-status"></span></div>
+      <section class="screen active" id="screen-meetings" aria-label="Meeting">
         <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
@@ -376,7 +401,12 @@ button{color:inherit}
           </div>
           <div class="info-row"><span>Existing operator interface</span><small>Loopback-only service; not a configured Door object</small></div>
           <div class="info-row"><span>Door installations</span><small>Registry and deployment controls are future work</small></div>
-          <p class="pane-intro">The working invitation Door is installed <em>on the selected meeting Room</em> and operated in Meetings; it is not installed at this Cobble instance's outer membrane. Its reusable <strong>template</strong> is described in Furniture → Doors.</p>
+          <h2 class="section-title">Selected meeting's Doors</h2>
+          <div class="info-row"><span id="door-room-title">Current meeting</span><button type="button" class="link" id="door-return">Return to meeting</button></div>
+          <p class="pane-intro">These deployed Doors admit a participant to the selected meeting Room only; each is not installed at this Cobble instance's outer membrane. Select another meeting in My meetings to change the scope.</p>
+          <div class="meeting-door-actions"><button type="button" id="invite-human" class="membrane-cue" disabled>Invite Sankarshan</button><button type="button" id="invite-puck" class="membrane-cue" disabled>Invite Puck</button></div>
+          <p id="door-page-status" class="pane-intro" role="status"></p>
+          <div id="puck-room-instructions" hidden><p class="pane-intro">In a dedicated ChatGPT conversation, ask Puck to enter meeting <code id="puck-room-id"></code>. The room ID is not an invitation credential.</p><button type="button" id="puck-copy-request" class="copy-action">Copy request for Puck</button></div>
         </div></div>
       </section>
       <section class="screen" id="screen-membrane-windows" aria-label="Windows of this Cobble instance">
@@ -395,7 +425,10 @@ button{color:inherit}
           <p class="pane-intro"><strong>Furniture is the template catalogue.</strong> Doors, Windows, Chairs, Seats and other fittings are reusable designs that a Room may deploy. Browsing a template does not install or operate it.</p>
           <details class="furniture-doors" id="furniture-doors">
             <summary>Doors · templates</summary>
-            <div class="door-detail"><span><strong>Meeting invitation Door template</strong> · a bearer invitation admitting a guest to one meeting Room, not to McKay's own membrane. A working Door based on this design is operated in Meetings.</span></div>
+            <div class="door-detail"><span><strong>Meeting invitation Door template</strong> · reusable design for admitting an intelligence to one meeting Room, not to McKay's own membrane.</span></div>
+            <div class="door-detail"><span><strong>Invite human</strong> · bearer invitation template.</span></div>
+            <div class="door-detail"><span><strong>Invite ChatGPT bot</strong> · locally bridged intelligence invitation template.</span></div>
+            <p class="pane-intro">Deployed meeting Doors are operated in Membrane → Doors.</p>
             <p class="pane-intro">Future templates may require credentials, reputational evidence, payment or other trust checks. Generic template installation is not yet implemented.</p>
           </details>
           <details class="furniture-doors" id="furniture-windows">
@@ -584,6 +617,15 @@ $('meeting-title').onblur=async()=>{
  }catch(error){status('Meeting rename failed: '+error.message,true);if(currentRoomId===roomId)setCurrentMeetingName(room.title)}
 };
 $('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
+function showMeetingOptions(open){
+ $('meeting-options').hidden=!open;
+ $('meeting-more').setAttribute('aria-expanded',String(open));
+}
+$('meeting-more').onclick=()=>showMeetingOptions($('meeting-options').hidden);
+document.addEventListener('click',e=>{if(!$('meeting-actions').contains(e.target))showMeetingOptions(false)});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&!$('meeting-options').hidden){showMeetingOptions(false);$('meeting-more').focus()}
+});
 function setScreen(name){
  if(!['senses','memories','intelligences','meetings','membrane','membrane-doors','membrane-windows','furniture','setup','help'].includes(name))return;
  currentScreen=name;
@@ -594,6 +636,8 @@ function setScreen(name){
  }
  const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,membrane:'Membrane','membrane-doors':'Membrane · Doors','membrane-windows':'Membrane · Windows',furniture:'Furniture',setup:'Setup',help:'Help'};
  $('meeting-title').hidden=name!=='meetings';
+ $('meeting-actions').hidden=name!=='meetings';showMeetingOptions(false);
+ if(name==='membrane-doors'){ $('door-room-title').textContent=currentMeetingTitle;refreshDoorStatus(); }
  $('page-title').hidden=name==='meetings';
  $('page-title').textContent=titles[name];
  $('context-help').href=(name==='membrane'||name.startsWith('membrane-'))?
@@ -619,6 +663,7 @@ $('membrane-toggle').onclick=()=>{
  showMembraneSubmenu($('membrane-submenu').hidden);
 };
 $('membrane-doors-open').onclick=()=>setScreen('membrane-doors');
+$('door-return').onclick=()=>setScreen('meetings');
 $('membrane-windows-open').onclick=()=>setScreen('membrane-windows');
 async function loadMeetings(){
  const response=await fetch('/api/live/rooms',{cache:'no-store'});
@@ -638,10 +683,12 @@ async function loadMeetings(){
  setCurrentMeetingName(meetings.find(m=>m.id===currentRoomId)?.title||'Current meeting');
 }
 async function switchMeeting(roomId){
- if(busy||roomId===currentRoomId)return;
+ if(busy)return;
+ if(roomId===currentRoomId){setScreen('meetings');return}
  const room=meetings.find(m=>m.id===roomId);if(!room)return;
  roomDrafts.set(currentRoomId,$('question').value);
  currentRoomId=roomId;
+ $('invite-human').disabled=true;$('invite-puck').disabled=true;$('puck-room-instructions').hidden=true;$('door-page-status').textContent='';
  safeStorageSet('cobble.meeting.active',roomId);
  setCurrentMeetingName(room.title);
  roomFloor=null;joeFloor=false;renderJoeControl();
@@ -931,8 +978,9 @@ async function send(){
 async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId},{preserveScroll:true});return true}catch(e){status(e.message,true);return false}}
 async function saveRoom(changes,{preserveScroll=false}={}){const roomId=currentRoomId;const updated=await api('live/rooms/configure',{room_id:roomId,...changes});const room=meetings.find(x=>x.id===roomId);if(room)Object.assign(room,updated);if(roomId===currentRoomId){meetingInfo=updated;renderTurns({preserveScroll})}return updated}
 
-$('meeting-state').onchange=async()=>{try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
+$('meeting-state').onchange=async()=>{showMeetingOptions(false);try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
 $('edit-orders').onclick=()=>{
+ showMeetingOptions(false);
  $('orders-text').value=meetingInfo?.standing_orders||defaultOrders;
  $('orders-error').textContent='';
  $('orders-dialog').showModal();
@@ -968,11 +1016,15 @@ async function refreshDoorStatus(){
   const data=await response.json();
   if(roomId!==currentRoomId)return;
   doorSnapshot=data;
+  $('door-room-title').textContent=currentMeetingTitle;
+  $('invite-human').disabled=false;$('invite-puck').disabled=false;
+  $('puck-room-id').textContent=roomId;
+  $('puck-room-instructions').hidden=!data.puck?.open;
   const puck=data.puck||{};
   $('invite-puck').classList.toggle('door-open',Boolean(puck.open));
-  $('invite-puck').textContent=puck.open?(puck.arrived?'Door: Puck admitted':'Door: awaiting Puck'):'Door: invite Puck';
+  $('invite-puck').textContent=puck.open?(puck.arrived?'Door: Puck admitted':'Door: awaiting Puck'):'Invite Puck';
   $('invite-human').classList.toggle('door-open',Boolean(data.open));
-  $('invite-human').textContent=data.open?(data.arrived?'Door: invitation used':'Door: awaiting guest'):'Door: invite Sankarshan';
+  $('invite-human').textContent=data.open?(data.arrived?'Door: invitation used':'Door: awaiting guest'):'Invite Sankarshan';
   $('invite-open').textContent=data.open?'Replace invitation':'Open Door';
   $('invite-revoke').disabled=!data.open;
   if($('invite-dialog').open&&!$('invite-url').value){
@@ -982,25 +1034,35 @@ async function refreshDoorStatus(){
     'Door closed. Open it to issue a new, room-specific invitation.';
   }
  }catch(error){
-  if(roomId===currentRoomId&&$('invite-dialog').open)$('invite-status').textContent=error.message;
+  if(roomId===currentRoomId){
+   $('invite-human').disabled=true;$('invite-puck').disabled=true;
+   $('puck-room-instructions').hidden=true;
+   $('door-page-status').textContent=error.message;
+   if($('invite-dialog').open)$('invite-status').textContent=error.message;
+  }
  }
 }
+$('puck-copy-request').onclick=()=>copyText('Puck, please enter the Cobble meeting '+currentRoomId+'.','Puck meeting request',$('puck-copy-request'));
 $('invite-puck').onclick=async()=>{
  const roomId=currentRoomId;
+ if(doorSnapshot.room_id!==roomId)return;
+ $('invite-puck').disabled=true;
  try{
   if(doorSnapshot.puck?.open){
    if(!confirm('Close Puck’s Door to this meeting?'))return;
    await api('live/rooms/revoke',{room_id:roomId,speaker:'Puck'});
-   status('Puck’s invitation revoked.');
+   $('door-page-status').textContent='Puck’s invitation revoked.';
   }else{
    if(!confirm('Invite Puck to read this meeting’s entire table and contribute?'))return;
    const result=await api('live/rooms/invite',{room_id:roomId,speaker:'Puck'});
-   status('Puck invited. In a dedicated ChatGPT chat, ask Puck to enter room '+result.room_id+'.');
+   $('door-page-status').textContent='Puck invited to this meeting.';
   }
   await refreshDoorStatus();
- }catch(error){status(error.message,true)}
+ }catch(error){$('door-page-status').textContent=error.message}
+ finally{await refreshDoorStatus()}
 };
 $('invite-human').onclick=()=>{
+ if(doorSnapshot.room_id!==currentRoomId)return;
  $('invite-url').value='';
  $('invite-dialog').showModal();
  refreshDoorStatus();
@@ -1026,6 +1088,7 @@ $('invite-revoke').onclick=async()=>{
 };
 $('invite-close').onclick=()=>$('invite-dialog').close();
 $('view-output').onclick=async()=>{
+ showMeetingOptions(false);
  try{
   const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId),{cache:'no-store'});
   const x=await r.json();
