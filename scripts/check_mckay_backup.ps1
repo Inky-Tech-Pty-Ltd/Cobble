@@ -213,7 +213,19 @@ $parameters = @{
     GraceHours = $OverdueHours
     CloudReader = { param($path) Get-CobbleCloudState $path }
 }
-$report = Get-CobbleBackupHealth @parameters
+try {
+    $report = Get-CobbleBackupHealth @parameters
+} catch {
+    # Even a filesystem or provider inspection failure must leave an alarm
+    # record, rather than silently preventing status persistence.
+    $report = [pscustomobject]@{
+        checked_at_local = $AsOf.ToString('o')
+        status = 'WARNING'
+        qualification = 'Watchdog inspection failed; off-machine recovery not verified'
+        alerts = @("Watchdog inspection error: $($_.Exception.GetType().Name)")
+        archives = @()
+    }
+}
 
 # Persistent metadata-only evidence even when no user is watching the screen.
 New-Item -ItemType Directory -Path $StatusDirectory -Force | Out-Null
