@@ -1,0 +1,31 @@
+name: McKay backup heartbeat (offline)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/send_mckay_backup_heartbeat.py'
+      - 'scripts/run_mckay_backup_heartbeat.ps1'
+      - '.github/workflows/mckay-backup-heartbeat.yml'
+  push:
+    paths:
+      - 'scripts/send_mckay_backup_heartbeat.py'
+      - 'scripts/run_mckay_backup_heartbeat.ps1'
+      - '.github/workflows/mckay-backup-heartbeat.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  sender-self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Offline mail templating self-test
+        run: python3 scripts/send_mckay_backup_heartbeat.py --self-test
+  wrapper-self-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Offline wrapper self-test
+        shell: powershell
+        run: ./scripts/run_mckay_backup_heartbeat.ps1 -SelfTest
