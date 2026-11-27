@@ -1,4 +1,4 @@
-"""One-room admission Door for the first trusted human collaborator.
+"""One-room admission Door for independently invited guest seats.
 
 Only a digest of each high-entropy invitation is persisted. An invitation
 admits its bearer to one meeting, never to the operator's Cobble console.
@@ -51,7 +51,7 @@ class MeetingDoor:
                 or any(not re.fullmatch(r"[0-9a-f]{64}", k) or
                        not isinstance(v, dict) or
                        not ROOM_ID.fullmatch(v.get("room_id", "")) or
-                       v.get("speaker") != "Sankarshan" or
+                       v.get("speaker") not in ("Sankarshan", "Puck") or
                        not isinstance(v.get("expires_utc"), str) or
                        not isinstance(v.get("revoked"), bool) or
                        ("first_seen_utc" in v and
@@ -87,9 +87,10 @@ class MeetingDoor:
             raise ValueError("Invalid invited room")
         return room_id
 
-    def issue(self, *, room_id):
-        """Return a secret exactly once; an older invitation to this room expires."""
+    def issue(self, *, room_id, speaker="Sankarshan"):
+        """Return a secret exactly once; an older invitation to this seat expires."""
         room_id = self._room(room_id)
+        self._speaker(speaker)
         with self.lock:
             records = self._read()
             now = datetime.now(timezone.utc)
@@ -98,14 +99,14 @@ class MeetingDoor:
                 if datetime.fromisoformat(v["expires_utc"]) > now
             }
             for item in records.values():
-                if item["room_id"] == room_id:
+                if item["room_id"] == room_id and item["speaker"] == speaker:
                     item["revoked"] = True
             if len(records) >= MAX_INVITES:
                 raise PermissionError("Invitation registry is full")
             token = secrets.token_urlsafe(32)
             digest = hashlib.sha256(token.encode("ascii")).hexdigest()
             records[digest] = {
-                "room_id": room_id, "speaker": "Sankarshan",
+                "room_id": room_id, "speaker": speaker,
                 "created_utc": now.isoformat(),
                 "expires_utc": (now + timedelta(days=VALID_DAYS)).isoformat(),
                 "revoked": False,
@@ -135,25 +136,32 @@ class MeetingDoor:
                 self._write(records)
             return {"room_id": record["room_id"], "speaker": record["speaker"]}
 
-    def status(self, *, room_id):
+    @staticmethod
+    def _speaker(speaker):
+        if speaker not in ("Sankarshan", "Puck"):
+            raise ValueError("Unrecognised guest seat")
+
+    def status(self, *, room_id, speaker="Sankarshan"):
         """Operator-only view. No bearer secret or unrelated room is returned."""
         room_id = self._room(room_id)
+        self._speaker(speaker)
         with self.lock:
             now = datetime.now(timezone.utc)
             active = next((item for item in self._read().values()
-                           if item["room_id"] == room_id and not item["revoked"]
-                           and datetime.fromisoformat(item["expires_utc"]) > now), None)
+                           if item["room_id"] == room_id and item["speaker"] == speaker
+                           and not item["revoked"] and datetime.fromisoformat(item["expires_utc"]) > now), None)
         return {"room_id": room_id, "open": active is not None,
                 "arrived": bool(active and active.get("first_seen_utc")),
                 "expires_utc": active["expires_utc"] if active else None}
 
-    def revoke(self, *, room_id):
+    def revoke(self, *, room_id, speaker="Sankarshan"):
         room_id = self._room(room_id)
+        self._speaker(speaker)
         with self.lock:
             records = self._read()
             changed = 0
             for item in records.values():
-                if item["room_id"] == room_id and not item["revoked"]:
+                if item["room_id"] == room_id and item["speaker"] == speaker and not item["revoked"]:
                     item["revoked"] = True
                     changed += 1
             if changed:

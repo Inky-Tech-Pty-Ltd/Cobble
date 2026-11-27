@@ -556,6 +556,19 @@ class LiveTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             door.require("not-a-valid-token")
 
+    def test_independent_puck_and_human_seats(self):
+        door = MeetingDoor(self.store)
+        human = door.issue(room_id="default")
+        puck = door.issue(room_id="default", speaker="Puck")
+        self.assertEqual(door.require(human["token"])["speaker"], "Sankarshan")
+        self.assertEqual(door.require(puck["token"])["speaker"], "Puck")
+        door.revoke(room_id="default", speaker="Puck")
+        self.assertTrue(door.status(room_id="default")["open"])
+        with self.assertRaises(PermissionError):
+            door.require(puck["token"])
+        with self.assertRaises(ValueError):
+            door.issue(room_id="default", speaker="Joe")
+
     def test_one_meeting_door_is_separate_from_operator_console(self):
         """Sankarshan can speak at this table, not access McKay or other rooms."""
         from urllib.parse import urlsplit, parse_qs

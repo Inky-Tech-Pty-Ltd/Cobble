@@ -242,7 +242,7 @@ class LiveChatService:
         """
         if not isinstance(text, str) or not 0 < len(text.strip()) <= MAX_QUESTION:
             raise ValueError("Post must contain 1–2000 characters")
-        if speaker not in ("Joe", "Sankarshan"):
+        if speaker not in ("Joe", "Sankarshan", "Puck"):
             raise PermissionError("Unrecognised meeting contributor")
         with self._lock:
             if self._inflight:
