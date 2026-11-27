@@ -22,6 +22,7 @@ if ($SelfTest) {
 }
 
 $watchExit = 99
+$started = Get-Date
 if (Test-Path -LiteralPath $Watchdog -PathType Leaf) {
     try {
         & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Watchdog -NoBalloon
@@ -31,6 +32,21 @@ if (Test-Path -LiteralPath $Watchdog -PathType Leaf) {
     }
 } else {
     Write-Warning 'Backup watchdog script is missing'
+}
+
+# A successful process exit cannot legitimise an old report from earlier
+# on the same day. The report must have been written by this invocation.
+if ($watchExit -eq 0 -or $watchExit -eq 2) {
+    try {
+        if (-not (Test-Path -LiteralPath $Report -PathType Leaf)) {
+            $watchExit = 98
+        } elseif ((Get-Item -LiteralPath $Report).LastWriteTimeUtc -lt $started.ToUniversalTime()) {
+            $watchExit = 98
+        }
+    } catch { $watchExit = 98 }
+    if ($watchExit -eq 98) {
+        Write-Warning 'Watchdog report was not refreshed by this run'
+    }
 }
 
 # Convert the Windows report path to a WSL path without assuming a drive letter.
