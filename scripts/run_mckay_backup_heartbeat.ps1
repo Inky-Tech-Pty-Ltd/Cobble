@@ -16,8 +16,27 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function ConvertTo-CobbleWslPath {
+    param([Parameter(Mandatory)][string]$WindowsPath)
+    # Construct a Linux mount path on Windows. Passing a backslash path
+    # directly to WSL's native argument parser strips the backslashes.
+    # This uses the default /mnt drive mount layout of McKay's Ubuntu WSL.
+    $absolute = [IO.Path]::GetFullPath($WindowsPath)
+    if ($absolute -notmatch '^([A-Za-z]):\\(.+)$') {
+        throw 'Expected a Windows drive-letter path for the backup report'
+    }
+    $drive = $Matches[1].ToLowerInvariant()
+    $rest = $Matches[2].Replace('\', '/')
+    return "/mnt/$drive/$rest"
+}
+
 if ($SelfTest) {
-    Write-Output 'HEARTBEAT WRAPPER SELF-TEST PASS: no network, no backup operations'
+    $fixture = 'C:\Users\example\AppData\Local\Cobble\backup-watchdog\latest.json'
+    $expected = '/mnt/c/Users/example/AppData/Local/Cobble/backup-watchdog/latest.json'
+    if ((ConvertTo-CobbleWslPath $fixture) -ne $expected) {
+        throw 'Windows-to-WSL path conversion failed'
+    }
+    Write-Output 'HEARTBEAT WRAPPER SELF-TEST PASS: path conversion; no network or backups'
     exit 0
 }
 
@@ -49,13 +68,12 @@ if ($watchExit -eq 0 -or $watchExit -eq 2) {
     }
 }
 
-# Convert the Windows report path to a WSL path without assuming a drive letter.
+# Explicit Windows-to-WSL mount path avoids wsl.exe stripping backslashes.
 $wslReport = ''
 try {
-    $result = & wsl.exe -d Ubuntu -u cobbler -- wslpath -a $Report
-    if ($LASTEXITCODE -eq 0) { $wslReport = [string]$result }
+    $wslReport = ConvertTo-CobbleWslPath $Report
 } catch {
-    Write-Warning 'Unable to reach WSL to convert report path'
+    Write-Warning 'Unable to convert Windows report path into WSL mount path'
 }
 
 $mailExit = 3
