@@ -1,0 +1,23 @@
+name: McKay backup watchdog (offline)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/check_mckay_backup.ps1'
+      - '.github/workflows/mckay-backup-watchdog.yml'
+  push:
+    paths:
+      - 'scripts/check_mckay_backup.ps1'
+      - '.github/workflows/mckay-backup-watchdog.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  self-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Offline watchdog fixtures (no archives, cloud credentials or network calls)
+        shell: powershell
+        run: ./scripts/check_mckay_backup.ps1 -SelfTest
