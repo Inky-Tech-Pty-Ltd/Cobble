@@ -366,6 +366,14 @@ check().catch(e=>{console.error(e);process.exitCode=1});
                         "Redact voice", "Restore voice", "Authorise room voice"):
             self.assertNotIn(removed, self.page)
 
+    def test_puck_door_has_independent_convenor_control(self):
+        for required in (
+            'id="invite-puck"', "speaker:'Puck'",
+            "Door: awaiting Puck", "Door: Puck admitted",
+            "#invite-puck.membrane-cue.door-open",
+        ):
+            self.assertIn(required, self.page)
+
     def test_room_door_highlight_appears_only_when_invitation_is_open(self):
         for required in (
             'id="invite-human"', 'id="invite-dialog"', 'id="invite-open"',

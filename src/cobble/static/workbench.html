@@ -242,6 +242,8 @@ button{color:inherit}
 .standing-orders-button{position:relative;border-left:var(--weight-edge-border)}
 #invite-human.membrane-cue{position:relative;background:white!important;color:var(--slate)!important;border:1px solid #dce4eb!important;font-weight:650}
 #invite-human.membrane-cue.door-open{border-left:var(--weight-edge-border)!important}
+#invite-puck.membrane-cue{position:relative;background:white!important;color:var(--slate)!important;border:1px solid #dce4eb!important;font-weight:650}
+#invite-puck.membrane-cue.door-open{border-left:var(--weight-edge-border)!important}
 #invite-human.membrane-cue:hover{background:#edf2f6!important}
 #invite-dialog{border:1px solid #d4dfe7}
 #invite-dialog #invite-heading{color:var(--ink)}
@@ -324,7 +326,7 @@ button{color:inherit}
         <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
         <div class="header-actions"><div id="joe-card" class="joe-card weighted" title="Joe's default speaking weight; you can still change each contribution individually"><button id="joe-voice-edge" type="button" class="weight-edge" aria-label="Make Joe speak for the room by default" aria-pressed="false" title="Switch Joe's default voice"></button><strong>Joe</strong><small id="joe-mode">Table talk</small></div><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
-      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders" class="standing-orders-button">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="view-output">Room output</button><button id="invite-human" class="membrane-cue">Door: invite Sankarshan</button><span id="floor-status"></span></div>
+      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders" class="standing-orders-button">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="view-output">Room output</button><button id="invite-human" class="membrane-cue">Door: invite Sankarshan</button><button id="invite-puck" class="membrane-cue">Door: invite Puck</button><span id="floor-status"></span></div>
         <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
@@ -805,6 +807,7 @@ function renderTurns({preserveScroll=false}={}){
    const cb=make('div');cb.className='message weight-fixed';cb.append(titled('Chair',null));
    const participants=['Joe (convenor)'];
    if(turns.some(x=>x.speaker==='Sankarshan'))participants.push('Sankarshan');
+   if(turns.some(x=>x.speaker==='Puck'))participants.push('Puck');
    participants.push(...providerOrder.filter(id=>states[id]?.active).map(providerName));
    const speech=make('p',meetingInfo.standing_orders+'\n\nParticipants: '+participants.join(', '));
    speech.className='message-body';cb.append(speech,copyButton(speech.textContent,'Copy Chair standing orders'));chair.append(cb);thread.append(chair);
@@ -965,6 +968,9 @@ async function refreshDoorStatus(){
   const data=await response.json();
   if(roomId!==currentRoomId)return;
   doorSnapshot=data;
+  const puck=data.puck||{};
+  $('invite-puck').classList.toggle('door-open',Boolean(puck.open));
+  $('invite-puck').textContent=puck.open?(puck.arrived?'Door: Puck admitted':'Door: awaiting Puck'):'Door: invite Puck';
   $('invite-human').classList.toggle('door-open',Boolean(data.open));
   $('invite-human').textContent=data.open?(data.arrived?'Door: invitation used':'Door: awaiting guest'):'Door: invite Sankarshan';
   $('invite-open').textContent=data.open?'Replace invitation':'Open Door';
@@ -979,6 +985,21 @@ async function refreshDoorStatus(){
   if(roomId===currentRoomId&&$('invite-dialog').open)$('invite-status').textContent=error.message;
  }
 }
+$('invite-puck').onclick=async()=>{
+ const roomId=currentRoomId;
+ try{
+  if(doorSnapshot.puck?.open){
+   if(!confirm('Close Puck’s Door to this meeting?'))return;
+   await api('live/rooms/revoke',{room_id:roomId,speaker:'Puck'});
+   status('Puck’s invitation revoked.');
+  }else{
+   if(!confirm('Invite Puck to read this meeting’s entire table and contribute?'))return;
+   const result=await api('live/rooms/invite',{room_id:roomId,speaker:'Puck'});
+   status('Puck invited. In a dedicated ChatGPT chat, ask Puck to enter room '+result.room_id+'.');
+  }
+  await refreshDoorStatus();
+ }catch(error){status(error.message,true)}
+};
 $('invite-human').onclick=()=>{
  $('invite-url').value='';
  $('invite-dialog').showModal();
