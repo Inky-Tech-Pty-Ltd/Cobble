@@ -109,14 +109,9 @@ GitHub `main`:
 $dir = Join-Path $env:LOCALAPPDATA 'Cobble'
 New-Item -ItemType Directory -Path $dir -Force | Out-Null
 $runner = Join-Path $dir 'run_mckay_backup_heartbeat.ps1'
-Invoke-WebRequest -UseBasicParsing \
-  'https://raw.githubusercontent.com/Inky-Tech-Pty-Ltd/Cobble/main/scripts/run_mckay_backup_heartbeat.ps1' \
-  -OutFile $runner
+Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/Inky-Tech-Pty-Ltd/Cobble/main/scripts/run_mckay_backup_heartbeat.ps1' -OutFile $runner
 & $runner -SelfTest
 ```
-
-Note: PowerShell 5.1 uses its normal command-line continuation syntax;
-the multiline URL above can instead be pasted as a single line if desired.
 
 Then **manually** run `& $runner`. Expect an email saying WARNING if
 backups remain in iCloud's queue. After the command, inspect:
