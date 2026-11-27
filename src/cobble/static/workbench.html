@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cobble · Meetings</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1d2833;background:#fff;--ink:#1d2833;--muted:#657386;--slate:#3b5166;--blue:#89a3bb;--pale:#ebeef1;--line:#e4e8eb;--soft:#f8fafb;--sidebar-width:272px;--membrane-teal:#168a96;--membrane-ink:#126f77;--membrane-pale:#edf7f6;--membrane-border:#c7e3e2;--weight-claude:#c77194;--weight-edge-border:5px solid var(--membrane-teal);--weight-preview:5px solid #168a9650}
 *{box-sizing:border-box}
 body{margin:0;overflow:hidden}
 button,input,textarea,select{font:inherit}
@@ -50,17 +50,54 @@ button{color:inherit}
 .icon-button{border:0;border-radius:9px;background:transparent;padding:7px 9px;color:var(--slate)}
 .icon-button:hover,.nav-item:hover,.meeting-item:hover{background:#edf2f6}
 .icon-button svg,.nav-item svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.primary-nav{display:grid;gap:3px;margin-top:9px}
+.primary-nav{display:flex;flex-direction:column;gap:3px;margin-top:9px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding-bottom:8px}
+.membrane-boundary{display:flex;align-items:center;gap:9px;font-size:.84rem}
+.membrane-boundary.nav-item{text-align:left}
+/* Active and hover treatments are applied to the complete Membrane bubble below. */
+.instance-membrane-panel{border:1px solid var(--membrane-border);background:var(--membrane-pale);border-radius:9px;padding:16px 18px;line-height:1.5;border-left:var(--weight-edge-border)}
+.instance-membrane-panel strong{color:var(--membrane-ink)}
+.instance-membrane-panel p{margin:7px 0 0}
+.furniture-doors{border:1px solid var(--membrane-border);background:#f9fcfc;border-radius:12px;margin:8px 0;padding:12px 15px}
+.furniture-doors summary{cursor:pointer;color:var(--membrane-ink);font-weight:700}
+.furniture-doors .door-detail{margin-top:12px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
+.furniture-doors button{color:var(--membrane-ink);border:1px solid var(--membrane-teal);border-radius:9px;background:#f7fbff;padding:8px 12px;font-weight:600}
+.furniture-doors button:hover{background:#e9f4fd}
+.membrane-symbol{display:inline-grid;place-items:center;border:2px solid var(--membrane-teal);border-radius:50%;width:20px;height:20px;font-size:.7rem;line-height:1;flex-shrink:0}
+.membrane-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.membrane-rule{height:1px;background:var(--membrane-border);flex:1;min-width:8px}
+.membrane-cue{color:var(--slate)!important;background:white!important}
+#invite-human.membrane-cue{font-weight:650}
+#invite-human.membrane-cue:hover{background:#edf2f6!important}
+#invite-dialog{border:2px solid var(--membrane-teal)}
+#invite-dialog #invite-heading{color:var(--membrane-ink)}
+#invite-dialog #invite-open{border-color:var(--membrane-teal);background:var(--membrane-teal);color:white;font-weight:700}
+#invite-dialog #invite-revoke{color:var(--membrane-ink);border-color:var(--membrane-teal)}
+.furniture-door{border:1px solid var(--membrane-border);background:var(--membrane-pale)}
+.furniture-door strong{color:var(--membrane-ink)}
+.utility-nav{display:flex;gap:4px;padding-top:6px;margin-top:5px;border-top:1px solid var(--line);flex-shrink:0}
+.utility-nav .nav-item{justify-content:center;gap:7px;padding:7px 5px;font-size:.76rem}
+.utility-nav .nav-item.active{background:#e2ebf3}
+.sidebar.collapsed .utility-nav{flex-direction:column;align-items:stretch}
+.sidebar.collapsed .membrane-boundary{justify-content:center;margin:9px 0;padding:8px 0}
+.sidebar.collapsed .membrane-title,.sidebar.collapsed .membrane-rule{display:none}
+.sidebar.collapsed .tree{display:block}
+.sidebar.collapsed .my-meetings-row .new-meeting,.sidebar.collapsed #meeting-list{display:none}
+.sidebar.collapsed .my-meetings-row .nav-item{justify-content:center;padding:11px}
+
 .nav-item{display:flex;align-items:center;gap:13px;text-align:left;width:100%;background:transparent;border:0;border-radius:10px;padding:12px 13px;white-space:nowrap;color:#344354}
 .nav-item.active{background:#e2ebf3;color:#23475d;font-weight:650}
 .nav-label{overflow:hidden;text-overflow:ellipsis}
 .sidebar.collapsed .nav-item{padding:11px;justify-content:center}
 .separator{height:1px;background:var(--line);margin:18px 3px 12px}
-.tree{flex:1;min-height:80px;overflow-y:auto}
-.tree-heading{color:var(--muted);font-size:.78rem;letter-spacing:.01em;margin:8px 7px;display:flex;justify-content:space-between;align-items:center}
+.tree{flex:none;min-height:0;overflow:visible}
+.tree-heading{color:var(--muted);font-size:.85rem;letter-spacing:.01em;margin:3px 0;display:flex;justify-content:space-between;align-items:center}
+.my-meetings-row{gap:3px}
+.my-meetings-row .nav-item{flex:1;min-width:0}
+.my-meetings-row .new-meeting{flex-shrink:0;margin-right:4px}
+#my-meetings-toggle[aria-expanded="false"]{color:var(--muted)}
 .new-meeting{border:0;background:transparent;font-size:1.32rem;line-height:1;border-radius:7px;color:var(--slate);padding:2px 7px;cursor:pointer}
 .new-meeting:hover{background:#e2ebf3}
-#meeting-list{display:grid;gap:4px}
+#meeting-list{display:grid;gap:4px;max-height:min(28dvh,280px);overflow-y:auto;padding:0 4px 2px 22px;scrollbar-width:thin}
 .meeting-item{background:transparent;cursor:pointer}
 .meeting-item.active{background:#eaf1f6}
 .meeting-item:hover{background:#e7eef4}
@@ -71,21 +108,21 @@ button{color:inherit}
 .suppliers h2{margin:4px 8px 10px;font-weight:600;font-size:.77rem;color:var(--muted)}
 .supplier-list{display:grid;gap:7px;overflow-y:auto;max-height:34dvh}
 .supplier-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e1e6ea;border-radius:12px;padding:7px 8px;box-shadow:0 2px 7px #1d28330b}
-.supplier-card[draggable="true"]{cursor:grab}.supplier-card.drag-over{outline:2px solid #89a3bb}.supplier-card.floor{border-color:#3b5166;background:#e7f2fa}.meeting-cost{margin-left:auto;font-size:.7rem;color:#657386;font-variant-numeric:tabular-nums}.governance{padding:8px 20px;border-bottom:1px solid #e4e8eb;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem}.governance button,.governance select{border:1px solid #dce4eb;border-radius:7px;background:white;padding:6px}.room-voice{border-left:4px solid #3b718b!important}.supplier-card.off{background:#f8f9fa;opacity:.78}
+.supplier-card[draggable="true"]{cursor:grab}.supplier-card.drag-over{outline:2px solid #89a3bb}.supplier-card.floor{border-color:#3b5166;background:#e7f2fa}.meeting-cost{margin-left:auto;font-size:.7rem;color:#657386;font-variant-numeric:tabular-nums}.governance{padding:8px 20px;border-bottom:1px solid #e4e8eb;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem}.governance button,.governance select{border:1px solid #dce4eb;border-radius:7px;background:white;padding:6px}.supplier-card.off{background:#f8f9fa;opacity:.78}
 .supplier-main{border:0;background:transparent;display:flex;align-items:center;gap:9px;min-width:0;flex:1;text-align:left;padding:2px 1px}
 .supplier-main .supplier-name{font-weight:650;font-size:.85rem}
 .supplier-detail{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
 .mark{display:inline-grid;place-items:center;flex-shrink:0;border-radius:8px;width:31px;height:31px;font-weight:750}
 .mark.openai{background:#edf1f1;color:#304f49;font-size:1rem}
-.mark.claude{color:#cf684c;background:#fcf0ec;font-size:1.55rem}
-.mark.mistral{background:#fff4e7;color:#c95e21;font-size:1.15rem}
+.mark.claude{color:var(--weight-claude);background:#fceff5;font-size:1.55rem}
+.mark.mistral{background:#edf4fa;color:#526e8b;font-size:1.15rem}
 .supplier-model{display:grid;place-items:center;border:0;background:transparent;color:#3b5166;border-radius:7px;width:28px;height:32px}
 .supplier-model{font-size:.68rem;font-weight:600}
 .supplier-model:hover{background:#e7eef3}
 .supplier-main[aria-pressed="true"] .mark{box-shadow:0 0 0 2px #8db3ce}
 .grip{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;touch-action:none;z-index:5}
 .grip:hover,.grip.dragging{background:#bfd3e0}
-.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .tree,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-model{display:none}
+.sidebar.collapsed .grip,.sidebar.collapsed .nav-label,.sidebar.collapsed .supplier-detail,.sidebar.collapsed .supplier-name,.sidebar.collapsed .supplier-model{display:none}
 .sidebar.collapsed .suppliers .supplier-card{padding:5px;justify-content:center}
 .sidebar.collapsed .suppliers .supplier-main{justify-content:center}
 .sidebar.collapsed .suppliers{margin-top:auto}
@@ -176,8 +213,65 @@ button{color:inherit}
 .link{color:#2b5e79;text-decoration:none}
 .link:hover{text-decoration:underline}
 @media(max-width:900px){.inspector.open{position:absolute;right:0;top:0;bottom:0;width:min(395px,90vw);box-shadow:-6px 0 26px #283b4e2b;z-index:15}.reading{padding:0 15px}.exchange{max-width:100%!important}}
-@media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}.exchange.human .message{width:90%}}
+@media(max-width:650px){.sidebar:not(.collapsed){--sidebar-width:207px}.identity{height:55px}.brand{width:112px;height:55px}.nav-item{padding:9px}.membrane-boundary{padding:8px 9px;margin-block:8px}.header{padding:15px}.header p{font-size:.72rem}.compose-options{align-items:start;flex-direction:column;gap:4px}.exchange .message{padding:11px}.exchange.human .message{width:90%}}
 @media(prefers-reduced-motion:no-preference){.supplier-card,.nav-item,.secondary{transition:background-color .12s ease}}
+/* Interaction and appearance are deliberately separate.
+   Invisible left-edge button = operator control.
+   Teal left border on the enclosing object = its current weight.
+   The actual rounded border hugs the object; no drawn pseudo-crescent. */
+.weighted{position:relative;isolation:isolate}
+.weight-edge{position:absolute;top:0;bottom:0;left:-10px;width:28px;z-index:2;border:0;border-radius:15px 0 0 15px;background:transparent;padding:0;cursor:pointer}
+.weight-edge:hover,.weight-edge:active{background:transparent}
+.weight-edge:focus-visible{outline:2px solid var(--membrane-teal);outline-offset:-2px}
+.weight-edge:disabled{cursor:not-allowed}
+.weight-fixed,.message.weight-fixed{position:relative;border-left:var(--weight-edge-border)}
+.message.weighted{padding-left:19px}
+.message.room-voice,.exchange.latest .message.room-voice{border-left:var(--weight-edge-border)}
+/* Only active states receive the lasting border; hover previews a toggle. */
+.message.weighted:not(.room-voice):has(> .weight-edge:hover),
+.supplier-card:not(.floor):has(> .weight-edge:hover),
+.joe-card:not(.default-heavy):has(> .weight-edge:hover){border-left:var(--weight-preview)}
+.supplier-card{position:relative;padding-left:18px;isolation:isolate}
+.supplier-card.floor{border-color:var(--membrane-border);background:#eef5fa;border-left:var(--weight-edge-border)}
+.supplier-card .weight-edge{border-radius:12px 0 0 12px}
+.joe-card{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;min-width:116px;padding:6px 12px 6px 20px;background:#f2f7fa;border:1px solid #dce5eb;border-radius:10px;line-height:1.2;min-height:40px}
+.joe-card strong{font-size:.79rem}
+.joe-card small{font-size:.66rem;color:var(--muted);margin-top:3px}
+.joe-card .weight-edge{border-radius:10px 0 0 10px}
+.joe-card.default-heavy{background:#e8f4f3;border-left:var(--weight-edge-border)}
+.standing-orders-button{position:relative;border-left:var(--weight-edge-border)}
+#invite-human.membrane-cue{position:relative;background:white!important;color:var(--slate)!important;border:1px solid #dce4eb!important;font-weight:650}
+#invite-human.membrane-cue.door-open{border-left:var(--weight-edge-border)!important}
+#invite-human.membrane-cue:hover{background:#edf2f6!important}
+#invite-dialog{border:1px solid #d4dfe7}
+#invite-dialog #invite-heading{color:var(--ink)}
+#invite-dialog #invite-open{border-color:var(--slate);background:var(--slate);color:white}
+#invite-dialog #invite-revoke{color:var(--slate);border-color:#cbd8e1}
+@media(max-width:650px){.joe-card{min-width:87px;padding-right:5px}.joe-card strong{font-size:.72rem}.joe-card small{font-size:.59rem}.header{gap:3px}.header-actions{gap:2px}}
+
+/* The instance's own Membrane is inherently heavy: use the bubble's own rounded border. */
+.membrane-boundary{position:relative;margin:3px 0;padding:12px 13px 12px 22px;border:1px solid var(--membrane-border);border-radius:12px;background:#edf7f6;color:#24565a;font-weight:650;letter-spacing:normal;border-left:var(--weight-edge-border)}
+.membrane-boundary.nav-item{width:100%}
+.membrane-boundary.nav-item.active{background:#dceeed;color:#174d53;border-left:var(--weight-edge-border)}
+.membrane-boundary.nav-item:hover{background:#e0f0ee;color:#174d53;border-left:var(--weight-edge-border)}
+.membrane-boundary .membrane-symbol{border:0;width:19px;height:19px;color:var(--membrane-ink)}
+.membrane-rule{display:none}
+@media(max-width:650px){.membrane-boundary{padding:9px 9px 9px 18px;margin:3px 0}}
+
+/* A hierarchy within the instance's Membrane, distinct from Furniture's smaller Rooms. */
+.membrane-nav-group{display:flex;flex-direction:column;gap:2px;min-width:0;padding:0 0 3px}
+.membrane-nav-heading{display:flex;position:relative;align-items:stretch;min-width:0}
+.membrane-nav-heading .membrane-boundary{min-width:0;flex:1;padding-right:36px}
+.membrane-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:29px;height:29px;border:0;border-radius:7px;background:transparent;color:var(--membrane-ink);font-size:1.15rem;line-height:1}
+.membrane-toggle:hover,.membrane-toggle:focus-visible{background:#d7eae8}
+.membrane-toggle[aria-expanded="false"] span{display:inline-block;transform:rotate(-90deg)}
+.membrane-submenu{display:grid;gap:2px;margin:0 0 0 17px;padding:2px 0 2px 14px;border-left:1px solid var(--membrane-border)}
+.membrane-child{font-size:.81rem;padding:7px 9px;color:#45636a}
+.membrane-child.active{background:#e7f3f1;color:#195e67}
+.membrane-child span:first-child{width:12px;color:var(--membrane-ink)}
+.sidebar.collapsed .membrane-submenu,.sidebar.collapsed .membrane-toggle{display:none}
+.sidebar.collapsed .membrane-nav-heading .membrane-boundary{padding-right:7px}
+@media(max-width:650px){.membrane-child{padding:6px 8px}.membrane-nav-heading .membrane-boundary{padding-right:30px}}
 </style>
 </head>
 <body>
@@ -188,19 +282,36 @@ button{color:inherit}
         <img class="brand" src="/assets/cobble-logo.png" alt="Cobble">
         <button class="icon-button" id="collapse" title="Collapse or expand sidebar" aria-label="Collapse sidebar">☰</button>
       </div>
-      <nav class="primary-nav" aria-label="Sections">
-        <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
-        <button class="nav-item" data-screen="memories"><span aria-hidden="true">◇</span><span class="nav-label">Memories</span></button>
+      <nav class="primary-nav" aria-label="Cobble navigation, from outside to inside">
         <button class="nav-item" data-screen="intelligences"><span aria-hidden="true">✦</span><span class="nav-label">Intelligences</span></button>
         <button class="nav-item active" data-screen="meetings" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">Meetings</span><span id="total-cost" class="meeting-cost"></span></button>
+        <button class="nav-item" data-screen="senses"><span aria-hidden="true">▤</span><span class="nav-label">Senses</span></button>
+        <div class="membrane-nav-group" id="membrane-nav-group">
+          <div class="membrane-nav-heading">
+            <button class="nav-item membrane-boundary" data-screen="membrane" aria-label="Membrane of this Cobble instance" title="This Cobble's membrane · instance boundary">
+              <span class="membrane-symbol" aria-hidden="true">·</span><span class="membrane-title">Membrane</span><span class="membrane-rule" aria-hidden="true"></span>
+            </button>
+            <button id="membrane-toggle" class="membrane-toggle" type="button" aria-label="Hide Membrane submenus" aria-expanded="true" aria-controls="membrane-submenu" title="Show or hide Membrane submenus"><span aria-hidden="true">⌄</span></button>
+          </div>
+          <div class="membrane-submenu" id="membrane-submenu" role="group" aria-label="This Cobble instance's membrane">
+            <button class="nav-item membrane-child" data-screen="membrane-doors"><span aria-hidden="true">↳</span><span class="nav-label">Doors</span></button>
+            <button class="nav-item membrane-child" data-screen="membrane-windows"><span aria-hidden="true">↳</span><span class="nav-label">Windows</span></button>
+          </div>
+        </div>
+        <button class="nav-item" data-screen="furniture"><span aria-hidden="true">▥</span><span class="nav-label">Furniture</span></button>
+        <div class="tree" id="my-meetings-menu">
+          <div class="tree-heading my-meetings-row">
+            <button class="nav-item" type="button" id="my-meetings-toggle" aria-expanded="true" aria-controls="meeting-list" title="Show or hide my meetings"><span aria-hidden="true">▣</span><span class="nav-label">My meetings</span></button>
+            <button id="new-meeting" class="new-meeting" aria-label="Create new meeting" title="New meeting">+</button>
+          </div>
+          <div id="meeting-list" aria-label="My meetings"></div>
+        </div>
+        <button class="nav-item" data-screen="memories"><span aria-hidden="true">◇</span><span class="nav-label">Memories</span></button>
+      </nav>
+      <nav class="utility-nav" aria-label="Workspace utilities">
         <button class="nav-item" data-screen="setup"><span aria-hidden="true">⚙</span><span class="nav-label">Setup</span></button>
         <button class="nav-item" data-screen="help"><span aria-hidden="true">?</span><span class="nav-label">Help</span></button>
       </nav>
-      <div class="tree">
-        <div class="separator"></div>
-        <div class="tree-heading"><span>Recent meetings</span><button id="new-meeting" class="new-meeting" aria-label="Create new meeting" title="New meeting">+</button></div>
-        <div id="meeting-list" aria-label="Saved meetings"></div>
-      </div>
       <section class="suppliers" aria-label="Intelligences">
         <div id="supplier-list" class="supplier-list"></div>
       </section>
@@ -211,9 +322,9 @@ button{color:inherit}
     <div class="workspace">
       <header class="header">
         <div><input id="meeting-title" class="meeting-title-input" type="text" maxlength="100" value="Current meeting" aria-label="Edit meeting title" title="Click to rename meeting"><h1 id="page-title" hidden></h1></div>
-        <div class="header-actions"><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
+        <div class="header-actions"><div id="joe-card" class="joe-card weighted" title="Joe's default speaking weight; you can still change each contribution individually"><button id="joe-voice-edge" type="button" class="weight-edge" aria-label="Make Joe speak for the room by default" aria-pressed="false" title="Switch Joe's default voice"></button><strong>Joe</strong><small id="joe-mode">Table talk</small></div><a id="context-help" class="context-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#meetings" target="_blank" rel="noopener noreferrer" aria-label="Help for this section" title="Help for this section">?</a><button id="open-info" class="icon-button" title="Meeting and privacy information" aria-label="Meeting information">ⓘ</button></div>
       </header>
-      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="grant-floor">Give AI the floor</button><button id="joe-floor" aria-pressed="false">Joe: speak for room</button><button id="view-output">Room output</button><span id="floor-status"></span></div>
+      <section class="screen active" id="screen-meetings" aria-label="Meeting"><div class="governance"><button id="edit-orders" class="standing-orders-button">Standing orders</button><select id="meeting-state" aria-label="Meeting state"><option value="open">Open</option><option value="adjourned">Adjourned</option><option value="closed">Closed</option></select><button id="view-output">Room output</button><button id="invite-human" class="membrane-cue">Door: invite Sankarshan</button><span id="floor-status"></span></div>
         <div id="drop-cue" class="drop-cue" hidden>Drop files onto the table</div>
         <div class="chat-scroll" id="chat-scroll" role="log" aria-label="Meeting conversation" aria-live="polite">
           <div class="reading thread" id="thread"></div>
@@ -243,6 +354,60 @@ button{color:inherit}
           <div id="intelligence-list"></div>
         </div></div>
       </section>
+      <section class="screen" id="screen-membrane" aria-label="This Cobble instance's membrane">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">The boundary of <strong>this Cobble instance</strong>, not the entrance to an individual meeting. Teal crescents identify a membrane wherever it appears.</p>
+          <div class="instance-membrane-panel">
+            <strong>Instance membrane · McKay</strong>
+            <p>This membrane separates this instance's private memories and tools from what it encounters through Senses. These pages are the inventory of <strong>actual Doors and Windows installed here</strong>, not a catalogue of available types.</p>
+          </div>
+          <div class="info-row"><span>Deployed Doors</span><small>Instance-level installations · <button id="membrane-doors-open" type="button" class="link" aria-label="View deployed Doors of this instance">View Doors</button></small></div>
+          <div class="info-row"><span>Deployed Windows</span><small>Instance-level installations · <button id="membrane-windows-open" type="button" class="link" aria-label="View deployed Windows of this instance">View Windows</button></small></div>
+          <p class="pane-intro">Only deployments at <em>this instance's membrane</em> belong in this inventory. Reusable, uninstalled designs belong under <strong>Furniture</strong>. A meeting's deployed Door belongs to that meeting's own membrane, and does not open McKay's.</p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-membrane-doors" aria-label="Doors of this Cobble instance">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">The <strong>installed Doors of this Cobble instance</strong> belong here: individual admissions mechanisms placed at McKay's own membrane, as distinct from Door templates available in Furniture.</p>
+          <div class="instance-membrane-panel"><strong>Deployed instance Doors · none registered</strong>
+            <p>This Candidate 3 build has no inventory or installation mechanism for instance-level Door objects. This is an honest empty state, not a live registry query. Nothing on this page grants access to McKay's memories, tools or credentials.</p>
+          </div>
+          <div class="info-row"><span>Existing operator interface</span><small>Loopback-only service; not a configured Door object</small></div>
+          <div class="info-row"><span>Door installations</span><small>Registry and deployment controls are future work</small></div>
+          <p class="pane-intro">The working invitation Door is installed <em>on the selected meeting Room</em> and operated in Meetings; it is not installed at this Cobble instance's outer membrane. Its reusable <strong>template</strong> is described in Furniture → Doors.</p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-membrane-windows" aria-label="Windows of this Cobble instance">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro">The <strong>installed Windows of this Cobble instance</strong> belong here: particular outward-facing views actually deployed on McKay's membrane, rather than reusable Window templates.</p>
+          <div class="instance-membrane-panel"><strong>Deployed instance Windows · none registered</strong>
+            <p>This Candidate 3 build has no inventory or installation mechanism for instance-level Window objects. This is an honest empty state, not a live registry query. No Star Credentials or other information are published by visiting this page.</p>
+          </div>
+          <div class="info-row"><span>Published instance views</span><small>No Window installations registered here</small></div>
+          <div class="info-row"><span>Window installations</span><small>Registry and disclosure controls are future work</small></div>
+          <p class="pane-intro">A meeting's outward voice is not automatically a Window through McKay's instance membrane. Reusable Window designs belong in Furniture → Windows.</p>
+        </div></div>
+      </section>
+      <section class="screen" id="screen-furniture" aria-label="Furniture">
+        <div class="content-pane"><div class="reading">
+          <p class="pane-intro"><strong>Furniture is the template catalogue.</strong> Doors, Windows, Chairs, Seats and other fittings are reusable designs that a Room may deploy. Browsing a template does not install or operate it.</p>
+          <details class="furniture-doors" id="furniture-doors">
+            <summary>Doors · templates</summary>
+            <div class="door-detail"><span><strong>Meeting invitation Door template</strong> · a bearer invitation admitting a guest to one meeting Room, not to McKay's own membrane. A working Door based on this design is operated in Meetings.</span></div>
+            <p class="pane-intro">Future templates may require credentials, reputational evidence, payment or other trust checks. Generic template installation is not yet implemented.</p>
+          </details>
+          <details class="furniture-doors" id="furniture-windows">
+            <summary>Windows · templates</summary>
+            <div class="door-detail"><span><strong>Star Credential Window template</strong> · an outward view of selected credentials, subject to the owning Room's disclosure rules. This is a proposed design, not an installed or publishing Window.</span></div>
+            <p class="pane-intro">A generic Window template library and installation mechanism are future work.</p>
+          </details>
+          <div class="info-row"><strong>Chair</strong><small>Reusable conduct and standing-orders templates · meeting controls already exist</small></div>
+          <div class="info-row"><strong>Seat</strong><small>Reusable participation templates · general seats are planned</small></div>
+          <div class="info-row"><strong>Table</strong><small>Reusable shared-context patterns for Rooms</small></div>
+          <div class="info-row"><strong>Socket</strong><small>Reusable Room connection patterns · planned</small></div>
+          <p class="pane-intro">To inspect <em>installed</em> objects at McKay's outer membrane, visit <strong>Membrane → Doors</strong> or <strong>Membrane → Windows</strong>. Smaller Rooms keep their deployed furniture at their own boundaries.</p>
+        </div></div>
+      </section>
       <section class="screen" id="screen-memories" aria-label="Memories">
         <div class="content-pane"><div class="reading">
           <p class="pane-intro">The memory graph will connect star credentials and rooms. This workspace is not populated yet.</p>
@@ -260,7 +425,7 @@ button{color:inherit}
       <section class="screen" id="screen-help" aria-label="Help">
         <div class="content-pane"><div class="reading">
           <h2 class="section-title">Cobble documentation</h2>
-          <div class="help-links">
+          <div class="help-links"><a id="weight-help" href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85" target="_blank" rel="noopener noreferrer">Room weight · how left-edge controls work</a>
             <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#senses" target="_blank" rel="noopener noreferrer">Senses</a>
             <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#memories" target="_blank" rel="noopener noreferrer">Memories</a>
             <a href="https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/main/docs/snug-demo.md#intelligences" target="_blank" rel="noopener noreferrer">Intelligences</a>
@@ -308,6 +473,22 @@ button{color:inherit}
     <div class="room-dialog-actions"><button type="button" id="output-copy">Copy output</button><button type="button" id="output-close" class="room-dialog-primary">Close</button></div>
   </div>
 </dialog>
+<dialog id="invite-dialog" class="room-dialog" aria-labelledby="invite-heading">
+  <div class="room-dialog-body">
+    <h2 id="invite-heading">Room Door · Sankarshan</h2>
+    <p class="room-dialog-note">This one-room invitation permits its bearer to read this meeting's entire discussion history and post as Sankarshan. It never opens the operator console, private memories or other meetings.</p>
+    <p class="room-dialog-note"><strong>Local test only:</strong> this URL works on McKay. Do not share it remotely until we configure authenticated HTTPS for the separate guest port.</p>
+    <label for="invite-url">Invitation URL (shown once when issued)</label>
+    <textarea id="invite-url" readonly rows="3" placeholder="Open the Door to generate a link"></textarea>
+    <p id="invite-status" class="room-dialog-note" role="status"></p>
+    <div class="room-dialog-actions">
+      <button type="button" id="invite-open">Open Door</button>
+      <button type="button" id="invite-copy">Copy link</button>
+      <button type="button" id="invite-revoke">Close Door</button>
+      <button type="button" id="invite-close" class="room-dialog-primary">Close</button>
+    </div>
+  </div>
+</dialog>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
@@ -352,13 +533,27 @@ let meetings=[{id:'default',title:'Current meeting'}];
 let currentRoomId=safeStorageGet('cobble.meeting.active')||'default';
 let currentMeetingTitle='Current meeting';
 const roomDrafts=new Map();
+function applyCostSnapshot(data){
+ // The server reads every room's immutable supplier outcomes, including
+ // meetings not opened in this browser session.
+ meetingCosts=Object.fromEntries((data.rooms||[]).map(room=>
+  [room.id,Number(room.estimated_cost_usd||0)]));
+ $('total-cost').textContent=money(data.estimated_total_usd||0);
+ $('total-cost').title='Recorded supplier cost estimates across all saved meetings';
+ renderMeetingList();
+}
+async function refreshMeetingCosts(){
+ const response=await fetch('/api/live/rooms',{cache:'no-store'});
+ if(!response.ok)throw Error('Meeting cost totals unavailable');
+ applyCostSnapshot(await response.json());
+}
 function renderMeetingList(){
  const target=$('meeting-list');target.replaceChildren();
  for(const room of meetings){
   const item=make('button');item.className='meeting-item'+(room.id===currentRoomId?' active':'');
   if(room.id===currentRoomId)item.setAttribute('aria-current','page');
   const icon=make('span','▢');icon.setAttribute('aria-hidden','true');
-  item.append(icon,make('strong',room.title));const cost=make('small',money(meetingCosts[room.id]||0));cost.className='meeting-cost';item.append(cost);item.title=room.title;
+  item.append(icon,make('strong',room.title));const cost=make('small',money(meetingCosts[room.id]||0));cost.className='meeting-cost';cost.title='Recorded supplier cost estimate for this meeting';item.append(cost);item.title=room.title;
   item.onclick=()=>switchMeeting(room.id);
   target.append(item);
  }
@@ -388,27 +583,47 @@ $('meeting-title').onblur=async()=>{
 };
 $('meeting-title').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('meeting-title').blur()}};
 function setScreen(name){
- if(!['senses','memories','intelligences','meetings','setup','help'].includes(name))return;
+ if(!['senses','memories','intelligences','meetings','membrane','membrane-doors','membrane-windows','furniture','setup','help'].includes(name))return;
  currentScreen=name;
  for(const el of document.querySelectorAll('.screen'))el.classList.toggle('active',el.id==='screen-'+name);
  for(const el of document.querySelectorAll('.nav-item')){
   const on=el.dataset.screen===name;el.classList.toggle('active',on);
   if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
  }
- const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,setup:'Setup',help:'Help'};
+ const titles={senses:'Senses',memories:'Memories',intelligences:'Intelligences',meetings:currentMeetingTitle,membrane:'Membrane','membrane-doors':'Membrane · Doors','membrane-windows':'Membrane · Windows',furniture:'Furniture',setup:'Setup',help:'Help'};
  $('meeting-title').hidden=name!=='meetings';
  $('page-title').hidden=name==='meetings';
  $('page-title').textContent=titles[name];
- $('context-help').href=HELP_DOC+'#'+(name==='help'?'workspace-navigation':name);
+ $('context-help').href=(name==='membrane'||name.startsWith('membrane-'))?
+   'https://github.com/Inky-Tech-Pty-Ltd/Cobble/blob/puck/room-door-sankarshan-1/docs/snug-demo.md#membrane':
+   HELP_DOC+'#'+(name==='help'?'workspace-navigation':name);
+ if(name==='membrane-doors'||name==='membrane-windows')showMembraneSubmenu(true);
  document.title='Cobble · '+titles[name];
  if(name==='intelligences')renderIntelligences();
 }
-for(const el of document.querySelectorAll('.nav-item'))el.onclick=()=>setScreen(el.dataset.screen);
+for(const el of document.querySelectorAll('.nav-item[data-screen]'))el.onclick=()=>{
+ if(sidebar.classList.contains('collapsed')&&el.dataset.screen.startsWith('membrane-'))collapse(false);
+ setScreen(el.dataset.screen);
+};
+function showMembraneSubmenu(expanded){
+ $('membrane-toggle').setAttribute('aria-expanded',String(expanded));
+ $('membrane-toggle').setAttribute('aria-label',expanded?'Hide Membrane submenus':'Show Membrane submenus');
+ $('membrane-submenu').hidden=!expanded;
+ safeStorageSet('cobble.membrane.expanded',expanded?'1':'0');
+}
+showMembraneSubmenu(safeStorageGet('cobble.membrane.expanded')!=='0');
+$('membrane-toggle').onclick=()=>{
+ if(sidebar.classList.contains('collapsed'))collapse(false);
+ showMembraneSubmenu($('membrane-submenu').hidden);
+};
+$('membrane-doors-open').onclick=()=>setScreen('membrane-doors');
+$('membrane-windows-open').onclick=()=>setScreen('membrane-windows');
 async function loadMeetings(){
  const response=await fetch('/api/live/rooms',{cache:'no-store'});
  if(!response.ok)throw Error('Meeting list unavailable; restart the Python server');
  const data=await response.json();
  meetings=data.rooms||[];defaultOrders=data.default_standing_orders||'';
+ applyCostSnapshot(data);
  // Preserve the legacy default conversation and its browser-local title.
  const oldLabel=safeStorageGet('cobble.meeting.title');
  const original=meetings.find(m=>m.id==='default');
@@ -427,7 +642,7 @@ async function switchMeeting(roomId){
  currentRoomId=roomId;
  safeStorageSet('cobble.meeting.active',roomId);
  setCurrentMeetingName(room.title);
- roomFloor=null;joeFloor=false;
+ roomFloor=null;joeFloor=false;renderJoeControl();
  $('question').value=roomDrafts.get(roomId)||'';
  resizeComposer();
  // Filename staging belongs to the active meeting only.
@@ -451,6 +666,16 @@ const sidebar=$('sidebar');
 const rememberedWidth=Number(safeStorageGet('cobble.sidebar.width'));
 function sidebarWidth(w){const allowed=Math.min(460,Math.max(215,Number(w)||272));sidebar.style.setProperty('--sidebar-width',allowed+'px');safeStorageSet('cobble.sidebar.width',String(allowed))}
 if(rememberedWidth)sidebarWidth(rememberedWidth);
+function showMyMeetings(expanded){
+  $('my-meetings-toggle').setAttribute('aria-expanded',String(expanded));
+  $('meeting-list').hidden=!expanded;
+  safeStorageSet('cobble.meetings.expanded',expanded?'1':'0');
+}
+showMyMeetings(safeStorageGet('cobble.meetings.expanded')!=='0');
+$('my-meetings-toggle').onclick=()=>{
+  if(sidebar.classList.contains('collapsed')){collapse(false);showMyMeetings(true);return}
+  showMyMeetings($('meeting-list').hidden);
+};
 function collapse(value){
  sidebar.classList.toggle('collapsed',value);
  $('collapse').setAttribute('aria-label',value?'Expand sidebar':'Collapse sidebar');
@@ -475,6 +700,35 @@ grip.onkeydown=e=>{
 };
 
 function populateResponder(){updateSend();}
+function createWeightEdge({heavy,label,onClick,disabled=false}){
+ const edge=make('button');edge.type='button';edge.className='weight-edge';
+ edge.setAttribute('aria-label',label);edge.setAttribute('aria-pressed',String(Boolean(heavy)));
+ edge.title=label;edge.disabled=disabled;
+ edge.onclick=async()=>{if(edge.disabled)return;edge.disabled=true;try{await onClick()}finally{edge.disabled=false}};
+ return edge;
+}
+function renderJoeControl(){
+ const active=Boolean(joeFloor);
+ $('joe-card').classList.toggle('default-heavy',active);
+ $('joe-voice-edge').setAttribute('aria-pressed',String(active));
+ $('joe-voice-edge').setAttribute('aria-label',active?
+  'Switch Joe to ordinary table talk by default':'Switch Joe to speaking for the room by default');
+ $('joe-voice-edge').title=active?'Joe: switch to table talk':'Joe: speak for the room by default';
+ $('joe-mode').textContent=active?'Room voice by default':'Table talk by default';
+ $('floor-status').textContent=roomFloor?providerName(roomFloor)+' has the floor':'';
+}
+function selectSupplierFloor(id){
+ if(!states[id]?.live||!states[id]?.active)return;
+ roomFloor=roomFloor===id?null:id;
+ if(roomFloor)joeFloor=false;
+ renderJoeControl();renderSuppliers();
+ status(roomFloor?providerName(roomFloor)+' has the floor.':'Supplier floor released.');
+}
+$('joe-voice-edge').onclick=()=>{
+ joeFloor=!joeFloor;if(joeFloor)roomFloor=null;
+ renderJoeControl();renderSuppliers();
+ status(joeFloor?'Joe speaks for the room by default.':'Joe speaks as a participant by default.');
+};
 function renderSuppliers(){
  const list=$('supplier-list');list.replaceChildren();
  for(const id of providerOrder){
@@ -486,6 +740,12 @@ function renderSuppliers(){
   card.ondragleave=()=>card.classList.remove('drag-over');
   card.ondrop=async e=>{e.preventDefault();card.classList.remove('drag-over');const from=e.dataTransfer.getData('text/plain');if(!providerOrder.includes(from)||from===p.id)return;providerOrder=providerOrder.filter(x=>x!==from);providerOrder.splice(providerOrder.indexOf(p.id),0,from);renderSuppliers();try{await saveRoom({precedence:providerOrder})}catch(err){status(err.message,true)}};
   if(roomFloor===p.id)card.classList.add('floor');
+  const edge=createWeightEdge({
+   heavy:roomFloor===p.id,
+   label:roomFloor===p.id?'Release '+p.name+' from the floor':'Give '+p.name+' the floor',
+   disabled:!s.live||!s.active,
+   onClick:()=>selectSupplierFloor(p.id)
+  });
   const toggle=make('button');toggle.className='supplier-main';toggle.disabled=!s.live;
   toggle.setAttribute('aria-pressed',String(s.active));
   toggle.title=s.live?(s.active?'Move '+p.name+' out of the meeting':'Invite '+p.name+' to the meeting'):p.name+' is not connected to this server';
@@ -499,7 +759,7 @@ function renderSuppliers(){
   };
   const model=make('button','···');model.className='supplier-model';model.title='Model and cost details for '+p.name;
   model.setAttribute('aria-label',model.title);model.onclick=()=>openInspector(p.id,'model');
-  card.append(toggle,model);list.append(card);
+  card.append(edge,toggle,model);list.append(card);
  }
 }
 function renderIntelligences(){
@@ -511,24 +771,65 @@ function renderIntelligences(){
   row.append(label,summary,button);target.append(row);
  }
 }
-function renderTurns(){
+function renderTurns({preserveScroll=false}={}){
+ const scroll=$('chat-scroll');const previousTop=scroll.scrollTop;
  const thread=$('thread');thread.replaceChildren();
+ const firstJoe=turns.find(t=>t.provider==='operator'&&(t.speaker||'Joe')==='Joe'&&t.status==='posted');
+ $('question').placeholder=firstJoe?'Message the meeting…':'Open the meeting with your agenda…';
+ const openingTurnId=(firstJoe||turns[0])?.turn_id;
+ if(!firstJoe){
+  const note=make('p','Waiting for the convenor\'s opening agenda. Joe\'s first post opens the table; an invited guest can enter but cannot speak yet.');
+  note.className='pane-intro';thread.append(note);
+ }
  for(let i=0;i<turns.length;i++){
   const t=turns[i],human=make('article');human.className='exchange human';
-  const hb=make('div');hb.className='message';const hvoice=t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(hvoice)hb.classList.add('room-voice');hb.append(titled(hvoice?'Joe (speaking for the room)':'Joe',null),make('p',t.question||''));
-  hb.lastChild.className='message-body';if(t.provider==='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));hb.append(b)}hb.append(copyButton(t.question||'','Copy Joe contribution'));human.append(hb);thread.append(human);
-  if(i===0&&meetingInfo?.standing_orders){const chair=make('article');chair.className='exchange supplier';const cb=make('div');cb.className='message';cb.append(titled('Chair',null));const speech=make('p',meetingInfo.standing_orders+'\n\nParticipants: Joe (convenor), '+providerOrder.filter(id=>states[id]?.active).map(providerName).join(', '));speech.className='message-body';cb.append(speech,copyButton(speech.textContent,'Copy Chair standing orders'));chair.append(cb);thread.append(chair)}
+  human.dataset.speaker=t.speaker||'Joe';
+  const hb=make('div');hb.className='message';
+  const humanId=t.provider==='operator'?t.turn_id:t.turn_id+':question';
+  const hvoice=meetingInfo?.room_voice?.includes(humanId)&&!meetingInfo?.redacted?.includes(humanId);
+  if(t.provider==='operator'||t.question?.trim()){
+   hb.classList.add('weighted');
+   hb.append(createWeightEdge({
+    heavy:hvoice,
+    label:hvoice?'Withdraw '+(t.speaker||'Joe')+' contribution from room voice':'Authorise '+(t.speaker||'Joe')+' contribution for room voice',
+    onClick:()=>setVoice(humanId,!hvoice)
+   }));
+  }
+  if(hvoice)hb.classList.add('room-voice');
+  hb.append(titled((t.speaker||'Joe')+(hvoice?' (speaking for the room)':''),null));
+  const humanSpeech=make('p',t.question||'');humanSpeech.className='message-body';hb.append(humanSpeech);
+  hb.append(copyButton(t.question||'','Copy '+(t.speaker||'Joe')+' contribution'));
+  human.append(hb);thread.append(human);
+  if(t.turn_id===openingTurnId&&meetingInfo?.standing_orders){
+   const chair=make('article');chair.className='exchange supplier chair';
+   const cb=make('div');cb.className='message weight-fixed';cb.append(titled('Chair',null));
+   const participants=['Joe (convenor)'];
+   if(turns.some(x=>x.speaker==='Sankarshan'))participants.push('Sankarshan');
+   participants.push(...providerOrder.filter(id=>states[id]?.active).map(providerName));
+   const speech=make('p',meetingInfo.standing_orders+'\n\nParticipants: '+participants.join(', '));
+   speech.className='message-body';cb.append(speech,copyButton(speech.textContent,'Copy Chair standing orders'));chair.append(cb);thread.append(chair);
+  }
   if(t.status==='posted'&&t.provider==='operator')continue;
   const p=PROVIDERS.find(x=>x.id===t.provider)||{id:'openai',name:t.provider||'Unknown',mark:'?'};
-  const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');
-  const box=make('div');box.className='message';const voiced=t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);if(voiced)box.classList.add('room-voice');box.append(titled(p.name+(voiced?' (speaking for the room)':''),p));
+  const exchange=make('article');exchange.className='exchange supplier'+(i===turns.length-1?' latest':'');exchange.dataset.provider=t.provider;
+  const box=make('div');box.className='message';
+  const voiced=t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)&&!meetingInfo?.redacted?.includes(t.turn_id);
+  if(t.provider!=='operator'&&t.status==='completed'&&t.answer?.trim()){
+   box.classList.add('weighted');
+   box.append(createWeightEdge({
+    heavy:voiced,
+    label:voiced?'Withdraw '+p.name+' reply from room voice':'Authorise '+p.name+' reply for room voice',
+    onClick:()=>setVoice(t.turn_id,!voiced)
+   }));
+  }
+  if(voiced)box.classList.add('room-voice');box.append(titled(p.name+(voiced?' (speaking for the room)':''),p));
   const body=make('p',t.status==='completed'?(t.answer||''):t.status==='outcome_unknown'?'Outcome unknown — do not automatically retry.':'No verified response retained.');
   body.className='message-body';box.append(body);
   const meta=make('div');meta.className='turn-meta';
   meta.textContent=[t.model||'',t.status==='completed'?money(t.usage?.estimated_provider_cost_usd)+' estimated':'',t.status!=='completed'?t.status:''].filter(Boolean).join(' · ');
-  box.append(meta);if(t.provider!=='operator'&&meetingInfo?.room_voice?.includes(t.turn_id)){const b=make('button',meetingInfo.redacted?.includes(t.turn_id)?'Restore voice':'Redact voice');b.onclick=()=>setVoice(t.turn_id,meetingInfo.redacted?.includes(t.turn_id));box.append(b)}box.append(copyButton(body.textContent,'Copy '+p.name+' contribution'));exchange.append(box);thread.append(exchange);
+  box.append(meta,copyButton(body.textContent,'Copy '+p.name+' contribution'));exchange.append(box);thread.append(exchange);
  }
- $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;
+ scroll.scrollTop=preserveScroll?previousTop:scroll.scrollHeight;
  for(const p of PROVIDERS)states[p.id].cost=0;
  for(const t of turns){
   const amount=Number(t.usage?.estimated_provider_cost_usd||0);
@@ -536,13 +837,14 @@ function renderTurns(){
  }
  renderSuppliers();
  renderIntelligences();
- meetingCosts[currentRoomId]=turns.reduce((sum,t)=>sum+Number(t.usage?.estimated_provider_cost_usd||0),0);
- $('total-cost').textContent=money(Object.values(meetingCosts).reduce((a,b)=>a+b,0));renderMeetingList();
+ // Room and all-room totals come from the durable server-side accounting snapshot.
 }
 function updateSend(){
  $('send').disabled=busy||!serverReady||!$('question').value.trim();
 }
 function chooseRecipient(question){
+ // The convenor's opening agenda is a local post, never a paid AI request.
+ if(!turns.some(t=>t.provider==='operator'&&(t.speaker||'Joe')==='Joe'&&t.status==='posted'))return 'post-only';
  if(joeFloor)return 'post-only';
  if(roomFloor&&states[roomFloor]?.active)return roomFloor;
  const named=question.match(/^(?:(?:hey|hello|hi|dear|mr\.?)\s+)?(GPT|Claude|Mistral)\b[\s,.:!?-]*/i);
@@ -570,6 +872,21 @@ async function reload(){
  const latest=turns.filter(t=>t.status==='completed').at(-1);
  if(latest)lastProvider=latest.provider;
  renderTurns();populateResponder();
+ await refreshMeetingCosts();
+ await refreshDoorStatus();
+}
+async function pollMeetingUpdates(){
+ if(!serverReady||busy||currentScreen!=='meetings')return;
+ const roomId=currentRoomId;
+ try{
+  const response=await fetch('/api/live/session?room_id='+encodeURIComponent(roomId),{cache:'no-store'});
+  if(!response.ok||roomId!==currentRoomId)return;
+  const data=await response.json();
+  if(roomId!==currentRoomId)return;
+  const incoming=data.turns||[];
+  const signature=list=>list.map(t=>t.turn_id+':'+t.status).join('|');
+  if(signature(incoming)!==signature(turns)){turns=incoming;renderTurns();}
+ }catch(_){} // A transient polling error must not interrupt the convenor.
 }
 async function send(){
  if(busy)return;
@@ -578,7 +895,9 @@ async function send(){
  const roomId=currentRoomId;
  let recipient;
  try{recipient=chooseRecipient(question)}catch(error){status(error.message,true);return}
- const publish=recipient==='post-only'?joeFloor:roomFloor===recipient;
+ // The supplier floor routes an exchange; it never silently publishes
+ // the supplier's future reply. Only Joe's deliberate default may auto-publish.
+ const publish=recipient==='post-only'&&joeFloor;
  busy=true;updateSend();
  status(recipient==='post-only'?'Recording a local meeting contribution…':
   'Consulting '+providerName(recipient)+' · one call, no automatic retries…');
@@ -606,10 +925,9 @@ async function send(){
  }finally{busy=false;updateSend()}
 }
 
-async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId});return true}catch(e){status(e.message,true);return false}}
-async function saveRoom(changes){const updated=await api('live/rooms/configure',{room_id:currentRoomId,...changes});Object.assign(meetings.find(x=>x.id===currentRoomId),updated);meetingInfo=updated;renderTurns();return updated}
-$('joe-floor').onclick=()=>{joeFloor=!joeFloor;if(joeFloor)roomFloor=null;$('joe-floor').setAttribute('aria-pressed',String(joeFloor));$('joe-floor').textContent=joeFloor?'Joe has the floor ✓':'Joe: speak for room';renderSuppliers()};
-$('grant-floor').onclick=()=>{roomFloor=roomFloor?null:providerOrder.find(id=>states[id]?.active&&states[id]?.live)||null;joeFloor=false;$('joe-floor').setAttribute('aria-pressed','false');$('joe-floor').textContent='Joe: speak for room';$('floor-status').textContent=roomFloor?providerName(roomFloor)+' has the floor':'';renderSuppliers()};
+async function setVoice(eventId,add){try{await saveRoom(add?{voice_event:eventId}:{redact_event:eventId},{preserveScroll:true});return true}catch(e){status(e.message,true);return false}}
+async function saveRoom(changes,{preserveScroll=false}={}){const roomId=currentRoomId;const updated=await api('live/rooms/configure',{room_id:roomId,...changes});const room=meetings.find(x=>x.id===roomId);if(room)Object.assign(room,updated);if(roomId===currentRoomId){meetingInfo=updated;renderTurns({preserveScroll})}return updated}
+
 $('meeting-state').onchange=async()=>{try{await saveRoom({state:$('meeting-state').value})}catch(e){status(e.message,true)}};
 $('edit-orders').onclick=()=>{
  $('orders-text').value=meetingInfo?.standing_orders||defaultOrders;
@@ -632,12 +950,60 @@ $('orders-save').onclick=async()=>{
 let lastRoomOutput=null;
 function formatRoomOutput(x){
  return 'Opening agenda:\n'+(x.agenda||'')+'\n\nSelected contributions:\n'+
-  x.contributions.map(c=>(c.provider==='operator'?'Joe':providerName(c.provider))+': '+c.text).join('\n\n');
+  x.contributions.map(c=>(c.speaker||((c.provider==='operator')?'Joe':providerName(c.provider)))+': '+c.text).join('\n\n');
 }
 $('output-copy').onclick=()=>{
  if(lastRoomOutput)copyText(formatRoomOutput(lastRoomOutput),'Room output',$('output-copy'));
 };
 $('output-close').onclick=()=>$('room-output-dialog').close();
+let doorSnapshot={open:false,arrived:false};
+async function refreshDoorStatus(){
+ const roomId=currentRoomId;
+ try{
+  const response=await fetch('/api/live/rooms/door?room_id='+encodeURIComponent(roomId),{cache:'no-store'});
+  if(!response.ok)throw Error('Door status unavailable');
+  const data=await response.json();
+  if(roomId!==currentRoomId)return;
+  doorSnapshot=data;
+  $('invite-human').classList.toggle('door-open',Boolean(data.open));
+  $('invite-human').textContent=data.open?(data.arrived?'Door: invitation used':'Door: awaiting guest'):'Door: invite Sankarshan';
+  $('invite-open').textContent=data.open?'Replace invitation':'Open Door';
+  $('invite-revoke').disabled=!data.open;
+  if($('invite-dialog').open&&!$('invite-url').value){
+   $('invite-status').textContent=data.open?
+    (data.arrived?'This invitation has been used. The bearer entered this Room.':'Door open; invitation not yet used.')+
+     ' The link is only shown when issued; replacing it revokes the old link.':
+    'Door closed. Open it to issue a new, room-specific invitation.';
+  }
+ }catch(error){
+  if(roomId===currentRoomId&&$('invite-dialog').open)$('invite-status').textContent=error.message;
+ }
+}
+$('invite-human').onclick=()=>{
+ $('invite-url').value='';
+ $('invite-dialog').showModal();
+ refreshDoorStatus();
+};
+$('invite-open').onclick=async()=>{
+ try{
+  const result=await api('live/rooms/invite',{room_id:currentRoomId});
+  $('invite-url').value=result.guest_url;
+  $('invite-status').textContent='Door open until '+result.expires_utc+'. Keep this link private. Reissuing revokes any previous one.';
+  await refreshDoorStatus();
+ }catch(error){$('invite-status').textContent=error.message}
+};
+$('invite-copy').onclick=()=>{
+ if($('invite-url').value)copyText($('invite-url').value,'Room invitation',$('invite-copy'));
+};
+$('invite-revoke').onclick=async()=>{
+ try{
+  const result=await api('live/rooms/revoke',{room_id:currentRoomId});
+  $('invite-url').value='';
+  await refreshDoorStatus();
+  $('invite-status').textContent='Door closed · '+result.revoked_count+' active invitation(s) revoked.';
+ }catch(error){$('invite-status').textContent=error.message}
+};
+$('invite-close').onclick=()=>$('invite-dialog').close();
 $('view-output').onclick=async()=>{
  try{
   const r=await fetch('/api/live/output?room_id='+encodeURIComponent(currentRoomId),{cache:'no-store'});
@@ -652,7 +1018,7 @@ $('view-output').onclick=async()=>{
    list.append(make('p','No contributions have been selected for the room\'s outward voice.'));
   }else for(const c of x.contributions){
    const item=make('section');item.className='room-output-item';
-   const speaker=make('strong',c.provider==='operator'?'Joe':providerName(c.provider));
+   const speaker=make('strong',c.speaker||(c.provider==='operator'?'Joe':providerName(c.provider)));
    const speech=make('p',c.text||'');
    item.append(speaker,speech,copyButton(c.text||'','Copy selected contribution'));list.append(item);
   }
@@ -823,12 +1189,13 @@ $('memory-form').onsubmit=async e=>{
   for(const p of PROVIDERS){states[p.id].live=available.has(p.id);states[p.id].active=states[p.id].live}
   serverReady=true;
   $('setup-health').textContent=available.size?'Connected · '+Array.from(available).map(providerName).join(', '):'Offline · no live supplier enabled';
-  renderSuppliers();populateResponder();
+  renderSuppliers();renderJoeControl();populateResponder();
   await loadMeetings();
   await reload();
   status('');
  }catch(error){serverReady=false;renderSuppliers();populateResponder();status(error.message,true);$('setup-health').textContent='Unavailable'}
 })();
+setInterval(()=>{if(serverReady&&!busy){refreshDoorStatus();pollMeetingUpdates()}},4000);
 })();
 </script>
 </body>

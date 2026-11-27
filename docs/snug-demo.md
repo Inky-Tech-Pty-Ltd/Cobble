@@ -79,7 +79,86 @@ markers, not official trademark artwork or endorsements. The existing
 perspective boardroom remains available at **http://127.0.0.1:8766/boardroom**
 for comparison and its filename-only staging controls.
 
+
+### Candidate 3: Room weight and left-edge controls (26 November 2026)
+
+**Read the source decisions:** [Room-weight design note](design/room-weight.md)
+and [GitHub Issue #85 — why the crescents work this way](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85).
+The live interface's **Help → Room weight** link opens the decision on GitHub.
+
+The same left-edge crescent now carries a family of *weight* meanings.
+Click a **speech bubble's** edge to include or withdraw a posted human
+contribution or completed supplier reply from the Room's outward voice.
+Click the **left edge of a connected supplier's card** to give that supplier
+the floor for the next manually sent request, or to release it.
+Click **Joe's top-right edge** to toggle his default future posts between
+ordinary table talk and the Room's outward voice. The Chair and standing
+orders have a permanently heavy edge, but this does not publish the
+standing orders. Individual posts remain independently adjustable.
+
+Each interactive edge is an accessible button with hover, keyboard focus,
+tooltip and `aria-pressed`. The guest interface is *read-only with respect to*
+these choices. The server's immutable message ledger, voice/redaction
+metadata, supplier preview/approval flow, and the guest's room-only
+restriction are unchanged. Floor selection is browser-local and creates
+**no** paid model calls by itself.
+
+The weight design now separates **two jobs**. The clickable **left-edge
+control is transparent**, retains its tooltip/keyboard focus/`aria-pressed`
+semantics, and still changes the same governance setting. The **actual card's
+rounded 5px CSS left border** indicates its state, hugging the shape:
+selected Room-voice messages, a supplier currently holding the floor, and
+Joe's heavy default gain the same teal (`#168A96`) border. Unselected
+objects remain neutral; hovering an inactive left edge briefly previews the
+border. The Chair, standing orders and instance Membrane are structurally
+heavy and retain a permanent weight border. The guest view shows that weight but
+cannot change it. No painted outer crescent or interior vertical stripe
+is used.
+
+This supersedes the earlier orange fills, blue/pink crescents and
+offset-stroke experiments. The **Membrane** menu retains its soft teal
+bubble, with its own close-fitting rounded border. Supplier icon colours remain
+identity markers, not weight signals. Reusable Furniture templates have
+ordinary neutral borders; they are not falsely displayed as activated objects.
+The working meeting Door remains attached to its meeting, not to McKay's
+instance boundary.
+
 ### Workspace navigation
+
+#### Membrane
+
+**Furniture is the catalogue; Membrane is the installation.** The Membrane
+represents the boundary of *this actual Cobble instance*. Expand its soft teal
+bubble for two instance-level deployment inventories:
+
+- **Doors**: the particular Door objects **installed at McKay's outer
+  membrane**, where they would govern incoming access. No formal instance-level
+  Door has been registered in Candidate 3; this is a stated empty state, not
+  a live query against a working installation registry. The localhost operator
+  interface is not itself represented as a configured Door object.
+- **Windows**: the particular Window objects **installed at that same membrane**,
+  governing selected outward disclosure. None has been registered here. No
+  Window, public Star Credential view or publishing endpoint is created by
+  opening the page.
+
+These are real navigable destinations but are **not yet backed by a generic
+installation registry, deployment mechanism or policy editor**. The submenu
+can be collapsed and remembers its state in this browser.
+
+**Furniture** contains the *reusable templates* for Doors and Windows (and
+Chairs, Seats, Tables and Sockets), not their deployed instances. A meeting
+invitation Door is a design example under **Furniture → Doors**; the **working
+Door installed on a specific meeting** remains operated from that meeting's
+toolbar in **Meetings**. Its existence does not install a Door at McKay's outer
+membrane. The same distinction applies at other scales: every Room can have
+its own deployed furniture at its own membrane, independently of Cobble's
+template catalogue. No item in Furniture currently performs generic
+installation.
+
+The navigation implementation and its rationale are in
+[the design decision on GitHub](https://github.com/Inky-Tech-Pty-Ltd/Cobble/issues/85)
+and [the Room-weight design note](design/room-weight.md).
+The context-sensitive **?** on these pages opens this section in the repo.
 
 #### Senses
 

@@ -9,6 +9,7 @@ import unittest
 
 from cobble.claude_adapter import ProviderReply, prepare_message as prepare_claude
 from cobble.mistral_adapter import prepare_message as prepare_mistral
+from cobble.meeting_door import MeetingDoor
 from cobble.local_search import build
 from cobble.openai_adapter import OpenAIAdapter, MODEL, prepare_message
 from cobble.snug_live import LiveChatService, OutcomeUnknown
@@ -55,6 +56,78 @@ class LiveTests(unittest.TestCase):
     def send(self, question="Hello"):
         p = self.svc.preview(question=question)
         return self.svc.send(approval_token=p["approval_token"])["turn"]
+
+    def test_durable_estimated_cost_survives_unopened_room_and_history_window(self):
+        """All saved estimates, not browser-opened or last 100 turns."""
+        from cobble.meeting_rooms import MeetingCatalog
+        from decimal import Decimal
+
+        class Priced:
+            name = "openai"
+
+            def answer(self, request):
+                return fake_reply("A saved paid response.")
+
+        catalog = MeetingCatalog(self.store)
+        distant = catalog.create(title="Never opened in this browser")["id"]
+        closed = catalog.create(title="Closed room")["id"]
+        catalog.configure(meeting_id=closed, state="closed")
+
+        default = LiveChatService(self.store, adapter=Priced())
+        old = LiveChatService(self.store, adapter=Priced(), meeting_id=distant)
+        another = LiveChatService(self.store, adapter=Priced(), meeting_id=closed)
+        default.send(approval_token=default.preview(question="Default")["approval_token"])
+        old.send(approval_token=old.preview(question="First paid call")["approval_token"])
+        another.send(approval_token=another.preview(question="Closed later")["approval_token"])
+        for i in range(101):
+            old.post_operator(text=f"Local message {i}")
+        self.assertNotIn("openai", [t["provider"] for t in old.session()["turns"]])
+        self.assertEqual(old.recorded_estimated_cost_usd(), "0.00001")
+        self.assertEqual(LiveChatService(self.store, adapters={},
+                         meeting_id=distant).recorded_estimated_cost_usd(), "0.00001")
+
+        index = self.store / "index" / "search.sqlite3"
+        build(self.store, index)
+        entry = Path(__file__).resolve().parents[1] / "scripts" / "snug_demo_web.py"
+        spec = importlib.util.spec_from_file_location("snug_demo_web", entry)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        with module.create_server(self.store, index, port=0) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                conn = http.client.HTTPConnection("127.0.0.1", server.server_port,
+                                                  timeout=10)
+                conn.request("GET", "/api/live/rooms")
+                response = conn.getresponse()
+                payload = json.loads(response.read())
+                conn.close()
+                self.assertEqual(response.status, 200)
+                self.assertEqual(Decimal(payload["estimated_total_usd"]), Decimal("0.00003"))
+                prices = {room["id"]: Decimal(room["estimated_cost_usd"])
+                          for room in payload["rooms"]}
+                self.assertEqual(set(prices), {"default", distant, closed})
+                self.assertEqual(prices[distant], Decimal("0.00001"))
+                self.assertEqual(prices[closed], Decimal("0.00001"))
+                self.assertNotIn("payload", payload)
+                self.assertNotIn("turns", payload)
+                self.assertNotIn("question", payload)
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+
+    def test_unknown_supplier_outcome_does_not_invent_an_estimated_cost(self):
+        self.assertEqual(self.svc.recorded_estimated_cost_usd(), "0")
+        self.send("Known paid call")
+        self.assertEqual(self.svc.recorded_estimated_cost_usd(), "0.00001")
+        self.supplier.fail = True
+        p = self.svc.preview(question="Outcome uncertain")
+        with self.assertRaises(OutcomeUnknown):
+            self.svc.send(approval_token=p["approval_token"])
+        self.assertEqual(self.svc.recorded_estimated_cost_usd(), "0.00001")
+        self.assertEqual(LiveChatService(self.store, adapters={})
+                         .recorded_estimated_cost_usd(), "0.00001")
 
     def test_standing_orders_are_distinct_and_in_exact_payload_for_all_suppliers(self):
         orders = "Convenor rule: listen before speaking."
@@ -454,6 +527,211 @@ class LiveTests(unittest.TestCase):
                 thread.join(timeout=5)
 
 
+    def test_room_door_token_hash_persistence_expiry_and_replacement(self):
+        door = MeetingDoor(self.store)
+        first = door.issue(room_id="default")
+        self.assertEqual(door.status(room_id="default")["open"], True)
+        self.assertEqual(door.status(room_id="default")["arrived"], False)
+        self.assertEqual(door.require(first["token"]),
+                         {"room_id": "default", "speaker": "Sankarshan"})
+        saved = self.store / "snug" / "doors" / "invitations.json"
+        self.assertEqual(saved.stat().st_mode & 0o777, 0o600)
+        self.assertNotIn(first["token"], saved.read_text())
+        again = MeetingDoor(self.store)
+        self.assertEqual(again.require(first["token"])["room_id"], "default")
+        door.require(first["token"], mark_arrival=True)
+        self.assertTrue(again.status(room_id="default")["arrived"])
+        self.assertNotIn(first["token"], json.dumps(again.status(room_id="default")))
+        second = again.issue(room_id="default")
+        self.assertFalse(door.status(room_id="default")["arrived"])
+        with self.assertRaises(PermissionError):
+            door.require(first["token"])
+        self.assertEqual(door.require(second["token"])["speaker"], "Sankarshan")
+        again.revoke(room_id="default")
+        self.assertFalse(door.status(room_id="default")["open"])
+        with self.assertRaises(PermissionError):
+            door.require(second["token"])
+        with self.assertRaises(ValueError):
+            door.issue(room_id="../unsafe")
+        with self.assertRaises(PermissionError):
+            door.require("not-a-valid-token")
+
+    def test_one_meeting_door_is_separate_from_operator_console(self):
+        """Sankarshan can speak at this table, not access McKay or other rooms."""
+        from urllib.parse import urlsplit, parse_qs
+        index = self.store / "index" / "search.sqlite3"
+        build(self.store, index)
+        entry = Path(__file__).resolve().parents[1] / "scripts" / "snug_demo_web.py"
+        spec = importlib.util.spec_from_file_location("snug_demo_web", entry)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        class RoomSupplier:
+            name = "openai"
+
+            def answer(self, request):
+                return fake_reply("Visible reply; private payload stays private")
+
+        with module.create_server(self.store, index, port=0, guest_port=0,
+                                  live_gpt=True, live_adapter=RoomSupplier()) as server:
+            guest_server = server.guest_server
+            self.assertIsNotNone(guest_server)
+            self.assertEqual(server.server_address[0], "127.0.0.1")
+            self.assertEqual(guest_server.server_address[0], "127.0.0.1")
+            operator_port, guest_port = server.server_port, guest_server.server_port
+            threads = [threading.Thread(target=s.serve_forever, daemon=True)
+                       for s in (server, guest_server)]
+            for thread in threads:
+                thread.start()
+
+            def call(port, route, body=None, token=None, guest=False,
+                     expected=200, origin=None):
+                conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+                headers = {"Content-Type": "application/json",
+                           "Origin": origin or f"http://127.0.0.1:{port}"}
+                if guest:
+                    if token is not None:
+                        headers["X-Cobble-Room-Token"] = token
+                else:
+                    headers["X-Snug-Client"] = "demo-local"
+                try:
+                    conn.request("POST" if body is not None else "GET", route,
+                                 body=json.dumps(body) if body is not None else None,
+                                 headers=headers)
+                    response = conn.getresponse()
+                    raw = response.read()
+                    self.assertEqual(response.status, expected, raw)
+                    return json.loads(raw)
+                finally:
+                    conn.close()
+
+            try:
+                a = call(operator_port, "/api/live/rooms/create",
+                         {"title": "Shared table"})["id"]
+                b = call(operator_port, "/api/live/rooms/create",
+                         {"title": "Private room"})["id"]
+                waiting = call(operator_port, "/api/live/rooms/create",
+                               {"title": "Waiting for Joe"})["id"]
+                invitation = call(operator_port, "/api/live/rooms/invite",
+                                  {"room_id": waiting})
+                waiting_token = parse_qs(urlsplit(invitation["guest_url"]).fragment)["invite"][0]
+                status = call(operator_port, "/api/live/rooms/door?room_id=" + waiting)
+                self.assertTrue(status["open"])
+                self.assertFalse(status["arrived"])
+                self.assertNotIn(waiting_token, json.dumps(status))
+                before = call(guest_port, "/api/guest/session",
+                              guest=True, token=waiting_token)
+                self.assertFalse(before["meeting"]["convenor_started"])
+                status = call(operator_port, "/api/live/rooms/door?room_id=" + waiting)
+                self.assertTrue(status["arrived"])
+                self.assertNotIn(waiting_token, json.dumps(status))
+                call(guest_port, "/api/guest/post", {"text": "Premature guest agenda"},
+                     guest=True, token=waiting_token, expected=403)
+                self.assertEqual(call(operator_port, "/api/live/output?room_id=" + waiting)["agenda"], "")
+                call(operator_port, "/api/live/post",
+                     {"room_id": waiting, "text": "Joe opens the table"})
+                after = call(guest_port, "/api/guest/session",
+                             guest=True, token=waiting_token)
+                self.assertTrue(after["meeting"]["convenor_started"])
+                call(guest_port, "/api/guest/post",
+                     {"text": "Now I'm invited to speak"},
+                     guest=True, token=waiting_token)
+                self.assertEqual(call(operator_port, "/api/live/output?room_id=" + waiting)["agenda"],
+                                 "Joe opens the table")
+                # Existing early experiments may contain a guest post before
+                # the convenor. Immutable history stays put; the guest never
+                # becomes the agenda by accident.
+                legacy = call(operator_port, "/api/live/rooms/create",
+                              {"title": "Pre-fix meeting"})["id"]
+                LiveChatService(self.store, adapters={}, meeting_id=legacy).post_operator(
+                    text="Guest spoke too soon", speaker="Sankarshan")
+                call(operator_port, "/api/live/post",
+                     {"room_id": legacy, "text": "Joe's actual agenda"})
+                self.assertEqual(
+                    call(operator_port, "/api/live/output?room_id=" + legacy)["agenda"],
+                    "Joe's actual agenda")
+                call(operator_port, "/api/live/post",
+                     {"room_id": a, "text": "Shared agenda"})
+                call(operator_port, "/api/live/post",
+                     {"room_id": b, "text": "SECRET OTHER ROOM"})
+                p = call(operator_port, "/api/live/preview",
+                         {"room_id": a, "question": "What do you think of the agenda?"})
+                sent = call(operator_port, "/api/live/send",
+                            {"room_id": a, "approval_token": p["approval_token"]})["turn"]
+                self.assertEqual(sent["status"], "completed")
+                self.assertIn("payload", sent)  # Operator audit only.
+                invited = call(operator_port, "/api/live/rooms/invite", {"room_id": a})
+                self.assertEqual(invited["room_id"], a)
+                self.assertNotIn("SECRET OTHER ROOM", json.dumps(invited))
+                link = urlsplit(invited["guest_url"])
+                self.assertEqual(link.hostname, "127.0.0.1")
+                self.assertEqual(link.port, guest_port)
+                token = parse_qs(link.fragment)["invite"][0]
+                self.assertGreaterEqual(len(token), 40)
+                self.assertEqual(
+                    call(guest_port, "/api/guest/session", guest=True, expected=403)["error"],
+                    "Room invitation invalid or unavailable")
+                self.assertEqual(
+                    call(guest_port, "/api/live/session", guest=True, token=token,
+                         expected=404)["error"], "Not found")
+                self.assertEqual(
+                    call(guest_port, "/api/search", guest=True, token=token,
+                         expected=404)["error"], "Not found")
+                self.assertEqual(
+                    call(guest_port, "/api/guest/session?room_id=" + b,
+                         guest=True, token=token, expected=404)["error"], "Not found")
+                data = call(guest_port, "/api/guest/session", guest=True, token=token)
+                self.assertTrue(data["meeting"]["convenor_started"])
+                self.assertEqual(data["meeting"]["id"], a)
+                self.assertEqual(data["speaker"], "Sankarshan")
+                self.assertEqual(data["turns"][0]["question"], "Shared agenda")
+                supplier_turn = next(t for t in data["turns"] if t["provider"] == "openai")
+                self.assertEqual(supplier_turn["answer"],
+                                 "Visible reply; private payload stays private")
+                self.assertNotIn("payload", supplier_turn)
+                self.assertNotIn("context", supplier_turn)
+                self.assertTrue(all("payload" not in t for t in data["turns"]))
+                self.assertNotIn("context_sha256", json.dumps(data))
+                self.assertNotIn("SECRET OTHER ROOM", json.dumps(data))
+                denied = call(guest_port, "/api/guest/post",
+                              {"text": "Forged", "room_id": b}, guest=True,
+                              token=token, expected=403)
+                self.assertEqual(denied["error"], "Guest contribution refused")
+                call(guest_port, "/api/guest/post",
+                     {"text": "Bad origin"}, guest=True, token=token,
+                     origin="https://evil.test", expected=403)
+                posted = call(guest_port, "/api/guest/post",
+                              {"text": "Hello Joe, from Sankarshan"},
+                              guest=True, token=token)
+                self.assertEqual(posted["speaker"], "Sankarshan")
+                data = call(guest_port, "/api/guest/session", guest=True, token=token)
+                self.assertEqual(data["turns"][-1]["speaker"], "Sankarshan")
+                self.assertEqual(data["turns"][-1]["question"],
+                                 "Hello Joe, from Sankarshan")
+                operator = call(operator_port, "/api/live/session?room_id=" + a)
+                self.assertEqual(operator["turns"][-1]["speaker"], "Sankarshan")
+                self.assertEqual(len(call(operator_port, "/api/live/session?room_id=" + b)
+                                     ["turns"]), 1)
+                preview = call(operator_port, "/api/live/preview",
+                               {"room_id": a, "question": "What did Sankarshan say?"})
+                self.assertEqual(preview["previous_exchanges"][-1]["speaker"],
+                                 "Sankarshan")
+                self.assertNotIn("SECRET OTHER ROOM", json.dumps(preview))
+                call(operator_port, "/api/live/rooms/configure",
+                     {"room_id": a, "voice_event": posted["turn_id"]})
+                output = call(operator_port, "/api/live/output?room_id=" + a)
+                self.assertEqual(output["contributions"][0]["speaker"], "Sankarshan")
+                call(operator_port, "/api/live/rooms/revoke", {"room_id": a})
+                call(guest_port, "/api/guest/session", guest=True, token=token,
+                     expected=403)
+                call(guest_port, "/api/guest/post",
+                     {"text": "No longer admitted"}, guest=True, token=token,
+                     expected=403)
+            finally:
+                server.shutdown()
+                guest_server.shutdown()
+                for thread in threads:
+                    thread.join(timeout=5)
+
     def test_room_output_complete_history_minimal_projection_and_lifecycle(self):
         folder = self.store / "hosting" / "inkytech"
         folder.mkdir(parents=True)
@@ -508,15 +786,29 @@ class LiveTests(unittest.TestCase):
                                         {"question": "What is our decision?"})
                 self.assertEqual(
                     decision_preview["room_authorised_output"]["contributions"],
-                    [{"turn_id": event_id, "provider": "openai",
+                    [{"turn_id": event_id, "provider": "openai", "speaker": "openai",
                       "text": event["answer"]}])
                 self.assertEqual(decision_preview["room_authorised_output"]["agenda"],
                                  "Original agenda")
                 self.assertEqual(output, {"agenda": "Original agenda",
-                    "contributions": [{"turn_id": event_id, "provider": "openai",
+                    "contributions": [{"turn_id": event_id, "provider": "openai", "speaker": "openai",
                                        "text": event["answer"]}]})
                 self.assertNotIn("Private supplier prompt", json.dumps(output))
                 self.assertNotIn("Private standing orders", json.dumps(output))
+                question_id = event_id + ":question"
+                question = {"turn_id": question_id, "provider": "operator",
+                            "speaker": "Joe", "text": "Private supplier prompt"}
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": question_id})
+                self.assertEqual(call(prefix + "output")["contributions"],
+                                 [question, *output["contributions"]])
+                call(prefix + "rooms/configure", {"room_id": "default", "redact_event": event_id})
+                self.assertEqual(call(prefix + "output")["contributions"], [question])
+                prompt_preview = call(prefix + "preview", {"question": "Check prompt only"})
+                self.assertEqual(prompt_preview["room_authorised_output"]["contributions"], [question])
+                call(prefix + "rooms/configure", {"room_id": "default", "redact_event": question_id})
+                self.assertEqual(call(prefix + "output")["contributions"], [])
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id})
+                self.assertEqual(call(prefix + "output"), output)
                 call(prefix + "rooms/configure", {"room_id": "default", "redact_event": event_id})
                 self.assertEqual(call(prefix + "output")["contributions"], [])
                 withdrawn = call(prefix + "preview", {"question": "Still authorised?"})
@@ -527,6 +819,8 @@ class LiveTests(unittest.TestCase):
                 self.assertEqual(call(prefix + "output"), output)
                 other = call(prefix + "rooms/create", {"title": "Other"})["id"]
                 call(prefix + "rooms/configure", {"room_id": other, "voice_event": event_id}, 400)
+                call(prefix + "rooms/configure", {"room_id": other, "voice_event": question_id}, 400)
+                call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id + ":answer"}, 400)
                 call(prefix + "rooms/configure", {"room_id": "default", "voice_event": event_id,
                      "redact_event": event_id}, 400)
                 call(prefix + "output?room_id=default&room_id=" + other, expected=400)

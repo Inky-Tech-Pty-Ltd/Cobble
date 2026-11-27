@@ -4,6 +4,7 @@ Live supplier access is explicit, per-supplier, and uses the shared private
 conversation ledger; keys remain only in local server process memory.
 """
 import argparse
+from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
@@ -19,17 +20,19 @@ from pathlib import Path
 from cobble.snug_demo import DemoService
 from cobble.snug_live import LiveChatService, OutcomeUnknown
 from cobble.meeting_rooms import MeetingCatalog, DEFAULT_ORDERS
+from cobble.meeting_door import MeetingDoor
 
 STATIC = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static"
 HTML = STATIC / "workbench.html"
 BOARDROOM_HTML = STATIC / "snug_demo.html"
+GUEST_HTML = STATIC / "guest_room.html"
 LOGO = Path(__file__).resolve().parent.parent / "docs" / "assets" / "cobble-logo.png"
 MAX_BYTES = 8192
 
 
 def create_server(store, index, port=8766, *, live_gpt=False,
                   live_claude=False, live_mistral=False,
-                  live_adapter=None, live_adapters=None):
+                  live_adapter=None, live_adapters=None, guest_port=None):
     service = DemoService(store, index)
     requested = {
         name for name, enabled in (("openai", live_gpt),
@@ -53,6 +56,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             adapters["mistral"] = MistralAdapter(allow_network=True, output_tokens=2048)
     # The legacy boardroom retains the default room's original ledger.
     catalog = MeetingCatalog(store)
+    door = MeetingDoor(store)
     live_sessions = {"default": LiveChatService(store, adapters=adapters)}
     live_lock = threading.Lock()
 
@@ -64,14 +68,35 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     store, adapters=adapters, meeting_id=room_id)
             return live_sessions[room_id]
 
+    def rooms_with_accounting():
+        """One server-owned snapshot for all rooms, including unopened ones."""
+        listed = catalog.list()
+        total = Decimal("0")
+        rooms = []
+        for room in listed:
+            estimated = room_session(room["id"]).recorded_estimated_cost_usd()
+            rooms.append({**room, "estimated_cost_usd": estimated})
+            total += Decimal(estimated)
+        return {"rooms": rooms, "estimated_total_usd": format(total, "f"),
+                "default_standing_orders": DEFAULT_ORDERS}
+
     # Serialize governance transitions and live actions in this single local server.
     # This is not a multi-process or multi-user authorization mechanism.
     governance_lock = threading.RLock()
 
-    def eligible(event):
-        return ((event["status"] == "posted" and event["provider"] == "operator")
-                or (event["status"] == "completed"
-                    and isinstance(event["answer"], str) and bool(event["answer"].strip())))
+    def contributions(events):
+        """Stable utterance IDs; legacy bare IDs retain their original meaning."""
+        for e in events:
+            base = e["turn_id"]
+            if e["provider"] != "operator" and isinstance(e["question"], str) and e["question"].strip():
+                yield {"turn_id": base + ":question", "provider": "operator",
+                       "speaker": e.get("speaker", "Joe"), "text": e["question"]}
+            if e["status"] == "posted" and e["provider"] == "operator":
+                yield {"turn_id": base, "provider": "operator",
+                       "speaker": e.get("speaker", "Joe"), "text": e["question"]}
+            elif e["provider"] != "operator" and e["status"] == "completed" and isinstance(e["answer"], str) and e["answer"].strip():
+                yield {"turn_id": base, "provider": e["provider"],
+                       "speaker": e["provider"], "text": e["answer"]}
 
     def room_output(meeting_id):
         item = next(r for r in catalog.list() if r["id"] == catalog.require(meeting_id))
@@ -79,14 +104,19 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             raise PermissionError("Closed meeting output is unavailable")
         events = room_session(meeting_id).complete_history()
         selected = set(item.get("room_voice", [])) - set(item.get("redacted", []))
-        by_id = {e["turn_id"]: e for e in events}
-        if any(i not in by_id or not eligible(by_id[i]) for i in selected):
+        available = {c["turn_id"]: c for c in contributions(events)}
+        if not selected.issubset(available):
             raise ValueError("Room voice contains unavailable or ineligible evidence")
-        return {"agenda": events[0]["question"] if events else "",
-                "contributions": [
-                    {"turn_id": e["turn_id"], "provider": e["provider"],
-                     "text": e["question"] if e["status"] == "posted" else e["answer"]}
-                    for e in events if e["turn_id"] in selected]}
+        # The convenor owns the agenda, even for an early experimental room
+        # where a guest happened to post before Joe. Never elevate guest
+        # speech to the room's opening agenda by accident.
+        agenda_turn = next((e for e in events if e["provider"] == "operator"
+                            and e.get("speaker", "Joe") == "Joe"), None)
+        if agenda_turn is None:
+            agenda_turn = next((e for e in events
+                                if e.get("speaker", "Joe") != "Sankarshan"), None)
+        return {"agenda": agenda_turn["question"] if agenda_turn else "",
+                "contributions": [c for key, c in available.items() if key in selected]}
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
@@ -138,8 +168,21 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                  "source": "github"})
             elif self.path == "/api/live/rooms":
                 try:
-                    self.reply(200, {"rooms": catalog.list(), "default_standing_orders": DEFAULT_ORDERS})
+                    with governance_lock:
+                        snapshot = rooms_with_accounting()
+                    self.reply(200, snapshot)
                 except (ValueError, PermissionError, OSError) as error:
+                    self.reply(400, {"error": str(error)})
+            elif urlsplit(self.path).path == "/api/live/rooms/door":
+                try:
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query) != {"room_id"} or len(query["room_id"]) != 1:
+                        raise ValueError("One room ID required")
+                    with governance_lock:
+                        room_id = catalog.require(query["room_id"][0])
+                        result = door.status(room_id=room_id)
+                    self.reply(200, result)
+                except (ValueError, PermissionError, OSError, TypeError) as error:
                     self.reply(400, {"error": str(error)})
             elif urlsplit(self.path).path == "/api/live/output":
                 try:
@@ -176,7 +219,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             if self.path not in ("/api/search", "/api/inspect", "/api/preview", "/api/exchange",
                                  "/api/live/preview", "/api/live/send", "/api/live/post",
                                   "/api/live/rooms/create", "/api/live/rooms/rename",
-                                  "/api/live/rooms/configure"):
+                                  "/api/live/rooms/configure", "/api/live/rooms/invite",
+                                  "/api/live/rooms/revoke"):
                 self.reply(404, {"error": "Not found"})
                 return
             if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
@@ -228,11 +272,31 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     session = room_session(meeting_id)
                     if "voice_event" in data or "redact_event" in data:
                         event_id = data.get("voice_event", data.get("redact_event"))
-                        if not any(e["turn_id"] == event_id and eligible(e)
-                                   for e in session.complete_history()):
+                        if not any(c["turn_id"] == event_id
+                                   for c in contributions(session.complete_history())):
                             raise ValueError("Contribution is not eligible in this meeting")
                     result = catalog.configure(meeting_id=meeting_id, **data)
                     session.invalidate_previews()
+                elif self.path == "/api/live/rooms/invite":
+                    if set(data) != {"room_id"}:
+                        raise PermissionError("Only room ID may be provided")
+                    if guest_server is None:
+                        raise PermissionError("Room guest Door is disabled on this local server")
+                    meeting_id = catalog.require(data["room_id"])
+                    room = next(r for r in catalog.list() if r["id"] == meeting_id)
+                    if room.get("state") == "closed":
+                        raise PermissionError("Reopen the meeting before issuing an invitation")
+                    issued = door.issue(room_id=meeting_id)
+                    result = {
+                        "guest_url": f"http://127.0.0.1:{guest_server.server_port}/"
+                                     f"#invite={issued['token']}",
+                        "expires_utc": issued["expires_utc"], "room_id": meeting_id,
+                        "notice": "Anyone holding this link may speak as Sankarshan in this one room.",
+                    }
+                elif self.path == "/api/live/rooms/revoke":
+                    if set(data) != {"room_id"}:
+                        raise PermissionError("Only room ID may be provided")
+                    result = door.revoke(room_id=catalog.require(data["room_id"]))
                 elif self.path == "/api/live/post":
                     if next(r for r in catalog.list() if r["id"] == catalog.require(data.get("room_id", "default"))).get("state") == "closed":
                         raise PermissionError("Reopen the meeting before contributing")
@@ -273,7 +337,134 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             except (OSError, RuntimeError):
                 self.reply(503, {"error": "Private local data unavailable"})
 
-    return ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    class GuestHandler(BaseHTTPRequestHandler):
+        """A different HTTP surface: no route reaches the operator API."""
+
+        def log_message(self, fmt, *args):
+            pass  # Never log invitations, messages or identities.
+
+        def reply(self, code, data, content_type="application/json; charset=utf-8"):
+            raw = data if isinstance(data, bytes) else json.dumps(
+                data, ensure_ascii=False).encode("utf-8")
+            self.send_response(code)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Content-Security-Policy",
+                             "default-src 'none'; script-src 'unsafe-inline'; "
+                             "style-src 'unsafe-inline'; connect-src 'self'; "
+                             "base-uri 'none'; frame-ancestors 'none'")
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def guard(self):
+            port = self.server.server_port
+            hosts = (f"127.0.0.1:{port}", f"localhost:{port}")
+            if self.headers.get("Host") not in hosts:
+                raise PermissionError("Unrecognised guest host")
+            if self.command == "POST":
+                origins = (f"http://{hosts[0]}", f"http://{hosts[1]}")
+                if self.headers.get("Origin") not in origins:
+                    raise PermissionError("Guest origin not recognised")
+                if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
+                    raise ValueError("JSON body required")
+            return door.require(self.headers.get("X-Cobble-Room-Token"))
+
+        def do_GET(self):
+            if self.path == "/":
+                self.reply(200, GUEST_HTML.read_bytes(), "text/html; charset=utf-8")
+                return
+            if self.path != "/api/guest/session":
+                self.reply(404, {"error": "Not found"})
+                return
+            try:
+                with governance_lock:
+                    admit = self.guard()
+                    room_id = catalog.require(admit["room_id"])
+                    meeting = next(r for r in catalog.list() if r["id"] == room_id)
+                    if meeting.get("state") == "closed":
+                        raise PermissionError("This meeting is closed")
+                    history = room_session(room_id).complete_history()
+                    # A successful view is admission, not evidence of who
+                    # holds the bearer invitation.
+                    door.require(self.headers.get("X-Cobble-Room-Token"),
+                                 mark_arrival=True)
+                    convenor_started = any(
+                        t["provider"] == "operator" and
+                        t.get("speaker", "Joe") == "Joe" and
+                        t["status"] == "posted" for t in history)
+                    projection = [{
+                        "turn_id": t["turn_id"],
+                        "created_utc": t["created_utc"],
+                        "status": t["status"],
+                        "speaker": t["speaker"],
+                        "provider": t["provider"],
+                        "question": t["question"],
+                        "answer": t["answer"] if t["status"] == "completed" else None,
+                        "authorised_question": (t["turn_id"] if t["provider"] == "operator"
+                                                else t["turn_id"] + ":question") in
+                            (set(meeting.get("room_voice", [])) -
+                             set(meeting.get("redacted", []))),
+                        "authorised_voice": t["turn_id"] in
+                            (set(meeting.get("room_voice", [])) -
+                             set(meeting.get("redacted", []))),
+                    } for t in history]
+                    result = {
+                        "meeting": {
+                            "id": room_id, "title": meeting["title"],
+                            "state": meeting.get("state", "open"),
+                            "standing_orders": meeting.get("standing_orders", DEFAULT_ORDERS),
+                            "convenor_started": convenor_started,
+                        },
+                        "speaker": admit["speaker"],
+                        "turns": projection, "room_output": room_output(room_id),
+                    }
+                self.reply(200, result)
+            except (ValueError, PermissionError, OSError, TypeError, StopIteration):
+                self.reply(403, {"error": "Room invitation invalid or unavailable"})
+
+        def do_POST(self):
+            if self.path != "/api/guest/post":
+                self.reply(404, {"error": "Not found"})
+                return
+            try:
+                size = int(self.headers.get("Content-Length", "0"))
+                if not 0 < size <= MAX_BYTES:
+                    raise ValueError("Invalid guest message size")
+                with governance_lock:
+                    admit = self.guard()
+                    data = json.loads(self.rfile.read(size))
+                    if not isinstance(data, dict) or set(data) != {"text"}:
+                        raise ValueError("Only a meeting contribution may be posted")
+                    room_id = catalog.require(admit["room_id"])
+                    meeting = next(r for r in catalog.list() if r["id"] == room_id)
+                    if meeting.get("state") == "closed":
+                        raise PermissionError("This meeting is closed")
+                    history = room_session(room_id).complete_history()
+                    if not any(t["provider"] == "operator" and
+                               t.get("speaker", "Joe") == "Joe" and
+                               t["status"] == "posted" for t in history):
+                        raise PermissionError("Waiting for convenor's opening agenda")
+                    outcome = room_session(room_id).post_operator(
+                        text=data["text"], speaker=admit["speaker"])
+                self.reply(200, {"turn_id": outcome["turn"]["turn_id"],
+                                 "speaker": admit["speaker"]})
+            except (ValueError, PermissionError, TypeError, KeyError, OSError, StopIteration):
+                self.reply(403, {"error": "Guest contribution refused"})
+
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    guest_server = None
+    if guest_port is not None:
+        try:
+            guest_server = ThreadingHTTPServer(("127.0.0.1", guest_port), GuestHandler)
+        except Exception:
+            server.server_close()
+            raise
+    server.guest_server = guest_server
+    return server
 
 
 def main():
@@ -281,6 +472,8 @@ def main():
     parser.add_argument("--store", type=Path, default=Path.home() / "cobble-data")
     parser.add_argument("--index", type=Path)
     parser.add_argument("--port", type=int, default=8766)
+    parser.add_argument("--guest-port", type=int, default=None,
+                        help="Optional local-only separate guest Door port; never expose operator port")
     parser.add_argument("--live-gpt", action="store_true",
                         help="Enable paid GPT API calls")
     parser.add_argument("--live-claude", action="store_true",
@@ -344,16 +537,30 @@ def main():
     with create_server(args.store, index, args.port,
                        live_gpt=args.live_gpt, live_claude=args.live_claude,
                        live_mistral=args.live_mistral,
-                       live_adapters=adapters if enabled else None) as server:
+                       live_adapters=adapters if enabled else None,
+                       guest_port=args.guest_port) as server:
         description = ", ".join(name for name in ("openai", "claude", "mistral")
                                 if name in enabled) if enabled else "offline"
         print(f"Cobble meetings ({description}): http://127.0.0.1:{server.server_port}/", flush=True)
         print("Live calls require one-time exact context review." if enabled else
               "No external supplier calls; only approved fixture exchanges.", flush=True)
+        thread = None
+        if server.guest_server is not None:
+            thread = threading.Thread(target=server.guest_server.serve_forever,
+                                      daemon=True)
+            thread.start()
+            print(f"Guest Door (LOCAL ONLY): "
+                  f"http://127.0.0.1:{server.guest_server.server_port}/", flush=True)
+            print("DO NOT expose the operator port; remote HTTPS is not configured.", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
             pass
+        finally:
+            if server.guest_server is not None:
+                server.guest_server.shutdown()
+                server.guest_server.server_close()
+                thread.join(timeout=5)
 
 
 if __name__ == "__main__":

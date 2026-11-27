@@ -5,6 +5,7 @@ the provider call. No automatic retries. Missing outcomes after a crash are
 represented as uncertain, never silently discarded or resubmitted.
 """
 from dataclasses import asdict
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -154,6 +155,7 @@ class LiveChatService:
                 "turn_id": p.stem,
                 "created_utc": start["created_utc"],
                 "provider": start["provider"],
+                "speaker": start.get("speaker", "Joe"),
                 "question": start["question"],
                 "context_sha256": start["context_sha256"],
                 "context": start["context"],
@@ -167,6 +169,44 @@ class LiveChatService:
                 "provider_request_id": outcome.get("provider_request_id") if outcome else None,
             })
         return turns
+
+    def recorded_estimated_cost_usd(self):
+        """Sum all retained, completed provider estimates for this room.
+
+        Read only immutable outcomes, not the browser's last 100 displayed
+        turns or the sensitive outgoing request payloads. Unknown outcomes
+        have no verified accounting estimate and are not silently guessed.
+        """
+        with self._lock:
+            folder = self.root / "outcomes"
+            if folder.is_symlink():
+                raise PermissionError("Unsafe live outcome directory")
+            if not folder.exists():
+                return "0"
+            total = Decimal("0")
+            for path in folder.glob("*.json"):
+                if path.is_symlink() or not TURN_ID.fullmatch(path.stem):
+                    raise ValueError("Unsafe outcome record in session")
+                outcome = self._read("outcomes", path.stem)
+                if outcome is None:
+                    raise ValueError("Unreadable outcome record")
+                if outcome.get("status") != "completed":
+                    continue
+                usage = outcome.get("usage")
+                if not isinstance(usage, dict):
+                    raise ValueError("Completed supplier call lacks accounting")
+                raw = usage.get("estimated_provider_cost_usd")
+                if raw is None:
+                    # Older completed records may not have a priced estimate.
+                    continue
+                try:
+                    amount = Decimal(str(raw))
+                except InvalidOperation as exc:
+                    raise ValueError("Invalid recorded supplier cost") from exc
+                if not amount.is_finite() or amount < 0:
+                    raise ValueError("Invalid recorded supplier cost")
+                total += amount
+            return format(total, "f")
 
     def complete_history(self):
         """Internal operator ledger snapshot; never expose directly as room output."""
@@ -189,11 +229,12 @@ class LiveChatService:
             "event_id": turn["turn_id"],
             "provider": turn["provider"],
             "participant": "operator",
+            "speaker": turn["speaker"],
             "question": turn["question"],
             "answer": turn["answer"] or "",
         } for turn in turns if turn["status"] in ("completed", "posted"))[-MAX_PRIOR:]
 
-    def post_operator(self, *, text):
+    def post_operator(self, *, text, speaker="Joe"):
         """Record one operator utterance locally; no supplier call or attempt.
 
         This has the same durable, append-only event format as paid turns.
@@ -201,6 +242,8 @@ class LiveChatService:
         """
         if not isinstance(text, str) or not 0 < len(text.strip()) <= MAX_QUESTION:
             raise ValueError("Post must contain 1–2000 characters")
+        if speaker not in ("Joe", "Sankarshan"):
+            raise PermissionError("Unrecognised meeting contributor")
         with self._lock:
             if self._inflight:
                 raise PermissionError("A supplier request is underway; post afterward")
@@ -210,9 +253,10 @@ class LiveChatService:
                 "turn_id": turn_id,
                 "created_utc": datetime.now(timezone.utc).isoformat(),
                 "kind": "operator_message",
+                "speaker": speaker,
                 "provider": "operator",
                 "question": text.strip(),
-                "context_sha256": _digest({"operator_message": text.strip()}),
+                "context_sha256": _digest({"operator_message": text.strip(), "speaker": speaker}),
                 "context": {},
                 "payload": {},
             })
