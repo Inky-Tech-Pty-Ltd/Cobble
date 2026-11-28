@@ -991,5 +991,99 @@ class LiveTests(unittest.TestCase):
                 thread.join(timeout=5)
 
 
+
+class IndependentInstanceTests(unittest.TestCase):
+    def test_reciprocal_peer_doors(self):
+        from contextlib import ExitStack
+        from cobble.instance_identity import provision, load
+        from cobble.peer_door import PeerDoor
+
+        entry = Path(__file__).resolve().parents[1] / "scripts" / "snug_demo_web.py"
+        spec = importlib.util.spec_from_file_location("candidate5_web", entry)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        def operator(server, path, data=None):
+            port = server.server_port
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            try:
+                headers = {"Origin": f"http://127.0.0.1:{port}",
+                           "X-Snug-Client": "demo-local",
+                           "Content-Type": "application/json"}
+                conn.request("POST" if data is not None else "GET", path,
+                             json.dumps(data) if data is not None else None, headers)
+                response = conn.getresponse()
+                return response.status, json.loads(response.read())
+            finally:
+                conn.close()
+
+        def start(stack, server):
+            for listener in (server, server.guest_server):
+                stack.callback(listener.server_close)
+                thread = threading.Thread(target=listener.serve_forever, daemon=True)
+                thread.start()
+                stack.callback(thread.join, 5)
+                stack.callback(listener.shutdown)
+
+        with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+            joe, puck = Path(tmp) / "joe", Path(tmp) / "puck"
+            identities = [provision(joe, "Joe"), provision(puck, "Puck")]
+            self.assertNotEqual(identities[0]["instance_id"], identities[1]["instance_id"])
+            self.assertEqual(load(puck), identities[1])
+            with self.assertRaises(FileExistsError):
+                provision(joe, "Puck")
+            ji, pi = [root / "index" / "search.sqlite3" for root in (joe, puck)]
+            for root, index in ((joe, ji), (puck, pi)):
+                build(root, index)
+            with self.assertRaises(PermissionError):
+                module.create_server(puck, ji, port=0)
+
+            js = module.create_server(joe, ji, port=0, guest_port=0)
+            start(stack, js)
+            ps = module.create_server(puck, pi, port=0, guest_port=0)
+            start(stack, ps)
+
+            def ok(server, path, data=None):
+                status, payload = operator(server, path, data)
+                self.assertEqual(status, 200, payload)
+                return payload
+
+            self.assertEqual(ok(ps, "/api/health")["instance"], identities[1])
+            for host, visitor_store, name, private in (
+                    (js, puck, "Puck", "Joe's other room"),
+                    (ps, joe, "Joe", "Puck's other room")):
+                hidden = ok(host, "/api/live/rooms/create", {"title": private})["id"]
+                ok(host, "/api/live/post", {"room_id": hidden, "text": private})
+                room = ok(host, "/api/live/rooms/create", {"title": "Shared table"})["id"]
+                grant = ok(host, "/api/live/rooms/invite",
+                           {"room_id": room, "speaker": name, "mode": "peer"})
+                client = PeerDoor(visitor_store, grant)
+                self.assertFalse(client.read()["meeting"]["convenor_started"])
+                with self.assertRaises(PermissionError):
+                    client.post("Too early")
+                ok(host, "/api/live/post", {"room_id": room, "text": "Opening agenda"})
+                self.assertEqual(client.read()["room_output"]["agenda"], "Opening agenda")
+                self.assertEqual(client.post("Guest contribution")["speaker"], name)
+                seen = client.read()
+                self.assertEqual([t["speaker"] for t in seen["turns"]],
+                                 ["Joe" if host is js else "Puck", name])
+                self.assertNotIn(private, json.dumps(seen))
+                self.assertNotIn("payload", seen["turns"][0])
+                self.assertNotIn("context", seen["turns"][0])
+                with self.assertRaises(PermissionError):
+                    PeerDoor(joe if visitor_store == puck else puck, grant)
+                wrong = {**grant, "room_id": hidden}
+                with self.assertRaises(PermissionError):
+                    PeerDoor(visitor_store, wrong).read()
+                with self.assertRaises(PermissionError):
+                    PeerDoor(visitor_store, {**grant, "guest_url":
+                        grant["guest_url"].replace("127.0.0.1", "example.org")})
+                ok(host, "/api/live/rooms/revoke", {"room_id": room, "speaker": name})
+                with self.assertRaises(PermissionError):
+                    client.read()
+                with self.assertRaises(PermissionError):
+                    client.post("Revoked")
+
+
 if __name__ == "__main__":
     unittest.main()
