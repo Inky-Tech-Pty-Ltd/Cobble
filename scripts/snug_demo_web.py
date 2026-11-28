@@ -297,6 +297,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     peer = data.get("mode") == "peer"
                     if "mode" in data and (not peer or not identity):
                         raise PermissionError("Peer mode requires a named host instance")
+                    if speaker == "Puck" and not peer and operator_name != "Joe":
+                        raise PermissionError("Legacy Puck bridge belongs to Joe-hosted rooms only")
                     if guest_server is None:
                         raise PermissionError("Room guest Door is disabled on this local server")
                     meeting_id = catalog.require(data["room_id"])
