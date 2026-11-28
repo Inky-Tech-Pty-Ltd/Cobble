@@ -1,7 +1,16 @@
-# McKay backup delivery watchdog — candidate
+# McKay backup delivery watchdog
 
-**Status:** Candidate only. Nothing is installed or scheduled by merging. Run the
-offline fixture test and real read-only diagnostic on McKay before registration.
+**Operational status (28 November 2026):** Installed and calibrated on McKay; the
+real Windows provider reported 11 November as synced and 13/27 November as
+pending during the observed queue. The alarm detected 14 overdue uploads.
+The separate daily **09:00 Backup Delivery Heartbeat** Windows task now runs
+this watchdog, emails OK or WARNING, and delivered an independently observed
+OK email on 28 November. **Do not additionally install a second standalone
+09:00 watchdog task.** The original setup procedure below is retained as
+historical rollout guidance.
+
+The independently downloaded 27 November archive was restored successfully
+on Bogong on 28 November: [see the dated recovery evidence](history/bogong-independent-recovery-2026-11-28.md).
 
 ## Why
 
@@ -113,9 +122,9 @@ unhealthy; `0` when checks are healthy. Re-copy the script after upgrades.
 
 **Known limitations:** Task Scheduler can fail to run, Windows can sleep, the
 user may not see an interactive balloon, and iCloud may falsely report
-`IN_SYNC`. None of these is an independent remote alarm. The full DR
-milestone still requires downloading a fresh encrypted archive from iCloud
-on Bogong and successfully restoring it using the 1Password recovery key.
+`IN_SYNC`. None of these is an independent remote alarm. The **independent data-recovery** milestone has now passed on Bogong (28 November;
+see the linked evidence above). A complete replacement-host/service rebuild and
+an off-machine monitoring system are not yet demonstrated.
 
 ## References
 
