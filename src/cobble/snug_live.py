@@ -30,6 +30,7 @@ from cobble.openai_adapter import (
     prepare_message as make_openai,
 )
 from cobble.snug_exchange import ExchangeRequest, request_context_digest
+from cobble.instance_identity import PILOT_NAMES
 
 TURN_ID = re.compile(r"[0-9]{20}-[0-9a-f]{12}\Z")
 ROOM_ID = re.compile(r"[0-9a-f]{16}\Z")
@@ -61,7 +62,11 @@ class OutcomeUnknown(RuntimeError):
 
 
 class LiveChatService:
-    def __init__(self, store, *, adapter=None, adapters=None, meeting_id="default"):
+    def __init__(self, store, *, adapter=None, adapters=None, meeting_id="default",
+                 operator_name="Joe"):
+        if operator_name not in PILOT_NAMES:
+            raise ValueError("Unknown local operator")
+        self.operator_name = operator_name
         self.store = Path(store).expanduser().resolve()
         if any((p / ".git").exists() for p in (self.store, *self.store.parents)):
             raise ValueError("Private conversations must stay outside Git")
@@ -234,7 +239,7 @@ class LiveChatService:
             "answer": turn["answer"] or "",
         } for turn in turns if turn["status"] in ("completed", "posted"))[-MAX_PRIOR:]
 
-    def post_operator(self, *, text, speaker="Joe"):
+    def post_operator(self, *, text, speaker=None):
         """Record one operator utterance locally; no supplier call or attempt.
 
         This has the same durable, append-only event format as paid turns.
@@ -242,7 +247,9 @@ class LiveChatService:
         """
         if not isinstance(text, str) or not 0 < len(text.strip()) <= MAX_QUESTION:
             raise ValueError("Post must contain 1–2000 characters")
-        if speaker not in ("Joe", "Sankarshan", "Puck"):
+        if speaker is None:
+            speaker = self.operator_name
+        if speaker not in PILOT_NAMES:
             raise PermissionError("Unrecognised meeting contributor")
         with self._lock:
             if self._inflight:
@@ -375,7 +382,7 @@ class LiveChatService:
         try:
             self._write("turns", turn_id, {
                 "turn_id": turn_id, "created_utc": datetime.now(timezone.utc).isoformat(),
-                "provider": provider, "question": request.question,
+                "provider": provider, "speaker": self.operator_name, "question": request.question,
                 "context_sha256": request_context_digest(request),
                 "context": asdict(request), "payload": payload,
                 "outbound_payload_sha256": _digest(payload),

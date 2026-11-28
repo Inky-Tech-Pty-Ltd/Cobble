@@ -21,6 +21,7 @@ from cobble.snug_demo import DemoService
 from cobble.snug_live import LiveChatService, OutcomeUnknown
 from cobble.meeting_rooms import MeetingCatalog, DEFAULT_ORDERS
 from cobble.meeting_door import MeetingDoor
+from cobble.instance_identity import load as load_instance, require_index
 from cobble.puck_meeting_bridge import bind_invitation, unbind_invitation
 
 STATIC = Path(__file__).resolve().parent.parent / "src" / "cobble" / "static"
@@ -34,6 +35,10 @@ MAX_BYTES = 8192
 def create_server(store, index, port=8766, *, live_gpt=False,
                   live_claude=False, live_mistral=False,
                   live_adapter=None, live_adapters=None, guest_port=None):
+    identity = load_instance(Path(store).expanduser().resolve())
+    operator_name = identity["name"] if identity else "Joe"
+    if identity:
+        require_index(store, index)
     service = DemoService(store, index)
     requested = {
         name for name, enabled in (("openai", live_gpt),
@@ -57,8 +62,9 @@ def create_server(store, index, port=8766, *, live_gpt=False,
             adapters["mistral"] = MistralAdapter(allow_network=True, output_tokens=2048)
     # The legacy boardroom retains the default room's original ledger.
     catalog = MeetingCatalog(store)
-    door = MeetingDoor(store)
-    live_sessions = {"default": LiveChatService(store, adapters=adapters)}
+    door = MeetingDoor(store, convenor=operator_name)
+    live_sessions = {"default": LiveChatService(store, adapters=adapters,
+                                                   operator_name=operator_name)}
     live_lock = threading.Lock()
 
     def room_session(room_id="default"):
@@ -66,7 +72,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
         with live_lock:
             if room_id not in live_sessions:
                 live_sessions[room_id] = LiveChatService(
-                    store, adapters=adapters, meeting_id=room_id)
+                    store, adapters=adapters, meeting_id=room_id,
+                    operator_name=operator_name)
             return live_sessions[room_id]
 
     def rooms_with_accounting():
@@ -112,10 +119,10 @@ def create_server(store, index, port=8766, *, live_gpt=False,
         # where a guest happened to post before Joe. Never elevate guest
         # speech to the room's opening agenda by accident.
         agenda_turn = next((e for e in events if e["provider"] == "operator"
-                            and e.get("speaker", "Joe") == "Joe"), None)
+                            and e.get("speaker", "Joe") == operator_name), None)
         if agenda_turn is None:
             agenda_turn = next((e for e in events
-                                if e.get("speaker", "Joe") == "Joe"), None)
+                                if e.get("speaker", "Joe") == operator_name), None)
         return {"agenda": agenda_turn["question"] if agenda_turn else "",
                 "contributions": [c for key, c in available.items() if key in selected]}
 
@@ -166,7 +173,8 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                  "live_gpt": "openai" in requested,
                                  "live_providers": [p for p in ("openai", "claude", "mistral")
                                                     if p in requested],
-                                 "source": "github"})
+                                 "source": "github", "instance": identity,
+                                 "operator_name": operator_name})
             elif self.path == "/api/live/rooms":
                 try:
                     with governance_lock:
@@ -181,8 +189,11 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         raise ValueError("One room ID required")
                     with governance_lock:
                         room_id = catalog.require(query["room_id"][0])
-                        result = door.status(room_id=room_id)
-                        result["puck"] = door.status(room_id=room_id, speaker="Puck")
+                        result = (door.status(room_id=room_id) if operator_name != "Sankarshan"
+                                  else {"room_id": room_id, "open": False, "arrived": False, "expires_utc": None})
+                        result["puck"] = (door.status(room_id=room_id, speaker="Puck")
+                                          if operator_name != "Puck" else
+                                          {"room_id": room_id, "open": False, "arrived": False, "expires_utc": None})
                     self.reply(200, result)
                 except (ValueError, PermissionError, OSError, TypeError) as error:
                     self.reply(400, {"error": str(error)})
@@ -280,9 +291,14 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     result = catalog.configure(meeting_id=meeting_id, **data)
                     session.invalidate_previews()
                 elif self.path == "/api/live/rooms/invite":
-                    if set(data) not in ({"room_id"}, {"room_id", "speaker"}):
-                        raise PermissionError("Only room ID and guest seat may be provided")
+                    if set(data) not in ({"room_id"}, {"room_id", "speaker"}, {"room_id", "speaker", "mode"}):
+                        raise PermissionError("Only room ID, guest seat and optional peer mode may be provided")
                     speaker = data.get("speaker", "Sankarshan")
+                    peer = data.get("mode") == "peer"
+                    if "mode" in data and (not peer or not identity):
+                        raise PermissionError("Peer mode requires a named host instance")
+                    if speaker == "Puck" and not peer and operator_name != "Joe":
+                        raise PermissionError("Legacy Puck bridge belongs to Joe-hosted rooms only")
                     if guest_server is None:
                         raise PermissionError("Room guest Door is disabled on this local server")
                     meeting_id = catalog.require(data["room_id"])
@@ -290,7 +306,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                     if room.get("state") == "closed":
                         raise PermissionError("Reopen the meeting before issuing an invitation")
                     issued = door.issue(room_id=meeting_id, speaker=speaker)
-                    if speaker == "Puck":
+                    if speaker == "Puck" and not peer:
                         try:
                             bind_invitation(store, meeting_id, guest_server.server_port, issued["token"])
                         except Exception:
@@ -303,8 +319,10 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                             "guest_url": f"http://127.0.0.1:{guest_server.server_port}/"
                                          f"#invite={issued['token']}",
                             "expires_utc": issued["expires_utc"], "room_id": meeting_id,
-                            "notice": "Anyone holding this link may speak as Sankarshan in this one room.",
+                            "notice": f"Anyone holding this link may speak as {speaker} in this one room.",
                         }
+                        if peer:
+                            result.update({"speaker": speaker, "host_instance_id": identity["instance_id"]})
                 elif self.path == "/api/live/rooms/revoke":
                     if set(data) not in ({"room_id"}, {"room_id", "speaker"}):
                         raise PermissionError("Only room ID and guest seat may be provided")
@@ -410,7 +428,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                                  mark_arrival=True)
                     convenor_started = any(
                         t["provider"] == "operator" and
-                        t.get("speaker", "Joe") == "Joe" and
+                        t.get("speaker", "Joe") == operator_name and
                         t["status"] == "posted" for t in history)
                     projection = [{
                         "turn_id": t["turn_id"],
@@ -436,6 +454,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                             "convenor_started": convenor_started,
                         },
                         "speaker": admit["speaker"],
+                        "host_instance_id": identity["instance_id"] if identity else None,
                         "turns": projection, "room_output": room_output(room_id),
                     }
                 self.reply(200, result)
@@ -461,7 +480,7 @@ def create_server(store, index, port=8766, *, live_gpt=False,
                         raise PermissionError("This meeting is closed")
                     history = room_session(room_id).complete_history()
                     if not any(t["provider"] == "operator" and
-                               t.get("speaker", "Joe") == "Joe" and
+                               t.get("speaker", "Joe") == operator_name and
                                t["status"] == "posted" for t in history):
                         raise PermissionError("Waiting for convenor's opening agenda")
                     outcome = room_session(room_id).post_operator(

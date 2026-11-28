@@ -14,6 +14,8 @@ import secrets
 import tempfile
 import threading
 
+from cobble.instance_identity import PILOT_NAMES
+
 
 ROOM_ID = re.compile(r"(?:default|[0-9a-f]{16})\Z")
 TOKEN = re.compile(r"[A-Za-z0-9_-]{32,128}\Z")
@@ -22,7 +24,10 @@ MAX_INVITES = 128
 
 
 class MeetingDoor:
-    def __init__(self, store):
+    def __init__(self, store, *, convenor="Joe"):
+        if convenor not in PILOT_NAMES:
+            raise ValueError("Unknown convenor")
+        self.convenor = convenor
         self.store = Path(store).expanduser().resolve()
         if any((p / ".git").exists() for p in (self.store, *self.store.parents)):
             raise ValueError("Private invitations must stay outside Git")
@@ -51,7 +56,8 @@ class MeetingDoor:
                 or any(not re.fullmatch(r"[0-9a-f]{64}", k) or
                        not isinstance(v, dict) or
                        not ROOM_ID.fullmatch(v.get("room_id", "")) or
-                       v.get("speaker") not in ("Sankarshan", "Puck") or
+                       v.get("speaker") not in PILOT_NAMES or
+                       v.get("speaker") == self.convenor or
                        not isinstance(v.get("expires_utc"), str) or
                        not isinstance(v.get("revoked"), bool) or
                        ("first_seen_utc" in v and
@@ -136,9 +142,8 @@ class MeetingDoor:
                 self._write(records)
             return {"room_id": record["room_id"], "speaker": record["speaker"]}
 
-    @staticmethod
-    def _speaker(speaker):
-        if speaker not in ("Sankarshan", "Puck"):
+    def _speaker(self, speaker):
+        if speaker not in PILOT_NAMES or speaker == self.convenor:
             raise ValueError("Unrecognised guest seat")
 
     def status(self, *, room_id, speaker="Sankarshan"):
