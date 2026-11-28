@@ -1,7 +1,16 @@
-# Backup heartbeat email — proposed operational rollout
+# Backup heartbeat email
 
-**Status:** Candidate. No scheduled task or SMTP credential is installed by
-merging this PR. The existing 01:00 encrypted backup is unchanged.
+**Operational status (28 November 2026):** Configured on McKay with an existing
+SMTP mailbox and the recipient's actively monitored inbox. The self-tests,
+one-off SMTP delivery test, manual WARNING email and Windows Scheduled Task
+invocation all passed. The independent 09:00 AEDT task is registered and sent
+its first scheduled **OK** email on 28 November, received by the operator.
+The earlier setup instructions below are retained as a reproducible rollout
+procedure, not as a claim the installation remains pending. The 01:00
+nightly encrypted backup task was not changed.
+
+The 27 November encrypted backup was also independently downloaded from
+Apple's cloud and restored on Bogong: [recovery evidence](history/bogong-independent-recovery-2026-11-28.md).
 
 ## Why an email every day?
 
@@ -157,5 +166,8 @@ invokes the watchdog.
 - One manually invoked WARNING heartbeat reaches the inbox with no secrets.
 - Independent 09:00 task executes on McKay as intended; the next morning's
   email is actually received.
-- Even after success, record the unresolved independent Bogong archive restore
-  and wider McKay infrastructure recovery work.
+- **Completed 28 November:** independent download, checksum, decryption and
+  data integrity checks on Bogong; [evidence record](history/bogong-independent-recovery-2026-11-28.md).
+- **Still open:** rebuild of a running replacement-host Cobble service and
+  independent off-machine monitoring. An OK email remains a local-provider
+  verdict, not a daily download-and-restore proof.
