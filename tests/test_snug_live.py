@@ -556,6 +556,19 @@ class LiveTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             door.require("not-a-valid-token")
 
+    def test_independent_puck_and_human_seats(self):
+        door = MeetingDoor(self.store)
+        human = door.issue(room_id="default")
+        puck = door.issue(room_id="default", speaker="Puck")
+        self.assertEqual(door.require(human["token"])["speaker"], "Sankarshan")
+        self.assertEqual(door.require(puck["token"])["speaker"], "Puck")
+        door.revoke(room_id="default", speaker="Puck")
+        self.assertTrue(door.status(room_id="default")["open"])
+        with self.assertRaises(PermissionError):
+            door.require(puck["token"])
+        with self.assertRaises(ValueError):
+            door.issue(room_id="default", speaker="Joe")
+
     def test_one_meeting_door_is_separate_from_operator_console(self):
         """Sankarshan can speak at this table, not access McKay or other rooms."""
         from urllib.parse import urlsplit, parse_qs
@@ -720,6 +733,30 @@ class LiveTests(unittest.TestCase):
                      {"room_id": a, "voice_event": posted["turn_id"]})
                 output = call(operator_port, "/api/live/output?room_id=" + a)
                 self.assertEqual(output["contributions"][0]["speaker"], "Sankarshan")
+                from cobble.puck_meeting_bridge import meeting_read, meeting_post
+                from unittest.mock import patch
+                import os
+                issued_puck = call(operator_port, "/api/live/rooms/invite",
+                                   {"room_id": a, "speaker": "Puck"})
+                self.assertNotIn("guest_url", issued_puck)
+                self.assertNotIn("token", issued_puck)
+                with patch.dict(os.environ, {"COBBLE_MCP_ALLOW_PUCK_MEETINGS": "0"}):
+                    with self.assertRaises(PermissionError):
+                        meeting_read(self.store, a)
+                with patch.dict(os.environ, {"COBBLE_MCP_ALLOW_PUCK_MEETINGS": "1"}):
+                    data_puck = meeting_read(self.store, a)
+                    self.assertEqual(data_puck["speaker"], "Puck")
+                    self.assertNotIn("SECRET OTHER ROOM", json.dumps(data_puck))
+                    self.assertNotIn("context_sha256", json.dumps(data_puck))
+                    with self.assertRaises(PermissionError):
+                        meeting_read(self.store, b)
+                    self.assertEqual(meeting_post(self.store, a, "Hello from Puck")["speaker"], "Puck")
+                    self.assertEqual(meeting_read(self.store, a)["turns"][-1]["speaker"], "Puck")
+                    self.assertEqual(call(operator_port, "/api/live/output?room_id=" + a), output)
+                    call(operator_port, "/api/live/rooms/revoke", {"room_id": a, "speaker": "Puck"})
+                    with self.assertRaises(PermissionError):
+                        meeting_post(self.store, a, "Revoked")
+                self.assertEqual(call(guest_port, "/api/guest/session", guest=True, token=token)["speaker"], "Sankarshan")
                 call(operator_port, "/api/live/rooms/revoke", {"room_id": a})
                 call(guest_port, "/api/guest/session", guest=True, token=token,
                      expected=403)

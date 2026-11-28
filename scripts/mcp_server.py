@@ -23,6 +23,7 @@ from cobble.remote_ops import (
 )
 from cobble.puck_github_writer import submit_write as dispatch_puck_write
 from cobble.github_discussion_writer import post_discussion_comment as post_puck_discussion
+from cobble.puck_meeting_bridge import meeting_read, meeting_post
 from cobble.memory_access import (
     get_trace as read_trace,
     inspect_star as read_star,
@@ -181,6 +182,26 @@ def puck_comment_on_discussion(repository: str, number: int, body: str) -> dict:
     A successful response includes the actual new GitHub comment URL.
     """
     return post_puck_discussion(repository, number, body)
+
+@mcp.tool()
+def puck_meeting_read(room_id: str) -> dict:
+    """Accept or read a convenor-issued Puck invitation to exactly this meeting.
+
+    Requires local opt-in and a current invitation. Returns only the table
+    visible to that seat; no operator console or other room access.
+    """
+    return meeting_read(store(), room_id)
+
+
+@mcp.tool()
+def puck_meeting_post(room_id: str, text: str) -> dict:
+    """Table a deliberate Puck contribution in an invited meeting.
+
+    No supplier call, no room-voice authority, no automatic retry. Never
+    disclose private chat or memories without the convenor's permission.
+    """
+    return meeting_post(store(), room_id, text)
+
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

@@ -97,7 +97,11 @@ class WorkbenchTests(unittest.TestCase):
         self.assertIn("Furniture is the template catalogue.", furniture)
         self.assertIn("Doors · templates", furniture)
         self.assertIn("Windows · templates", furniture)
-        self.assertIn("A working Door based on this design is operated in Meetings.", furniture)
+        self.assertIn("Deployed meeting Doors are operated in Membrane → Doors.", furniture)
+        self.assertIn("Invite human", furniture)
+        self.assertIn("Invite ChatGPT bot", furniture)
+        self.assertNotIn('id="invite-puck"', furniture)
+        self.assertNotIn('id="invite-human"', furniture)
         self.assertIn("proposed design, not an installed or publishing Window", furniture)
         self.assertNotIn("Open selected meeting Door", furniture)
         self.assertIn("Deployed instance Doors · none registered", doors)
@@ -365,6 +369,30 @@ check().catch(e=>{console.error(e);process.exitCode=1});
         for removed in ("id=\"grant-floor\"", "id=\"joe-floor\"",
                         "Redact voice", "Restore voice", "Authorise room voice"):
             self.assertNotIn(removed, self.page)
+
+    def test_meeting_controls_relocated_without_duplicate_ids(self):
+        header = self.page.split('<header class="header">', 1)[1].split('</header>', 1)[0]
+        meeting = self.page.split('id="screen-meetings"', 1)[1].split('</section>', 1)[0]
+        doors = self.page.split('id="screen-membrane-doors"', 1)[1].split('</section>', 1)[0]
+        for item in ('meeting-more', 'meeting-options', 'edit-orders', 'meeting-state', 'view-output'):
+            self.assertIn(f'id="{item}"', header)
+            self.assertNotIn(f'id="{item}"', meeting)
+        for item in ('invite-human', 'invite-puck', 'door-room-title', 'puck-room-id'):
+            self.assertIn(f'id="{item}"', doors)
+            self.assertNotIn(f'id="{item}"', header)
+            self.assertNotIn(f'id="{item}"', meeting)
+        self.assertNotIn('class="governance"', self.page)
+        self.assertIn("function showMeetingOptions(open)", self.page)
+        self.assertIn("if(doorSnapshot.room_id!==roomId)return", self.page)
+        self.assertIn(".primary-nav .nav-item,.primary-nav .meeting-item{font-size:.9rem", self.page)
+
+    def test_puck_door_has_independent_convenor_control(self):
+        for required in (
+            'id="invite-puck"', "speaker:'Puck'",
+            "Door: awaiting Puck", "Door: Puck admitted",
+            "#invite-puck.membrane-cue.door-open",
+        ):
+            self.assertIn(required, self.page)
 
     def test_room_door_highlight_appears_only_when_invitation_is_open(self):
         for required in (
