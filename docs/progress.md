@@ -4,6 +4,17 @@ A snapshot of what has **actually been demonstrated**, what remains a
 hypothesis, and what comes next. This is an experiment log, not a product
 announcement. For intent, see [the specification](../specification.md).
 
+**Later evidence (28 November 2026):** The October backup claims below remain
+an historical snapshot. The larger encrypted archive was subsequently
+**downloaded from iCloud.com onto independent laptop Bogong**, matched by
+SHA-256, decrypted with the recovery key retrieved separately from 1Password,
+extracted, and validated (111 JSON records, two Git repositories, seven SQLite
+databases). A local watchdog and 09:00 email heartbeat were also installed and
+tested. **Independent data recovery: PASS; full service rebuild: NOT TESTED.**
+See the [dated Bogong recovery report](history/bogong-independent-recovery-2026-11-28.md)
+and the [heartbeat operations guide](mckay-backup-heartbeat.md).
+
+
 ## Demonstrated
 
 ### 1. User-controlled persistent memory
